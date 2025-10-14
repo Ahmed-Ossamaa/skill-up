@@ -8,7 +8,7 @@ class GoalController {
     }
 
     createGoal = asyncHandler(async (req, res) => {
-        const userId = req.user.id; 
+        const userId = req.user.id;
         const goalData = req.body;
 
         if (!goalData || Object.keys(goalData).length === 0) {
@@ -17,21 +17,28 @@ class GoalController {
         }
 
         const goal = await this.goalService.createGoal(userId, goalData);
-        console.log(userId);
-        console.log('request : ', req);
-        console.log('request.user : ', req.user );
-
-        res.status(201).json(goal);
+        res.status(201).json({
+            message: 'Goal created successfully',
+            data: goal
+        });
     });
 
     getUserGoals = asyncHandler(async (req, res) => {
-        const userId = req.user.id;
-        const goals = await this.goalService.getUserGoals(userId);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        let userId;
 
-        res.status(200).json({
-            count: goals.length,
-            data: goals
-        });
+        if (req.user.role === 'admin' && req.query.userId) {
+            // admin can view any user's goals by sending user's id in query
+            userId = req.query.userId;
+        } else {
+            // user can only view their own goals ( getting his id from token)
+            userId = req.user.id;
+        }
+
+        const goals = await this.goalService.getUserGoals(userId, page, limit);
+
+        res.status(200).json({ data: goals });
     });
 
     getGoalById = asyncHandler(async (req, res) => {
@@ -49,7 +56,9 @@ class GoalController {
             throw new Error('Not authorized to access this goal');
         }
 
-        res.status(200).json(goal);
+        res.status(200).json({
+            data: goal
+        });
     });
 
     updateGoal = asyncHandler(async (req, res) => {
@@ -75,7 +84,10 @@ class GoalController {
 
         const goal = await this.goalService.updateGoal(id, updateGoal);
 
-        res.status(200).json(goal);
+        res.status(200).json({
+            message: 'Goal updated successfully',
+            data: goal
+        });
     });
 
     deleteGoal = asyncHandler(async (req, res) => {
@@ -95,15 +107,18 @@ class GoalController {
 
         await this.goalService.deleteGoal(id);
 
-        res.status(200).json({ message: 'Goal deleted successfully'});
+        res.status(200).json({ message: 'Goal deleted successfully' });
     });
 
+
+    //restricted to admin in routes
     getAllGoals = asyncHandler(async (req, res) => {
-        const goals = await this.goalService.getAllGoals();
-        res.status(200).json({
-            count: goals.length,
-            data: goals
-        });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const goals = await this.goalService.getAllGoals(page, limit);
+
+        res.status(200).json({ data: goals });
     });
 }
 
