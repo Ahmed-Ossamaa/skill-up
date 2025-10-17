@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const AuthService = require('../services/AuthService');
 const asyncHandler = require('express-async-handler');
+const ApiError = require('../utils/ApiError');
 
 class AuthController {
     constructor() {
@@ -11,7 +12,7 @@ class AuthController {
         const { name, email, password } = req.body;
         if(!name || !email || !password) {
             res.status(400);
-            throw new Error('Name, Email and Password are required');
+            throw ApiError.badRequest('Name, Email and Password are required');
         }
         const user = await this.AuthService.register(name, email, password);
         res.status(201).json({
@@ -24,7 +25,7 @@ class AuthController {
         const { email, password } = req.body;
         if (!email || !password) {
             res.status(400);
-            throw new Error('Please provide email and password');
+            throw ApiError.badRequest('Please provide email and password');
         }
         const user = await this.AuthService.login({ email, password });
         res.status(200).json({

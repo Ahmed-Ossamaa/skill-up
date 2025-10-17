@@ -1,6 +1,7 @@
 const Feedback = require('../models/Feedback');
 const asyncHandler = require('express-async-handler');
 const FeedbackService = require('../services/FeedbackService');
+const ApiError = require('../utils/ApiError');
 
 
 class FeedbackController {
@@ -26,20 +27,23 @@ class FeedbackController {
     getFeedbackById = asyncHandler(async (req, res) => {
         const { id } = req.params;
         const userId = req.user.id;
-        if (Feedback.user.toString() !== userId || req.user.role !== 'admin') {
-            res.status(401);
-            throw new Error('User not authorized to delete this feedback');
-        }
         const feedback = await this.feedbackService.getFeedbackById(id);
+
+        if (feedback.user.toString() !== userId && req.user.role !== 'admin') {
+            throw ApiError.forbidden('Not authorized to view this feedback');
+        }
+
         res.status(200).json({ data: feedback });
     });
+
 
     deleteFeedback = asyncHandler(async (req, res) => {
         const { id } = req.params;
         const userId = req.user.id;
-        if (Feedback.user.toString() !== userId || req.user.role !== 'admin') {
-            res.status(401);
-            throw new Error('User not authorized to delete this feedback');
+        const feedback = await this.feedbackService.getFeedbackById(id);
+
+        if (feedback.user.toString() !== userId && req.user.role !== 'admin') {
+            throw ApiError.forbidden('You are not authorized to delete this feedback');
         }
         await this.feedbackService.deleteFeedback(id);
         res.status(200).json({ message: 'Feedback deleted successfully' });

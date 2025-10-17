@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const log = require('../utils/logger');
 
 class AuthService {
     constructor(UserModel) {
@@ -18,6 +19,8 @@ class AuthService {
         const userObj = newUser.toObject();
         delete userObj.password;
         const token = jwt.sign({ id: newUser._id, role: newUser.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        
+        log.info(`User created successfully: ${email}`);
         return {...userObj, token};
     }
     async login({ email, password }) {

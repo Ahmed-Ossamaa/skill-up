@@ -1,4 +1,4 @@
-
+const log = require('../utils/logger');
 class UserService{
     constructor(UserModel){
         this.User = UserModel;
@@ -25,6 +25,7 @@ class UserService{
 
     async deleteUser(id){
         const user = await this.User.findByIdAndDelete(id);
+        log.info(`User deleted successfully: ${user.email}`);
         return user;
     }
 

@@ -1,4 +1,4 @@
-
+const ApiError = require('../utils/ApiError');
 class GoalService {
     constructor(GoalModel) {
         this.Goal = GoalModel;
@@ -27,6 +27,9 @@ class GoalService {
 
     async getGoalById(goalId) {
         const goal = await this.Goal.findById(goalId);
+        if(!goal) {
+            throw ApiError.notFound('Goal not found');
+        }
         return goal;
     }
 
