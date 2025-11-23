@@ -1,15 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const user = require('../controllers/userController');
+const userController = require('../controllers/userController');
 const { protect, isAdmin } = require('../middlewares/authMW');
-const validate= require('../middlewares/reqValidation');
+const validate  = require('../middlewares/reqValidation');
 const { updateUserSchema } = require('../Validation/usersValidation');
+const { objIdSchema } = require('../Validation/objectIdValidation');
 
 router.use(protect);
 
-router.get('/', isAdmin,user.getAllUsers);
-router.delete('/:id',isAdmin ,user.deleteUser);
-router.get('/:id', user.getUserById);
-router.patch('/:id',validate(updateUserSchema),user.updateUser);
+// ================== Admin Routes ==================
+router.get('/', isAdmin, userController.getAllUsers);
+router.delete('/:id', isAdmin, validate(objIdSchema, 'params'), userController.deleteUser);
+
+// ================== User Routes ==================
+router.get('/:id', validate(objIdSchema, 'params'), userController.getUserById);
+router.patch('/:id', validate(objIdSchema, 'params'), validate(updateUserSchema), userController.updateUser);
 
 module.exports = router;

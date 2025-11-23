@@ -1,20 +1,25 @@
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const User = require('../models/User');
+const ApiError = require('../utils/ApiError');
 
 class AuthMW {
     //only logged in user with token can access
     protect = asyncHandler(async (req, res, next) => {
         let token;
-        let auth = req.headers.authorization
 
-        if (auth && auth.startsWith('Bearer')) {
-            token = auth.split(' ')[1];
+        //cookkies
+        if (req.cookies && req.cookies.token) {
+            token = req.cookies.token;
+        }
+        // Fallback to Authorization header
+        else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
         }
 
         if (!token) {
             res.status(401);
-            throw new Error('Not authorized, no token provided');
+            throw ApiError.unauthorized('Not authorized, no token');
         }
 
         try {
@@ -23,28 +28,29 @@ class AuthMW {
             next();
         } catch (error) {
             res.status(401);
-            throw new Error('Not authorized, invalid token');
+            throw ApiError.unauthorized('Not authorized, token failed');
         }
     })
+
     //only admin can access 
     isAdmin = asyncHandler(async (req, res, next) => {
         if (req.user.role !== 'admin') {
             res.status(403);
-            throw new Error('Not authorized, only admin can access this route');
+            throw ApiError.forbidden('Access denied, only admin can access this route');
         }
         next();
     })
+
     //checks user role "takes multiple roles" ('admin' , 'moderator' ,'...etc')
     authorize = (...roles) => {
         return (req, res, next) => {
             if (!roles.includes(req.user.role)) {
                 res.status(403);
-                throw new Error(`Access denied: Requires ${roles.join(' or ')} role`);
+                throw ApiError.forbidden(`Access denied: Requires ${roles.join(' or ')} role`);
             }
             next();
         };
     };
-
 }
 
 module.exports = new AuthMW();

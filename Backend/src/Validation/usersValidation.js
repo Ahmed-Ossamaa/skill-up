@@ -14,7 +14,7 @@ const registerSchema = joi.object({
         'any.required': 'Password is required',
         'string.min': 'Password must be at least 8 characters'
     }),
-    role: joi.string().valid('user', 'admin', 'moderator').default('user'),
+    role: joi.string().valid('student', 'instructor').default('student'),
     status: joi.string().valid('active', 'banned').default('active')
 });
 
@@ -40,9 +40,21 @@ const updateUserSchema = joi.object({
     password: joi.string().min(8).messages({
         'string.min': 'Password must be at least 8 characters'
     }),
-    role: joi.string().valid('user', 'admin', 'moderator'),
-    status: joi.string().valid('active', 'banned')
+    role: joi.string().valid('student', 'instructor', 'admin'),
+    status: joi.string().valid('active', 'banned').default('active')
 }).min(1); // require at least one field to be updated
 
+const forgotSchema = joi.object({
+    email: joi.string().email().required()
+});
 
-module.exports = { registerSchema, loginSchema, updateUserSchema };
+const resetSchema = joi.object({
+    token: joi.string().required(),
+    password: joi.string().min(8).required().messages({
+        'string.empty': 'Password Cannot be empty',
+        'any.required': 'Password is required',
+        'string.min': 'Password must be at least 8 characters'
+    })
+});
+
+module.exports = { registerSchema, loginSchema, updateUserSchema, forgotSchema,resetSchema };

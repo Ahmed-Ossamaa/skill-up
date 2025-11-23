@@ -10,21 +10,38 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        lowercase: true,
+        lowercase: true,    
         trim: true,
-        match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
+        match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email (DB Error)']
     },
     password: {
         type: String,
         required: true,
         minLength: [8, 'Password must be at least 8 characters'],
-        select: false
+        select: false  // ✅ Already hidden
     },
     role: {
         type: String,
-        enum: ['user', 'admin', 'moderator'],
-        default: 'user'
+        enum: ['student', 'admin', 'instructor'],
+        default: 'student'
     },
+    resetPasswordToken: {
+        type: String,
+        select: false 
+    },
+    resetPasswordExpires: {
+        type: Date,
+        select: false  
+    },
+    refreshToken: {
+        type: String,
+        select: false  
+    },
+    avatar: {
+        type: String,
+        default: ''
+    },
+    avatarPublicId: {type: String},
     status: {
         type: String,
         enum: ['active', 'banned'],

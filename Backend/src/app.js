@@ -5,8 +5,12 @@ const db = require('./config/db');
 dotenv.config();
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-const goalRoutes = require('./routes/goalRoutes');
+const courseRoutes = require('./routes/courseRoutes');
 const feedbackRoutes = require('./routes/feedBackRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const lessonRoutes = require('./routes/lessonRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
+const sectionRoutes = require('./routes/sectionRoutes');
 const ApiError = require('./utils/ApiError');
 const errorHandler = require('./middlewares/errorHandler');
 const cookieParser = require("cookie-parser");
@@ -14,21 +18,26 @@ const cookieParser = require("cookie-parser");
 const app = express();
 db.connect("Mongo");
 
-//===============================Middlewares===================================
+//=============================== Middlewares ===================================
 app.use(cors(
     {
-        origin: "http://localhost:3000",
+        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
         credentials: true
     }
 ));
 app.use(express.json());
 app.use(cookieParser());
 
-//===============================Routes===================================
-app.use('/auth', authRoutes);
-app.use('/goals', goalRoutes);
-app.use('/users', userRoutes);
-app.use('/feedback', feedbackRoutes);
+//=============================== Routes ===================================
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/courses', courseRoutes);
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/lessons', lessonRoutes);
+app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/sections', sectionRoutes);
+app.use('/api/v1/feedback', feedbackRoutes);
+
 app.all(/.*/, (req, res, next) => {
     throw  ApiError.notFound(`Path ${req.originalUrl} not found`);
 });
