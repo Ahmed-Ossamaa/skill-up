@@ -11,7 +11,13 @@ const categorySchema = new mongoose.Schema({
     description: {
         type: String,
         default: ''
-    }
-}, { timestamps: true });
+    },
+    parent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Category',
+        default: null
+    },
+
+});
 
 module.exports = mongoose.model('Category', categorySchema);

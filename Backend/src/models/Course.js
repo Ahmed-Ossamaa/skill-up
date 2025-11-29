@@ -15,8 +15,14 @@ const courseSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Description is required']
     },
-    thumbnailUrl: { type: String },
-    thumbnailPublicId: { type: String },
+    thumbnailUrl: {
+        type: String,
+        default: '',
+    },
+    thumbnailPublicId: {
+        type: String,
+        default: '',
+    },
 
     status: {
         type: String,
@@ -37,11 +43,13 @@ const courseSchema = new mongoose.Schema({
     studentsCount: { type: Number, default: 0 },
     category: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Category'
+        ref: 'Category',
+        required: true
     },
     sections: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Section'  
+        ref: 'Section',
+        default: []
     }],
 
     instructor: {

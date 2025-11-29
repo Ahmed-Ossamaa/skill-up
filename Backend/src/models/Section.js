@@ -25,7 +25,8 @@ const sectionSchema = new mongoose.Schema(
         lessons: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Lesson'
+                ref: 'Lesson',
+                default: []
             }
         ]
     },

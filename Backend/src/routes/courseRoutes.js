@@ -8,7 +8,7 @@ const { objIdSchema } = require('../Validation/objectIdValidation');
 
 
 // =============================== Public Routes ===============================
-router.get('/', validate(courseFilterSchema, 'query'), courseController.getPublishedCourses);
+router.get('/',  courseController.getPublishedCourses);
 router.get('/:id', validate(objIdSchema, 'params'), courseController.getCoursePublicDetails);
 
 // =============================== Protected Routes =============================

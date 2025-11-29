@@ -10,7 +10,8 @@ class CourseService {
     // ================= Public courses =================
 
     async createCourse(instructorId, data) {
-        const course = await this.Course.create({ ...data, instructor: instructorId });
+        const course = await this.Course.create({ ...data, instructor: instructorId, category: data.category });
+  
         return course;
     }
     async getPublishedCourses(page = 1, limit = 10, filters = {}) {
@@ -24,7 +25,9 @@ class CourseService {
         if (filters.instructor) query.instructor = filters.instructor;
 
         const [courses, total] = await Promise.all([
-            this.Course.find(query).skip(skip).limit(limit),
+            this.Course.find(query).skip(skip).limit(limit)
+            .populate('instructor', 'name')
+            .populate('category', 'name'),
             this.Course.countDocuments(query)
         ]);
 
