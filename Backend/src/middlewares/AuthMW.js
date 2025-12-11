@@ -32,6 +32,28 @@ class AuthMW {
         }
     })
 
+    optionalAuth = asyncHandler(async (req, res, next) => {
+        let token;
+
+        if (req.cookies && req.cookies.token) {
+            token = req.cookies.token;
+        } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                req.user = await User.findById(decoded.id).select('-password');
+            } catch (error) {
+                console.warn('Optional auth: token invalid, continuing as guest');
+            }
+        }
+
+        // If no token or invalid token, req.user remains undefined (guest)
+        next();
+    });
+
     //only admin can access 
     isAdmin = asyncHandler(async (req, res, next) => {
         if (req.user.role !== 'admin') {
