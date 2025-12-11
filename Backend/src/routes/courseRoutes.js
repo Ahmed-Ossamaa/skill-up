@@ -1,30 +1,62 @@
 const express = require('express');
 const router = express.Router();
 const courseController = require('../controllers/courseController');
-const { protect, authorize, isAdmin } = require('../middlewares/authMW');
+const { protect, authorize, isAdmin, optionalAuth } = require('../middlewares/AuthMW');
 const validate = require('../middlewares/reqValidation');
-const { courseSchema, updateCourseSchema, courseFilterSchema } = require('../Validation/courseValidation');
-const { objIdSchema } = require('../Validation/objectIdValidation');
+const { courseSchema, updateCourseSchema } = require('../Validation/courseValidation');
+const { uploadThumbnail } = require('../middlewares/upload');
 
+// =============================== Public / Guest Routes ===============================
+// List all published courses
+router.get('/', courseController.getPublishedCourses);
 
-// =============================== Public Routes ===============================
-router.get('/',  courseController.getPublishedCourses);
-router.get('/:id', validate(objIdSchema, 'params'), courseController.getCoursePublicDetails);
+// Get course content (sections and lessons)
+// Optional auth: if logged in, access info like enrollment is available
+router.get('/:id/content', optionalAuth, courseController.getCourseContent);
 
-// =============================== Protected Routes =============================
+// Get public course details (title, description, instructor, etc.)
+router.get('/:id', courseController.getCoursePublicDetails);
+
+// =============================== Protected Routes ===============================
+// All routes below require a valid token
 router.use(protect);
 
-// ------------------------ Enrolled Students ------------------------
-router.get('/:id/content', validate(objIdSchema, 'params'), authorize('student', 'admin'), courseController.getCourseContent);
+// Check enrollment status for a course (student only)
+router.get('/:id/enrollment', courseController.checkEnrollment);
 
-// ------------------------ Instructor/Admin ------------------------
-router.get('/instructor/my-courses', authorize('instructor', 'admin'), courseController.getInstructorCourses);
-router.post('/', authorize('instructor', 'admin'), validate(courseSchema), courseController.createCourse);
-router.patch('/:id', validate(objIdSchema, 'params'), authorize('instructor', 'admin'), validate(updateCourseSchema), courseController.updateCourse);
-router.delete('/:id', validate(objIdSchema, 'params'), authorize('instructor', 'admin'), courseController.deleteCourse);
-router.patch('/:id/status', validate(objIdSchema, 'params'), authorize('instructor', 'admin'), courseController.publishCourse);
+// =============================== Instructor / Admin Routes ===============================
+// Get courses created by the logged-in instructor
+router.get(
+    '/instructor/my-courses',
+    authorize('instructor', 'admin'),
+    courseController.getInstructorCourses
+);
 
-// ------------------------- Admin Only ---------------------------
+// Create a new course
+router.post(
+    '/',
+    authorize('instructor', 'admin'),
+    validate(courseSchema),
+    uploadThumbnail.single('thumbnail'),
+    courseController.createCourse
+);
+
+// Update course
+router.patch(
+    '/:id',
+    authorize('instructor', 'admin'),
+    validate(updateCourseSchema),
+    courseController.updateCourse
+);
+
+// Delete course
+router.delete('/:id', authorize('instructor', 'admin'), courseController.deleteCourse);
+
+// Publish / unpublish course
+router.patch('/:id/status', authorize('instructor', 'admin'), courseController.publishCourse);
+
+// =============================== Admin Only Routes ===============================
+// Get all courses (admin)
 router.get('/admin/all', isAdmin, courseController.getAllCourses);
 
 module.exports = router;

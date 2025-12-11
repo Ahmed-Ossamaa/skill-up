@@ -1,23 +1,144 @@
 const ApiError = require('../utils/ApiError');
 const { deleteMediaFromCloudinary } = require('../utils/cloudinaryCelanUp');
+const { uploadToCloudinary } = require('../utils/cloudinaryHelpers');
 
 class CourseService {
-    constructor(CourseModel, EnrollmentModel) {
+    constructor(CourseModel, EnrollmentModel, SectionModel, LessonModel) {
         this.Course = CourseModel;
         this.Enrollment = EnrollmentModel;
+        this.Section = SectionModel;
+        this.Lesson = LessonModel;
     }
 
-    // ================= Public courses =================
+    // ==================== Public & User-Specific ====================
+
+    async getCourseForUser(courseId, user = null) {
+        const course = await this.Course.findById(courseId)
+            .populate('instructor', 'name email avatar title')
+            .populate({
+                path: 'sections',
+                populate: {
+                    path: 'lessons',
+                    select: 'title type duration isPreview video description'
+                }
+            });
+
+        if (!course) throw ApiError.notFound('Course not found');
+
+        const isOwnerOrAdmin = user && (user.role === 'admin' || course.instructor._id.toString() === user.id);
+
+        let isEnrolled = false;
+        if (user && user.role === 'student') {
+            isEnrolled = !!(await this.Enrollment.exists({
+                course: courseId,
+                student: user.id,
+                status: { $in: ['enrolled', 'completed'] }
+            }));
+        }
+
+        // Map sections and lessons
+        const filteredSections = course.sections.map(section => ({
+            ...section.toObject(),
+            lessons: section.lessons.map(lesson => ({
+                id: lesson._id,
+                title: lesson.title,
+                type: lesson.type,
+                duration: lesson.duration,
+                isPreview: lesson.isPreview,
+                accessible: isOwnerOrAdmin || isEnrolled || lesson.isPreview,
+                // Only include sensitive info if accessible
+                ...(isOwnerOrAdmin || isEnrolled ? {
+                    videoUrl: lesson.video?.url,
+                    description: lesson.description,
+                } : {})
+            })),
+        }));
+
+        const completedCount = await this.Enrollment.countDocuments({
+            course: courseId,
+            status: 'completed'
+        });
+
+        return {
+            ...course.toObject(),
+            sections: filteredSections,
+            isEnrolled,
+            completedCount,
+        };
+    }
+
+
+    // ==================== CRUD Operations ====================
 
     async createCourse(instructorId, data) {
-        const course = await this.Course.create({ ...data, instructor: instructorId, category: data.category });
-  
+        const uploadResults = data.file
+            ? await uploadToCloudinary(data.file.buffer, 'courses/thumbnails', 'image')
+            : null;
+
+        const thumbnail = uploadResults
+            ? { url: uploadResults.secure_url, publicId: uploadResults.public_id, type: "image" }
+            : undefined;
+
+        const course = await this.Course.create({
+            ...data,
+            thumbnail,
+            instructor: instructorId,
+            category: data.category
+        });
+
         return course;
     }
+
+    async updateCourse(courseId, data, userId, userRole) {
+        const course = await this.Course.findById(courseId);
+        if (!course) throw ApiError.notFound('Course not found');
+        if (course.instructor.toString() !== userId && userRole !== 'admin') {
+            throw ApiError.forbidden('Not authorized to update this course');
+        }
+
+        Object.assign(course, data);
+        await course.save();
+        return course;
+    }
+
+    async deleteCourse(courseId, userId, userRole) {
+        const course = await this.Course.findById(courseId);
+        if (!course) throw ApiError.notFound('Course not found');
+        if (course.instructor.toString() !== userId && userRole !== 'admin') {
+            throw ApiError.forbidden('Not authorized to delete this course');
+        }
+
+        const sections = await this.Section.find({ _id: { $in: course.sections } }).populate('lessons');
+        const lessons = sections.flatMap(s => s.lessons);
+
+        await deleteMediaFromCloudinary({ thumbnailPublicId: course.thumbnail?.publicId, lessons });
+
+        for (const lesson of lessons) await this.Lesson.findByIdAndDelete(lesson._id);
+        for (const section of sections) await this.Section.findByIdAndDelete(section._id);
+
+        await course.remove();
+    }
+
+    async publishCourse(courseId, userId, userRole, status) {
+        if (!['published', 'draft', 'archived'].includes(status)) {
+            throw ApiError.badRequest("Status must be 'published', 'draft' or 'archived'");
+        }
+        const course = await this.Course.findById(courseId);
+        if (!course) throw ApiError.notFound('Course not found');
+        if (course.instructor.toString() !== userId && userRole !== 'admin') {
+            throw ApiError.forbidden('Not authorized to publish/unpublish this course');
+        }
+
+        course.status = status;
+        await course.save();
+        return course;
+    }
+
+    // ==================== Listings ====================
+
     async getPublishedCourses(page = 1, limit = 10, filters = {}) {
         const skip = (page - 1) * limit;
         const query = { status: 'published' };
-
         if (filters.level) query.level = filters.level;
         if (filters.category) query.category = filters.category;
         if (filters.priceMin !== undefined) query.price = { $gte: filters.priceMin };
@@ -26,8 +147,8 @@ class CourseService {
 
         const [courses, total] = await Promise.all([
             this.Course.find(query).skip(skip).limit(limit)
-            .populate('instructor', 'name')
-            .populate('category', 'name'),
+                .populate('instructor', 'name')
+                .populate('category', 'name'),
             this.Course.countDocuments(query)
         ]);
 
@@ -40,14 +161,6 @@ class CourseService {
         };
     }
 
-    async getCourseById(courseId) {
-        const course = await this.Course.findById(courseId)
-            .populate('instructor', 'name email')
-            .populate('lessons');
-        if (!course) throw ApiError.notFound('Course not found');
-        return course;
-    }
-
     async getInstructorCourses(instructorId, page = 1, limit = 10) {
         const skip = (page - 1) * limit;
         const [courses, total] = await Promise.all([
@@ -55,19 +168,12 @@ class CourseService {
             this.Course.countDocuments({ instructor: instructorId })
         ]);
 
-        return {
-            total,
-            page,
-            pages: Math.ceil(total / limit),
-            count: courses.length,
-            data: courses
-        };
+        return { total, page, pages: Math.ceil(total / limit), count: courses.length, data: courses };
     }
 
     async getAllCourses(page = 1, limit = 10, filters = {}) {
         const skip = (page - 1) * limit;
         const query = {};
-
         if (filters.status) query.status = filters.status;
         if (filters.level) query.level = filters.level;
         if (filters.category) query.category = filters.category;
@@ -78,84 +184,15 @@ class CourseService {
             this.Course.countDocuments(query)
         ]);
 
-        return {
-            total,
-            page,
-            pages: Math.ceil(total / limit),
-            count: courses.length,
-            data: courses
-        };
+        return { total, page, pages: Math.ceil(total / limit), count: courses.length, data: courses };
     }
-
-    async updateCourse(courseId, data, userId, userRole) {
-        const course = await this.getCourseById(courseId);
-        if (course.instructor.toString() !== userId && userRole !== 'admin') {
-            throw ApiError.forbidden('Not authorized to update this course');
-        }
-        Object.assign(course, data);
-        await course.save();
-        return course;
-    }
-    //delete the course with all of its sections and lessons and media from cloudinary
-    async deleteCourse(courseId, userId, userRole) {
-        const course = await this.getCourseById(courseId);
-        if (course.instructor.toString() !== userId && userRole !== 'admin') {
-            throw ApiError.forbidden('Not authorized to delete this course');
-        }
-        // Load sections with lessons
-        const sections = await this.Section.find({ _id: { $in: course.sections } }).populate('lessons');
-        const lessons = sections.flatMap(section => section.lessons);
-
-        // Delete all media from Cloudinary
-        await deleteMediaFromCloudinary({ thumbnailPublicId: course.thumbnailPublicId, lessons });
-
-        // Delete lessons and sections from DB
-        for (const lesson of lessons) {
-            await this.Lesson.findByIdAndDelete(lesson._id);
-        }
-        for (const section of sections) {
-            await this.Section.findByIdAndDelete(section._id);
-        }
-
-        // Delete course
-        await course.remove();
-    }
-
-    async publishCourse(courseId, userId, userRole, status) {
-        if (!['published', 'draft', 'archived'].includes(status)) {
-            throw ApiError.badRequest("Status must be 'published' or 'draft', or 'archived'");
-        }
-        const course = await this.getCourseById(courseId);
-        if (course.instructor.toString() !== userId && userRole !== 'admin') {
-            throw ApiError.forbidden('Not authorized to publish/unpublish this course');
-        }
-        course.status = status;
-        await course.save();
-        return course;
-    }
-
-    async getCourseContent(courseId, userId, userRole) {
-        const course = await this.Course.findById(courseId)
-            .populate({
-                path: 'sections',
-                populate: { path: 'lessons' }
-            });
-        if (!course) throw ApiError.notFound('Course not found');
-
-        // Admin or instructor who owns the course
-        if (userRole === 'admin' || course.instructor.toString() === userId) {
-            return course;
-        }
-
-        // Students must be enrolled
+    // ==================== CheckEnrollment ====================
+    async checkEnrollment(courseId, userId) {
         const enrollment = await this.Enrollment.findOne({
             course: courseId,
             student: userId
         });
-
-        if (!enrollment) throw ApiError.forbidden('You are not enrolled in this course');
-
-        return course;
+        return !!enrollment; // returns true if enrolled
     }
 }
 
