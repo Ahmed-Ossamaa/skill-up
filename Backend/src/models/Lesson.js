@@ -7,27 +7,34 @@ const lessonSchema = new mongoose.Schema(
             required: [true, 'Title is required']
         },
         description: { type: String },
-        videoUrl: {
+        type: {
             type: String,
-            required: [true, 'Video URL is required']
+            enum: ["video", "raw"],
+            default: "video"
         },
-        videoPublicId: { type: String },
-        resources: [
-            {
-                fileUrl: String,
-                filePublicId: String,
-                fileName: String,
-                fileType: String
-            }
-        ],
+        video: {
+            url: { type: String },
+            publicId: { type: String },
+            type: { type: String }
+        },
+        resources: [{
+            fileUrl: { type: String },
+            filePublicId: { type: String },
+            fileName: { type: String },
+            fileType: { type: String }
+        }],
+        content: { type: String },
         duration: {
             type: Number,
-            required: [true, 'Duration is required'],
             min: [1, "Duration must be a positive number"]
         },
         order: {
             type: Number,
             default: 0
+        },
+        isPreview: {
+            type: Boolean,
+            default: false
         },
         section: {
             type: mongoose.Schema.Types.ObjectId,
@@ -44,6 +51,7 @@ const lessonSchema = new mongoose.Schema(
             ref: "User",
             required: true
         }
+
     },
     { timestamps: true }
 );

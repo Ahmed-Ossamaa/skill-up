@@ -1,37 +1,47 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const enrollmentSchema = new mongoose.Schema({
-    student: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    course: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course',
-        required: true
-    },
-    progress: {
-        type: Number,
-        default: 0
-    },
-    notes: {
-        type: String,
-        default: ''
-    },
-    completedLessons: [{
-        lesson: { type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' },
-        completedAt: Date
-    }],
-    status: {
-        type: String,
-        enum: ['active', 'completed'],
-        default: 'active'
-    },
-    enrolledAt: {
-        type: Date,
-        default: Date.now
-    }
-}, { timestamps: true });
+const enrollmentSchema = new mongoose.Schema(
+    {
+        student: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
 
-module.exports = mongoose.model('Enrollment', enrollmentSchema);
+        course: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Course",
+            required: true,
+        },
+
+        // Actual lesson progress
+        progress: {
+            completedLessons: [
+                { type: mongoose.Schema.Types.ObjectId, ref: "Lesson" }
+            ],
+            percentage: {
+                type: Number,
+                default: 0,
+            },
+        },
+
+        status: {
+            type: String,
+            enum: ["enrolled", "completed", "cancelled"],
+            default: "enrolled",
+        },
+
+        enrolledAt: {
+            type: Date,
+            default: Date.now,
+        },
+
+        completedAt: Date,
+    },
+    { timestamps: true }
+);
+
+// Prevent enrolling in same course twice
+enrollmentSchema.index({ student: 1, course: 1 }, { unique: true });
+
+module.exports = mongoose.model("Enrollment", enrollmentSchema);

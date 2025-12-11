@@ -15,13 +15,10 @@ const courseSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Description is required']
     },
-    thumbnailUrl: {
-        type: String,
-        default: '',
-    },
-    thumbnailPublicId: {
-        type: String,
-        default: '',
+    thumbnail: {
+        url: { type: String },
+        publicId: { type: String },
+        type: { type: String }
     },
 
     status: {
@@ -39,8 +36,22 @@ const courseSchema = new mongoose.Schema({
         enum: ["beginner", "intermediate", "advanced"],
         default: "beginner"
     },
-    rating: { type: Number, default: 0 },
-    studentsCount: { type: Number, default: 0 },
+    rating: {
+        type: Number,
+        default: 0
+    },
+    ratingCount: {
+        type: Number,
+        default: 0
+    },
+    studentsCount: {
+        type: Number,
+        default: 0
+    },
+    isFree: {
+        type: Boolean,
+        default: false
+    },
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',
@@ -70,5 +81,15 @@ courseSchema.pre('save', function (next) {
     }
     next();
 });
+
+courseSchema.virtual("lessons", {
+    ref: "Lesson",
+    localField: "_id",
+    foreignField: "course",
+    justOne: false
+});
+
+courseSchema.set("toObject", { virtuals: true });
+courseSchema.set("toJSON", { virtuals: true });
 
 module.exports = mongoose.model('Course', courseSchema);
