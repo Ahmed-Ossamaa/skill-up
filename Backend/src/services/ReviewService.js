@@ -1,8 +1,11 @@
 const ApiError = require('../utils/ApiError');
+const mongoose = require('mongoose');
 
 class ReviewService {
-    constructor(ReviewModel) {
+    constructor(ReviewModel, CourseModel) {
         this.Review = ReviewModel;
+        this.Course = CourseModel;
+
     }
 
     async getAllReviews(courseId, page = 1, limit = 10) {
@@ -36,23 +39,42 @@ class ReviewService {
         return review;
     }
 
-    async createReview(userId, data) {
-        const existing = await this.Review.findOne({ course: data.course, user: userId });
+    async createReview(userId, courseId, data) {
+        const existing = await this.Review.findOne({ course: courseId, user: userId });
         if (existing) throw ApiError.badRequest('You have already reviewed this course');
 
-        const review = await this.Review.create({ ...data, user: userId });
+        const review = await this.Review.create({ ...data, user: userId, course: courseId });
+
+        await this.updateCourseRatingOnCreate(courseId, data.rating)
+
         return review;
+    }
+    async updateCourseRatingOnCreate(courseId, newRating) {
+        const course = await this.Course.findById(courseId);
+
+        const totalRating = course.rating * course.ratingCount;
+        const newTotal = totalRating + newRating;
+
+        const newCount = course.ratingCount + 1;
+        const newAverage = newTotal / newCount;
+
+        course.rating = Number(newAverage.toFixed(2));
+        course.ratingCount = newCount;
+
+        await course.save();
     }
 
     async updateReview(reviewId, userId, userRole, data) {
         const review = await this.getReviewById(reviewId);
 
-        if (review.user.toString() !== userId && userRole !== 'admin') {
+            if (review.user.toString() !== userId && userRole !== 'admin') {
             throw ApiError.forbidden('Not authorized to update this review');
         }
-
-        Object.assign(review, data);
+        review.rating = data.rating ?? review.rating;
+        review.comment = data.comment ?? review.comment;
         await review.save();
+
+        await this.recalculateCourseRating(review.course);
         return review;
     }
 
@@ -62,10 +84,27 @@ class ReviewService {
         if (review.user.toString() !== userId && userRole !== 'admin') {
             throw ApiError.forbidden('Not authorized to delete this review');
         }
+        const courseId = review.course;
 
         await review.remove();
+        await this.recalculateCourseRating(courseId);
         return;
     }
+    async recalculateCourseRating(courseId) {
+        const stats = await this.Review.aggregate([
+            { $match: { course: new mongoose.Types.ObjectId(courseId) } },
+            { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } }
+        ]);
+
+        const avg = stats[0]?.avg || 0;
+        const count = stats[0]?.count || 0;
+
+        await this.Course.findByIdAndUpdate(courseId, {
+            rating: Number(avg.toFixed(2)),
+            ratingCount: count
+        });
+    }
+
 }
 
 module.exports = ReviewService;

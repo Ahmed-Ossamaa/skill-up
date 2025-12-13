@@ -1,5 +1,7 @@
+const Enrollment = require('../models/Enrollment');
 const ApiError = require('../utils/ApiError');
 const { deleteMediaFromCloudinary } = require('../utils/cloudinaryCelanUp');
+const { uploadToCloudinary } = require('../utils/cloudinaryHelpers');
 
 class LessonService {
     constructor(LessonModel, SectionModel, CourseModel) {
@@ -19,9 +21,21 @@ class LessonService {
             throw ApiError.forbidden('Not authorized to add lesson to this course');
         }
 
+        const uploadResults = await uploadToCloudinary(data.file.buffer, 'lessons', 'video');
+
+        const video = data.file
+            ? {
+                url: uploadResults.secure_url,
+                publicId: uploadResults.public_id,
+                type: "video"
+            }
+            : undefined;
+
+
         // Create the lesson
         const lesson = await this.Lesson.create({
             ...data,
+            video,
             createdBy: userId,
             course: course._id
         });
@@ -125,6 +139,45 @@ class LessonService {
 
         return lesson;
     }
+
+async markLessonCompleted(studentId, courseId, lessonId, EnrollmentModel) {
+    const enrollment = await EnrollmentModel.findOne({
+        student: studentId,
+        course: courseId
+    });
+
+    if (!enrollment) 
+        throw ApiError.forbidden("Not enrolled");
+
+    // If lesson already completed>> skip
+    const alreadyCompleted = enrollment.progress.completedLessons.some(
+        (id) => id.toString() === lessonId
+    );
+    if (alreadyCompleted) return enrollment;
+
+    // Add completed lesson ID
+    enrollment.progress.completedLessons.push(lessonId);
+
+    // Count total lessons in course
+    const totalLessons = await Lesson.countDocuments({ course: courseId });
+
+    const completedCount = enrollment.progress.completedLessons.length;
+
+    // Calculate progress percentage
+    const percentage = Math.round((completedCount / totalLessons) * 100);
+
+    enrollment.progress.percentage = percentage;
+
+    // If progress reaches 100% → mark as completed
+    if (percentage >= 100) {
+        enrollment.status = "completed";
+        enrollment.completedAt = new Date();
+    }
+
+    await enrollment.save();
+    return enrollment;
+}
+
 }
 
 module.exports = LessonService;

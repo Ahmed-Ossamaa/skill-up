@@ -15,7 +15,7 @@ class SectionService {
         }
         const section = await this.Section.create(data);
 
-        // FIX: Add section to course's sections 
+        //  Add section to course's sections 
         await this.Course.findByIdAndUpdate(
             data.course,
             { $push: { sections: section._id } }
