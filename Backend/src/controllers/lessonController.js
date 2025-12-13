@@ -13,9 +13,12 @@ class LessonController {
     }
 
     createLesson = asyncHandler(async (req, res) => {
-
+        const file = req.file? req.file: undefined;
         const lesson = await this.lessonService.createLesson(
-            req.body,
+            {
+                ...req.body,
+                file
+            },
             req.user.id,
             req.user.role
         );
@@ -60,6 +63,25 @@ class LessonController {
             Enrollment
         );
         res.status(200).json({ data: lesson });
+    });
+
+    markLessonComplete = asyncHandler(async (req, res) => {
+        const studentId = req.user._id;
+        const courseId = req.params.courseId;
+        const lessonId = req.params.lessonId;
+
+        const result = await this.lessonService.markLessonCompleted(
+            studentId,
+            courseId,
+            lessonId,
+            Enrollment
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Lesson marked as completed",
+            data: result
+        });
     });
 }
 
