@@ -1,10 +1,11 @@
+const Course = require('../models/Course');
 const Review = require('../models/Review');
 const ReviewService = require('../services/ReviewService');
 const asyncHandler = require('express-async-handler');
 
 class ReviewController {
     constructor() {
-        this.reviewService = new ReviewService(Review);
+        this.reviewService = new ReviewService(Review, Course);
     }
 
     getAllReviews = asyncHandler(async (req, res) => {
@@ -16,12 +17,14 @@ class ReviewController {
     });
 
     createReview = asyncHandler(async (req, res) => {
-        const review = await this.reviewService.createReview(req.user.id, req.body);
+        const courseId = req.params.courseId;
+        const review = await this.reviewService.createReview(req.user.id, courseId, req.body);
         res.status(201).json({ message: 'Review created', data: review });
     });
 
     updateReview = asyncHandler(async (req, res) => {
-        const review = await this.reviewService.updateReview(req.params.id, req.user.id, req.user.role, req.body);
+        const reviewId = req.params.reviewId;
+        const review = await this.reviewService.updateReview(reviewId, req.user.id, req.user.role, req.body);
         res.status(200).json({ message: 'Review updated', data: review });
     });
 
