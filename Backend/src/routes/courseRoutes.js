@@ -19,10 +19,10 @@ router.get('/:id', courseController.getCoursePublicDetails);
 
 // =============================== Protected Routes ===============================
 // All routes below require a valid token
+router.get('/:id/enrollment',optionalAuth, courseController.checkEnrollment);
 router.use(protect);
 
 // Check enrollment status for a course (student only)
-router.get('/:id/enrollment', courseController.checkEnrollment);
 
 // =============================== Instructor / Admin Routes ===============================
 // Get courses created by the logged-in instructor
