@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const feedback = require('../controllers/feedbackController');
-const { protect, isAdmin } = require('../middlewares/authMW');  
+const { protect, isAdmin } = require('../middlewares/AuthMW');  
 const validate= require('../middlewares/reqValidation');
 const { feedbackSchema } = require('../Validation/feedbackValidation');
 const { valid } = require('joi');

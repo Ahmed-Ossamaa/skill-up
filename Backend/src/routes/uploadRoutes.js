@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { uploadAvatar, uploadVideo, uploadResource,uploadThumbnail } = require('../middlewares/upload');
 const uploadController = require('../controllers/uploadController');
-const { protect, authorize } = require('../middlewares/authMW');
+const { protect, authorize } = require('../middlewares/AuthMW');
 
 router.use(protect);
 
@@ -41,7 +41,7 @@ router.delete(
 router.post(
     '/lessons/:lessonId/resources',
     authorize('instructor', 'admin'),
-    uploadResource.single('resource'),
+    uploadResource.array('resources', 5),
     uploadController.uploadLessonResource
 );
 

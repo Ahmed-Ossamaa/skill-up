@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const sectionController = require('../controllers/sectionController');
 const validate = require('../middlewares/reqValidation');
-const { protect, authorize } = require('../middlewares/authMW');
+const { protect, authorize } = require('../middlewares/AuthMW');
 const { createSectionSchema, updateSectionSchema } = require('../Validation/sectionValidation');
 const { objIdSchema } = require('../Validation/objectIdValidation');
 

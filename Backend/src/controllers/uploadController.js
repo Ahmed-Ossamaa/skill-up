@@ -19,14 +19,14 @@ exports.uploadAvatar = asyncHandler(async (req, res) => {
     // remove old avatar after new upload
     const oldPublicId = req.user.avatarPublicId;
     req.user.avatarUrl = result.secure_url;
-    req.user.avatarPublicId = result.public_id;
+    req.user.avatarPublicId = result.publicId;
     await req.user.save();
 
-    if (oldPublicId && oldPublicId !== result.public_id) {
+    if (oldPublicId && oldPublicId !== result.publicId) {
         await deleteFromCloudinary(oldPublicId, 'image');
     }
 
-    res.status(200).json({ message: 'Avatar uploaded', url: result.secure_url, publicId: result.public_id });
+    res.status(200).json({ message: 'Avatar uploaded', url: result.secure_url, publicId: result.publicId });
 });
 
 // ---------------------- Delete Avatar -----------------------
@@ -60,14 +60,14 @@ exports.uploadCourseThumbnail = asyncHandler(async (req, res) => {
 
     const oldPublicId = course.thumbnailPublicId;
     course.thumbnailUrl = result.secure_url;
-    course.thumbnailPublicId = result.public_id;
+    course.thumbnailPublicId = result.publicId;
     await course.save();
 
-    if (oldPublicId && oldPublicId !== result.public_id) {
+    if (oldPublicId && oldPublicId !== result.publicId) {
         await deleteFromCloudinary(oldPublicId, 'image');
     }
 
-    res.status(200).json({ message: 'Thumbnail uploaded', url: result.secure_url, publicId: result.public_id });
+    res.status(200).json({ message: 'Thumbnail uploaded', url: result.secure_url, publicId: result.publicId });
 });
 
 // -------------------- Delete Course Thumbnail --------------------
@@ -106,17 +106,17 @@ exports.uploadLessonVideo = asyncHandler(async (req, res) => {
 
     const result = await uploadToCloudinary(req.file.buffer, `skillup/lessons/${lessonId}/videos`, 'video');
 
-    const oldPublicId = lesson.videoPublicId;
-    lesson.videoUrl = result.secure_url;
-    lesson.videoPublicId = result.public_id;
-    lesson.duration = result.duration || lesson.duration;
+    const oldPublicId = lesson.video.publicId;
+    lesson.video.url = result.url;
+    lesson.videoPublicId = result.publicId;
+    lesson.duration = result.duration || lesson.duration || null;
     await lesson.save();
 
-    if (oldPublicId && oldPublicId !== result.public_id) {
+    if (oldPublicId && oldPublicId !== result.publicId) {
         await deleteFromCloudinary(oldPublicId, 'video');
     }
 
-    res.status(200).json({ message: 'Video uploaded', url: result.secure_url, publicId: result.public_id, duration: result.duration });
+    res.status(200).json({ message: 'Video uploaded', url: result.secure_url, publicId: result.publicId, duration: result.duration|| lesson.duration});
 });
 
 // ----------------------- Delete Lesson Video -----------------------
@@ -161,7 +161,7 @@ exports.uploadLessonResource = asyncHandler(async (req, res) => {
 
     const fileData = {
         fileUrl: result.secure_url,
-        filePublicId: result.public_id,
+        filePublicId: result.publicId,
         fileName: req.file.originalname,
         fileType: req.file.mimetype
     };
