@@ -15,7 +15,7 @@ const uploadToCloudinary = (fileBuffer, folder, resourceType = 'auto', options =
     });
 };
 
-// simple delete by publicId
+// delete by publicId
 const deleteFromCloudinary = async (publicId, resourceType = 'image') => {
     if (!publicId) return;
     try {
