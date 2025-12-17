@@ -5,15 +5,23 @@ const createLessonSchema = Joi.object({
     title: Joi.string().required().messages({
         'string.empty': 'Title is required'
     }),
-
+    description: Joi.string().allow(''),
+    type: Joi.string().valid('video', 'raw').default('video'),
+    video: Joi.object({ url: Joi.string().uri(), publicId: Joi.string() }),
     duration: Joi.number().min(1).messages({
         'number.base': 'Duration must be a number',
         'number.min': 'Duration must be positive'
     }),
-    resources: Joi.array().items(Joi.object({ fileUrl: Joi.string().uri(), filePublicId: Joi.string() })),
+    isPreview: Joi.boolean().default(false),
+    resources: Joi.string().allow(''),
     content: Joi.string().allow(''),
-    // course: objectIdValidator.required(),
-    section: objectIdValidator.required().messages({
+    createdBy: Joi.string().required().messages({
+        'string.empty': 'InstructorId is required'
+    }),
+    section: Joi.string().required().messages({
+        'string.empty':'CourseId is required'
+    }),
+    course: Joi.string().required().messages({
         'string.empty':'CourseId is required'
     })
 });

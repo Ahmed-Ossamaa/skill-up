@@ -6,15 +6,15 @@ class EnrollmentService {
 
     async enroll(studentId, courseId) {
 
-        // 1. Validate course exists
+        // Validate course exists
         const course = await Course.findById(courseId);
         if (!course) throw ApiError.notFound("Course not found");
 
-        // 2. Prevent duplicate enrollment
+        // Prevent duplicate enrollment
         const existing = await Enrollment.findOne({ student: studentId, course: courseId });
         if (existing) throw ApiError.badRequest("You are already enrolled in this course");
 
-        // 3. Create enrollment (matches new schema)
+        // Create enrollment 
         const enrollment = await Enrollment.create({
             student: studentId,
             course: courseId,
@@ -22,6 +22,7 @@ class EnrollmentService {
                 completedLessons: [],
                 percentage: 0
             },
+            amountPaid: 0, //def value for free courses
             status: "enrolled"
         });
 

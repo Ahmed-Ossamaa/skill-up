@@ -1,13 +1,13 @@
-const Enrollment = require('../models/Enrollment');
 const ApiError = require('../utils/ApiError');
 const { deleteMediaFromCloudinary } = require('../utils/cloudinaryCelanUp');
 const { uploadToCloudinary } = require('../utils/cloudinaryHelpers');
 
 class LessonService {
-    constructor(LessonModel, SectionModel, CourseModel) {
+    constructor(LessonModel, SectionModel, CourseModel, EnrollmentModel) {
         this.Lesson = LessonModel;
         this.Section = SectionModel;
         this.Course = CourseModel;
+        this.Enrollment = EnrollmentModel;
     }
 
     async createLesson(data, userId, userRole) {
@@ -121,7 +121,7 @@ class LessonService {
     }
 
     // Get lesson by ID ( enrollment check for students)
-    async getLessonById(lessonId, userId, userRole, EnrollmentModel) {
+    async getLessonById(lessonId, userId, userRole) {
         const lesson = await this.Lesson.findById(lessonId)
             .populate('section')
             .populate('course');
@@ -130,7 +130,7 @@ class LessonService {
 
         // Students must be enrolled
         if (userRole === 'student') {
-            const enrollment = await EnrollmentModel.findOne({
+            const enrollment = await this.Enrollment.findOne({
                 student: userId,
                 course: lesson.course
             });
@@ -139,44 +139,43 @@ class LessonService {
 
         return lesson;
     }
+//working on it -----------------------------------------------------------------
+    async markLessonCompleted(studentId, courseId, lessonId) {
+        const enrollment = await this.Enrollment.findOne({
+            student: studentId,
+            course: courseId
+        });
 
-async markLessonCompleted(studentId, courseId, lessonId, EnrollmentModel) {
-    const enrollment = await EnrollmentModel.findOne({
-        student: studentId,
-        course: courseId
-    });
+        if (!enrollment)
+            throw ApiError.forbidden("Not enrolled");
 
-    if (!enrollment) 
-        throw ApiError.forbidden("Not enrolled");
+        // If lesson already completed>> skip
+        const alreadyCompleted = enrollment.progress.completedLessons.some(
+            (id) => id.toString() === lessonId.toString()
+        );
+        if (alreadyCompleted) return enrollment;
 
-    // If lesson already completed>> skip
-    const alreadyCompleted = enrollment.progress.completedLessons.some(
-        (id) => id.toString() === lessonId
-    );
-    if (alreadyCompleted) return enrollment;
+        // Add completed lesson ID
+        enrollment.progress.completedLessons.push(lessonId);
 
-    // Add completed lesson ID
-    enrollment.progress.completedLessons.push(lessonId);
+        // Count total lessons in course
+        const totalLessons = await this.Lesson.countDocuments({ course: courseId });
+        const completedCount = enrollment.progress.completedLessons.length;
 
-    // Count total lessons in course
-    const totalLessons = await Lesson.countDocuments({ course: courseId });
+        // Calculate progress percentage
+        const percentage =totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
-    const completedCount = enrollment.progress.completedLessons.length;
+        enrollment.progress.percentage = percentage;
 
-    // Calculate progress percentage
-    const percentage = Math.round((completedCount / totalLessons) * 100);
+        // If progress reaches 100% -> mark as completed
+        if (percentage >= 100) {
+            enrollment.status = "completed";
+            enrollment.completedAt = new Date();
+        }
 
-    enrollment.progress.percentage = percentage;
-
-    // If progress reaches 100% → mark as completed
-    if (percentage >= 100) {
-        enrollment.status = "completed";
-        enrollment.completedAt = new Date();
+        await enrollment.save();
+        return enrollment;
     }
-
-    await enrollment.save();
-    return enrollment;
-}
 
 }
 

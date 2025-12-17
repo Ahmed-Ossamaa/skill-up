@@ -15,7 +15,14 @@ const courseSchema = Joi.object({
     price: Joi.number().min(0).optional().messages({
         'number.min': 'Price cannot be negative'
     }),
-    level: Joi.string().valid('beginner', 'intermediate', 'advanced').optional(),
+    discount: Joi.number().min(0).optional().messages({
+        'number.min': 'Discount cannot be negative'
+    }),
+    requirements: Joi.array().items(Joi.string()).optional(),
+    learningOutcomes: Joi.array().items(Joi.string()).optional(),
+    targetAudience: Joi.array().items(Joi.string()).optional(),
+    language: Joi.string().optional(),
+    level: Joi.string().valid('beginner', 'intermediate', 'advanced, all levels').optional(),
     status: Joi.string().valid('draft', 'published', 'archived').optional(),
     category: Joi.string().optional()
 });
@@ -25,7 +32,12 @@ const updateCourseSchema = Joi.object({
     description: Joi.string().optional(),
     thumbnail: Joi.string().uri().optional(),
     price: Joi.number().min(0).optional(),
-    level: Joi.string().valid('beginner', 'intermediate', 'advanced').optional(),
+    discount: Joi.number().min(0).optional(),
+    requirements: Joi.array().items(Joi.string()).optional(),
+    learningOutcomes: Joi.array().items(Joi.string()).optional(),
+    targetAudience: Joi.array().items(Joi.string()).optional(),
+    language: Joi.string().optional(),
+    level: Joi.string().valid('beginner', 'intermediate', 'advanced, all levels').optional(),
     status: Joi.string().valid('draft', 'published').optional(),
     category: Joi.string().optional()
 });
@@ -34,7 +46,7 @@ const updateCourseSchema = Joi.object({
 const courseFilterSchema = Joi.object({
     page: Joi.number().min(1).default(1),
     limit: Joi.number().min(1).default(10),
-    level: Joi.string().valid('beginner', 'intermediate', 'advanced'),
+    level: Joi.string().valid('beginner', 'intermediate', 'advanced, all levels'),
     category: Joi.string().hex().length(24), // ObjectId
     priceMin: Joi.number().min(0),
     priceMax: Joi.number().min(0),

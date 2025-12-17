@@ -7,11 +7,12 @@ const { createLessonSchema, updateLessonSchema } = require('../Validation/lesson
 // const { objIdSchema } = require('../Validation/objectIdValidation');
 const { uploadVideo } = require('../middlewares/upload');
 const isEnrolled = require('../middlewares/isEnrolled.middleware');
-
+const parseFormDataArrays = require('../middlewares/FormDataParser');
 router.use(protect);
 
 // Instructor/Admin routes
 router.post('/', authorize('instructor', 'admin'), uploadVideo.single('video'),
+    parseFormDataArrays,
     validate(createLessonSchema),
     lessonController.createLesson);
 

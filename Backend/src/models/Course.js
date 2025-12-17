@@ -29,11 +29,31 @@ const courseSchema = new mongoose.Schema({
     price: {
         type: Number,
         min: [0, "Price must be a positive number"],
+        default: 0,
+        required: () => !this.isFree
+    },
+    discount: {
+        type: Number,
+        min: [0, "Discount must be a positive number"],
         default: 0
+    },
+    requirements: [{
+        type: String
+    }],
+    learningOutcomes: [{
+        type: String
+    }],
+    targetAudience: [{
+        type: String
+    }],
+
+    language: {
+        type: String,
+        default: "English"
     },
     level: {
         type: String,
-        enum: ["beginner", "intermediate", "advanced"],
+        enum: ["beginner", "intermediate", "advanced", "all levels"],
         default: "beginner"
     },
     rating: {

@@ -27,8 +27,8 @@ exports.createPaymentIntent = asyncHandler( async (req, res) => {
             return res.status(400).json({ message: "This course is already free." });
         }
 
-        const amount =
-            course.salePrice > 0 ? course.salePrice * 100 : course.price * 100;
+        const amount = course.price * 100;
+            // course.salePrice > 0 ? course.salePrice * 100 : course.price * 100;
 
         // Create PaymentIntent
         const paymentIntent = await stripe.paymentIntents.create({
@@ -37,12 +37,18 @@ exports.createPaymentIntent = asyncHandler( async (req, res) => {
             metadata: {
                 courseId: course._id.toString(),
                 userId: userId.toString(),
+                courseTitle: course.title
             },
             automatic_payment_methods: { enabled: true },
         });
-
-        return res.status(200).json({
-            clientSecret: paymentIntent.client_secret,
-        });
+        if(paymentIntent.error){
+            console.log(paymentIntent.error.message);
+            return res.status(400).json({ message: paymentIntent.error.message });
+        }else{
+            console.log("success",paymentIntent.client_secret);
+            return res.status(200).json({
+                clientSecret: paymentIntent.client_secret,
+            });
+        }
 
 } );

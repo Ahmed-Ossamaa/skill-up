@@ -9,7 +9,7 @@ const { deleteFromCloudinary } = require('../utils/cloudinaryHelpers');
 class LessonController {
     constructor() {
 
-        this.lessonService = new LessonService(Lesson, Section, Course);
+        this.lessonService = new LessonService(Lesson, Section, Course, Enrollment);
     }
 
     createLesson = asyncHandler(async (req, res) => {
@@ -60,7 +60,6 @@ class LessonController {
             req.params.id,
             req.user.id,
             req.user.role,
-            Enrollment
         );
         res.status(200).json({ data: lesson });
     });
@@ -74,7 +73,6 @@ class LessonController {
             studentId,
             courseId,
             lessonId,
-            Enrollment
         );
 
         res.status(200).json({

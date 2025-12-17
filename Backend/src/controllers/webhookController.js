@@ -38,8 +38,13 @@ exports.webhookHandler = async (req, res) => {
         // create payment intent
         const { userId, courseId } = paymentIntent.metadata;
 
+        const realAmountPaid = paymentIntent.amount_received / 100;
+
+        console.log("Payment succeeded for:", { userId, courseId });
+
+
         try {
-            const existing = await Enrollment.findOne({ user: userId, course: courseId });
+            const existing = await Enrollment.findOne({ student: userId, course: courseId });
 
             if (!existing) {
                 await Enrollment.create({
@@ -47,6 +52,7 @@ exports.webhookHandler = async (req, res) => {
                     course: courseId,
                     status: "enrolled",
                     paymentId: paymentIntent.id,
+                    amountPaid: realAmountPaid,
                 });
 
                 await Course.findByIdAndUpdate(courseId, {
@@ -57,6 +63,7 @@ exports.webhookHandler = async (req, res) => {
             console.log("User enrolled:", userId);
         } catch (err) {
             console.error("Enrollment error:", err);
+            return res.status(500).json({ error: err.message });
         }
     }
 

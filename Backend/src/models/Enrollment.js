@@ -17,11 +17,18 @@ const enrollmentSchema = new mongoose.Schema(
         // Actual lesson progress
         progress: {
             completedLessons: [
-                { type: mongoose.Schema.Types.ObjectId, ref: "Lesson" }
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Lesson",
+                    _id: false,
+                    default: []
+                }
             ],
             percentage: {
                 type: Number,
                 default: 0,
+                min: 0,
+                max: 100
             },
         },
 
@@ -34,6 +41,11 @@ const enrollmentSchema = new mongoose.Schema(
         enrolledAt: {
             type: Date,
             default: Date.now,
+        },
+        amountPaid: {
+            type: Number,
+            required: true,
+            default: 0
         },
 
         completedAt: Date,

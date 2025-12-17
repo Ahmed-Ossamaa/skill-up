@@ -108,15 +108,29 @@ class CourseService {
             throw ApiError.forbidden('Not authorized to delete this course');
         }
 
-        const sections = await this.Section.find({ _id: { $in: course.sections } }).populate('lessons');
-        const lessons = sections.flatMap(s => s.lessons);
+        // Fetch all related data at once
+        const sections = await this.Section.find({ _id: { $in: course.sections } });
+        const sectionIds = sections.map(s => s._id);
+        const lessonIds = sections.flatMap(s => s.lessons);
 
-        await deleteMediaFromCloudinary({ thumbnailPublicId: course.thumbnail?.publicId, lessons });
+        const lessons = await this.Lesson.find({ _id: { $in: lessonIds } });
 
-        for (const lesson of lessons) await this.Lesson.findByIdAndDelete(lesson._id);
-        for (const section of sections) await this.Section.findByIdAndDelete(section._id);
+        //  Delete files first
+        await deleteMediaFromCloudinary({
+            thumbnailPublicId: course.thumbnail?.publicId,
+            lessons
+        });
 
-        await course.remove();
+        const session = await this.Course.startSession();
+        try {//delete all or nothing
+            await session.withTransaction(async () => {
+                await this.Lesson.deleteMany({ _id: { $in: lessonIds } }, { session });
+                await this.Section.deleteMany({ _id: { $in: sectionIds } }, { session });
+                await course.deleteOne({ session });
+            });
+        } finally {
+            await session.endSession();
+        }
     }
 
     async publishCourse(courseId, userId, userRole, status) {
@@ -148,7 +162,8 @@ class CourseService {
         const [courses, total] = await Promise.all([
             this.Course.find(query).skip(skip).limit(limit)
                 .populate('instructor', 'name')
-                .populate('category', 'name'),
+                .populate('category', 'name')
+                .sort({ createdAt: -1 }),
             this.Course.countDocuments(query)
         ]);
 
@@ -164,7 +179,11 @@ class CourseService {
     async getInstructorCourses(instructorId, page = 1, limit = 10) {
         const skip = (page - 1) * limit;
         const [courses, total] = await Promise.all([
-            this.Course.find({ instructor: instructorId }).skip(skip).limit(limit),
+            this.Course
+                .find({ instructor: instructorId })
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 }),
             this.Course.countDocuments({ instructor: instructorId })
         ]);
 
