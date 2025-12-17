@@ -2,13 +2,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { AiFillStar } from 'react-icons/ai';
 import { HiOutlineUsers, HiOutlineClock, HiOutlineBookOpen } from 'react-icons/hi';
-import { formatPrice, getCourseLevelLabel, getCourseLevelColor, getFinalPrice, isOnSale, calculateDiscount } from '@/lib/utils';
+import { formatPrice, getCourseLevelLabel, getCourseLevelColor, getFinalPrice, isOnSale } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 export default function CourseCard({ course, disableLink = false }) {
     const finalPrice = getFinalPrice(course);
     const onSale = isOnSale(course);
-    const discount = calculateDiscount(course.price, course.salePrice);
+    const discount = course.discount;
 
     const CardContent = (
         <div className="glass-card overflow-hidden hover-lift h-full">
@@ -16,7 +16,7 @@ export default function CourseCard({ course, disableLink = false }) {
             <div className="relative aspect-video overflow-hidden">
                 {course.thumbnail ? (
                     <Image
-                        src={course.thumbnail}
+                        src={course.thumbnail.url}
                         alt={course.title}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -64,25 +64,29 @@ export default function CourseCard({ course, disableLink = false }) {
 
                 {/* Instructor */}
                 <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-6 h-6 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                        {course.instructor?.name?.charAt(0).toUpperCase() || 'I'}
-                    </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="font-semibold">By</span>
+                    <span className="font-semibold text-sm text-gray-600 dark:text-gray-400">
                         {course.instructor?.name || 'Instructor'}
                     </span>
                 </div>
 
                 {/* Stats */}
-                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 ">
                     <div className="flex items-center space-x-4">
                         {/* Rating */}
-                        {course.rating && (
+                        {course.rating >0 ? (
                             <div className="flex items-center space-x-1">
                                 <AiFillStar className="w-4 h-4 text-yellow-500" />
                                 <span className="font-semibold">{course.rating.toFixed(1)}</span>
                                 <span className="text-xs">({course.reviewCount || 0})</span>
                             </div>
-                        )}
+                        ):
+                        <div className="flex items-center space-x-1">
+                            <AiFillStar className="w-4 h-4 text-gray-400" />
+                            <span className="font-semibold">0.0</span>
+                            <span className="text-xs">({course.reviewCount || 0})</span>
+                        </div>
+                    }
 
                         {/* Students */}
                         {course.enrollmentCount && (

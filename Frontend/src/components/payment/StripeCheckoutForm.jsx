@@ -1,22 +1,3 @@
-// 'use client';
-
-// import { useState, useEffect } from "react";
-// import { Elements } from "@stripe/react-stripe-js";
-// import { loadStripe } from "@stripe/stripe-js";
-// import StripePaymentForm from "./StripePaymentFrom";
-
-
-
-// const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
-// export default function CheckoutPage({ course }) {
-//     return (
-//         <Elements stripe={stripePromise}>
-//             <StripePaymentForm course={course} />
-//         </Elements>
-//     );
-// }
-
 'use client';
 
 import { useState, useEffect } from "react";
@@ -31,7 +12,13 @@ export default function StripeCheckout({ course }) {
     const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
     useEffect(() => {
-        if (!accessToken) return;
+        if (!accessToken) {
+            console.log("Access token not found");
+            return;
+        } else {
+            console.log("Access token found", accessToken);
+        }
+
 
         const createPaymentIntent = async () => {
             try {
@@ -41,10 +28,12 @@ export default function StripeCheckout({ course }) {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${accessToken}`
                     },
-                    body: JSON.stringify({ courseId: course._id })
+                    body: JSON.stringify({ courseId: course._id, courseTitle: course.title })
                 });
 
                 const data = await res.json();
+                console.log('Payment Intent Response:', data); // Debug log
+
 
                 if (!res.ok) throw new Error(data.message || "Failed to create payment intent");
 
@@ -56,7 +45,7 @@ export default function StripeCheckout({ course }) {
         };
 
         createPaymentIntent();
-    }, [accessToken, course._id]);
+    }, [accessToken, course._id, course.title]);
 
     if (!clientSecret) return <p>Loading payment info...</p>;
 

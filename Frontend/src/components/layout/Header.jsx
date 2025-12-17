@@ -16,6 +16,9 @@ export default function Header() {
 
     const { isAuthenticated, user, logout } = useAuthStore();
 
+    // Dashboard path per role
+    const dashboardHref = user?.role === 'admin' ? '/admin' : user?.role === 'instructor' ? '/instructor' : user?.role === 'student' ? '/student' : '/dashboard';
+
     // Handle scroll effect
     useEffect(() => {
         const handleScroll = () => {
@@ -114,7 +117,7 @@ export default function Header() {
                                 {/* Dropdown */}
                                 <div className="absolute right-0 mt-2 w-48 glass-card opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                                     <div className="p-2">
-                                        <Link href="/dashboard" className="block px-4 py-2 text-sm hover:bg-white/10 rounded-lg transition-colors">
+                                        <Link href={dashboardHref} className="block px-4 py-2 text-sm hover:bg-white/10 rounded-lg transition-colors">
                                             Dashboard
                                         </Link>
                                         <Link href="/my-learning" className="block px-4 py-2 text-sm hover:bg-white/10 rounded-lg transition-colors">
@@ -200,7 +203,37 @@ export default function Header() {
                             ))}
 
                             {/* Mobile Auth Buttons */}
-                            {!isAuthenticated && (
+                            {isAuthenticated ? (
+                                <div className="pt-3 space-y-2 border-t border-white/10">
+                                    <Link
+                                        href={dashboardHref}
+                                        className="block px-4 py-2 rounded-lg"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                    <Link
+                                        href="/my-learning"
+                                        className="block px-4 py-2 rounded-lg"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        My Learning
+                                    </Link>
+                                    <Link
+                                        href="/profile"
+                                        className="block px-4 py-2 rounded-lg"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Profile
+                                    </Link>
+                                    <button
+                                        onClick={() => { setIsMobileMenuOpen(false); logout(); }}
+                                        className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-white/10 rounded-lg transition-colors"
+                                    >
+                                        Logout
+                                    </button>
+                                </div>
+                            ) : (
                                 <div className="pt-3 space-y-2 border-t border-white/10">
                                     <Link
                                         href="/auth/login"

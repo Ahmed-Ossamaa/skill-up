@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -8,15 +8,21 @@ import Filters from '@/components/courses/Filters';
 import CourseGrid from '@/components/courses/CourseGrid';
 import { courseAPI } from '@/lib/api';
 import { FiSearch, FiFilter, FiX } from 'react-icons/fi';
-
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function CoursesPage() {
     const searchParams = useSearchParams();
+
+    // --- State Management ---
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
     const [showMobileFilters, setShowMobileFilters] = useState(false);
+    
+    // Search & Sort State
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
     const [sortBy, setSortBy] = useState('-createdAt');
+    
+    // Pagination State
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
@@ -24,6 +30,7 @@ export default function CoursesPage() {
         limit: 12,
     });
 
+    // Filter State
     const [filters, setFilters] = useState({
         category: searchParams.get('category') || null,
         level: null,
@@ -32,9 +39,19 @@ export default function CoursesPage() {
     });
 
 
+    // --- Memoized Options ---
+    const sortOptions = useMemo(() => [
+        { value: '-createdAt', label: 'Newest First' },
+        { value: '-enrollmentCount', label: 'Most Popular' },
+        { value: '-rating', label: 'Highest Rated' },
+        { value: 'price', label: 'Price: Low to High' },
+        { value: '-price', label: 'Price: High to Low' },
+    ], []);
+
+    // --- Data Fetching ---
     const fetchCourses = useCallback(async (page = 1) => {
+        setLoading(true);
         try {
-            setLoading(true);
             const params = {
                 page,
                 limit: pagination.limit,
@@ -45,6 +62,7 @@ export default function CoursesPage() {
                 ...(filters.rating && { rating: filters.rating }),
             };
 
+            // Price range parsing logic
             if (filters.priceRange) {
                 if (filters.priceRange === 'free') params.isFree = true;
                 else if (filters.priceRange === 'paid') params.isFree = false;
@@ -55,12 +73,10 @@ export default function CoursesPage() {
                 }
             }
 
-            const response = await courseAPI.getPublished(params);
-            const apiData = response.data?.data || {};
-            const coursesData = apiData.data || [];
-
-            setCourses(coursesData);
-
+            const { data: response } = await courseAPI.getPublished(params);
+            const apiData = response?.data || {};
+            
+            setCourses(apiData.data || []);
             setPagination(prev => ({
                 ...prev,
                 totalPages: apiData.pages || 1,
@@ -73,177 +89,144 @@ export default function CoursesPage() {
         } finally {
             setLoading(false);
         }
-    }, [filters, sortBy, searchQuery, pagination.limit]); // removed currentPage
+    }, [filters, sortBy, searchQuery, pagination.limit]);
 
-
+    // Trigger fetch on parameter change
     useEffect(() => {
         fetchCourses(1);
-    }, [fetchCourses, sortBy, filters, searchQuery]);
+    }, [fetchCourses]);
 
+    // --- Handlers ---
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({ ...prev, [key]: value }));
         setPagination(prev => ({ ...prev, currentPage: 1 }));
     };
 
     const handleClearFilters = () => {
-        setFilters({
-            category: null,
-            level: null,
-            priceRange: null,
-            rating: null,
-        });
+        setFilters({ category: null, level: null, priceRange: null, rating: null });
         setSearchQuery('');
-        setPagination(prev => ({ ...prev, currentPage: 1 }));
     };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        setPagination(prev => ({ ...prev, currentPage: 1 }));
+    const openLesson = (courseId, lessonId) => {
+        setLessonModal({ isOpen: true, courseId, lessonId });
     };
-
-    const sortOptions = [
-        { value: '-createdAt', label: 'Newest First' },
-        { value: 'createdAt', label: 'Oldest First' },
-        { value: '-enrollmentCount', label: 'Most Popular' },
-        { value: '-rating', label: 'Highest Rated' },
-        { value: 'price', label: 'Price: Low to High' },
-        { value: '-price', label: 'Price: High to Low' },
-    ];
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
             <Header />
 
-            <main className="pt-32 pb-20">
-                <div className="container mx-auto px-4">
-                    {/* Page Header */}
-                    <div className="mb-8">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                            Explore <span className="gradient-text">Courses</span>
-                        </h1>
-                        <p className="text-xl text-gray-600 dark:text-gray-300">
-                            {pagination.totalCourses > 0
-                                ? `${pagination.totalCourses.toLocaleString()} courses available`
-                                : 'Discover your next learning adventure'}
-                        </p>
+            <main className="pt-32 pb-20 container mx-auto px-4">
+                {/* 1. Page Title Section */}
+                <div className="mb-10 text-center">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900  dark:text-white italic">
+                        EXPLORE <span className="text-primary-500">COURSES</span>
+                    </h1>
+                    <p className="text-slate-500 mt-2 font-medium">
+                        {pagination.totalCourses.toLocaleString()} masterclasses ready for you.
+                    </p>
+                </div>
+
+                {/* 2. Control Bar */}
+                <div className="flex flex-col lg:flex-row gap-4 mb-10">
+                    <div className="relative flex-1 group">
+                        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="What do you want to learn today?"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full h-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl pl-12 pr-4 focus:ring-2 focus:ring-primary-500 outline-none transition-all shadow-sm"
+                        />
                     </div>
 
-                    {/* Search and Sort Bar */}
-                    <div className="flex flex-col md:flex-row gap-4 mb-8">
-                        {/* Search */}
-                        <form onSubmit={handleSearch} className="flex-1">
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Search courses..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full glass rounded-full pl-12 pr-4 py-3 focus-ring"
-                                />
-                                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                            </div>
-                        </form>
-
-                        {/* Sort */}
+                    <div className="flex gap-3">
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="glass rounded-full px-6 py-3 focus-ring min-w-[200px]"
+                            className="h-14 px-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold text-slate-700 dark:text-slate-200 outline-none shadow-sm cursor-pointer"
                         >
-                            {sortOptions.map(option => (
-                                <option key={option.value} value={option.value}>
-                                    {option.label}
-                                </option>
-                            ))}
+                            {sortOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                         </select>
 
-                        {/* Mobile Filter Toggle */}
                         <button
-                            onClick={() => setShowMobileFilters(!showMobileFilters)}
-                            className="lg:hidden glass-button flex items-center justify-center space-x-2"
+                            onClick={() => setShowMobileFilters(true)}
+                            className="lg:hidden h-14 px-6 bg-primary-500 text-white rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary-500/20"
                         >
-                            <FiFilter className="w-5 h-5" />
-                            <span>Filters</span>
+                            <FiFilter /> Filters
                         </button>
                     </div>
+                </div>
 
-                    {/* Main Content */}
-                    <div className="grid lg:grid-cols-4 gap-8">
-                        {/* Filters Sidebar - Desktop */}
-                        <div className="hidden lg:block">
+                {/* 3. Main Content Layout */}
+                <div className="grid lg:grid-cols-4 gap-10">
+                    {/* Filters Sidebar */}
+                    <aside className="hidden lg:block">
+                        <div className="sticky top-32">
                             <Filters
                                 filters={filters}
                                 onFilterChange={handleFilterChange}
                                 onClearFilters={handleClearFilters}
                             />
                         </div>
+                    </aside>
 
-                        {/* Mobile Filters */}
-                        {showMobileFilters && (
-                            <div className="fixed inset-0 bg-black/50 z-50 lg:hidden" onClick={() => setShowMobileFilters(false)}>
-                                <div className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white dark:bg-gray-900 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                                    <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-                                        <h3 className="text-xl font-bold">Filters</h3>
-                                        <button onClick={() => setShowMobileFilters(false)}>
-                                            <FiX className="w-6 h-6" />
-                                        </button>
-                                    </div>
-                                    <div className="p-4">
-                                        <Filters
-                                            filters={filters}
-                                            onFilterChange={handleFilterChange}
-                                            onClearFilters={handleClearFilters}
-                                        />
-                                    </div>
-                                </div>
+                    {/* Course Display */}
+                    <div className="lg:col-span-3">
+                        <CourseGrid courses={courses} loading={loading} />
+
+                        {/* Custom Pagination Design */}
+                        {!loading && courses.length > 0 && (
+                            <div className="mt-16 flex items-center justify-center gap-4">
+                                <button
+                                    onClick={() => fetchCourses(pagination.currentPage - 1)}
+                                    disabled={pagination.currentPage === 1}
+                                    className="px-6 py-3 rounded-xl font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 disabled:opacity-30 hover:bg-slate-50 transition-colors"
+                                >
+                                    Prev
+                                </button>
+                                <span className="font-black text-slate-400 uppercase tracking-widest text-xs">
+                                    Page {pagination.currentPage} of {pagination.totalPages}
+                                </span>
+                                <button
+                                    onClick={() => fetchCourses(pagination.currentPage + 1)}
+                                    disabled={pagination.currentPage === pagination.totalPages}
+                                    className="px-6 py-3 rounded-xl font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 disabled:opacity-30 hover:bg-slate-50 transition-colors"
+                                >
+                                    Next
+                                </button>
                             </div>
                         )}
-
-                        {/* Course Grid */}
-                        <div className="lg:col-span-3">
-                            <CourseGrid courses={courses} loading={loading} />
-
-                            {/* Pagination */}
-                            {!loading && courses.length > 0 && pagination.totalPages > 1 && (
-                                <div className="flex justify-center mt-12 space-x-2">
-                                    <button
-                                        onClick={() => fetchCourses(Math.max(1, pagination.currentPage - 1))}
-                                        disabled={pagination.currentPage === 1}
-                                        className="px-4 py-2 glass-button disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        Previous
-                                    </button>
-
-                                    <div className="flex space-x-2">
-                                        {[...Array(pagination.totalPages)].map((_, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => fetchCourses(i + 1)}
-                                                className={`px-4 py-2 rounded-lg font-semibold transition-all ${pagination.currentPage === i + 1
-                                                    ? 'bg-linear-to-r from-primary-500 to-secondary-500 text-white'
-                                                    : 'glass-button'
-                                                    }`}
-
-                                            >
-                                                {i + 1}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    <button
-                                        onClick={() => fetchCourses(Math.min(pagination.totalPages, pagination.currentPage + 1))}
-                                        disabled={pagination.currentPage === pagination.totalPages}
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                            )}
-                        </div>
                     </div>
                 </div>
             </main>
 
             <Footer />
+
+            {/* Mobile Filter Overlay */}
+            <AnimatePresence>
+                {showMobileFilters && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 lg:hidden bg-slate-900/60 backdrop-blur-sm"
+                        onClick={() => setShowMobileFilters(false)}
+                    >
+                        <motion.div 
+                            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="absolute right-0 top-0 bottom-0 w-[85%] bg-white dark:bg-slate-950 p-6"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center mb-8">
+                                <h3 className="text-2xl font-black italic">FILTERS</h3>
+                                <button onClick={() => setShowMobileFilters(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
+                                    <FiX size={20} />
+                                </button>
+                            </div>
+                            <Filters filters={filters} onFilterChange={handleFilterChange} onClearFilters={handleClearFilters} />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

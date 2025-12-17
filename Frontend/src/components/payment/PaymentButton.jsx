@@ -19,7 +19,7 @@ export default function PaymentButton({ course }) {
                 },
                 body: JSON.stringify({ courseId: course._id }),
             });
-
+            
             const data = await res.json();
             if (!res.ok) throw new Error(data.message);
 

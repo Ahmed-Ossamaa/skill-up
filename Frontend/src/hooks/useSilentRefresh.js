@@ -1,14 +1,27 @@
 'use client';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import useAuthStore from "@/store/authStore";
 
 export default function useSilentRefresh() {
-    const { accessToken, isAuthenticated, refreshAccessToken } = useAuthStore();
+    const { isReady, hydrate } = useAuthStore();
+    const [isInitialized, setIsInitialized] = useState(false);
 
     useEffect(() => {
-        //Only refresh if user WAS logged in before
-        if (!accessToken && isAuthenticated) {
-            refreshAccessToken().catch((err) => { console.error(err) });
-        }
-    }, [accessToken, isAuthenticated, refreshAccessToken]);
+        const initAuth = async () => {
+            // Only hydrate if we haven't yet
+            if (!isReady) {
+                try {
+                    await hydrate();
+                } catch (error) {
+                    console.error('Failed to hydrate auth on init:', error);
+                }
+            }
+            setIsInitialized(true);
+        };
+
+        initAuth();
+    }, [isReady, hydrate]);
+
+    return isInitialized;
 }
+

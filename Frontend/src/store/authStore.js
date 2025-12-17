@@ -6,23 +6,26 @@ const useAuthStore = create(
     persist(
         (set, get) => ({
             user: null,
-            accessToken: null,
+            accessToken: null, // in memory only
             isAuthenticated: false,
+            isReady: false, // becomes true after initial hydration
             isLoading: false,
             error: null,
 
-            // Set auth state
+            // Set auth state (in memory)
             setAuth: ({ user, accessToken }) => {
                 set({
-                    user,
-                    accessToken,
-                    isAuthenticated: true,
+                    user: user ?? null,
+                    accessToken: accessToken ?? null,
+                    isAuthenticated: !!user,
                     error: null,
+                    isReady: true,
                 });
             },
             
+            // Register
             register: async (userData) => {
-                set({ isLoading: true });
+                set({ isLoading: true, error: null });
 
                 try {
                     const res = await authAPI.register(userData);
@@ -41,7 +44,7 @@ const useAuthStore = create(
 
             // Login
             login: async (credentials) => {
-                set({ isLoading: true });
+                set({ isLoading: true, error: null });
 
                 try {
                     const res = await authAPI.login(credentials);
@@ -50,7 +53,8 @@ const useAuthStore = create(
                     get().setAuth({ user, accessToken });
 
                     set({ isLoading: false });
-                    return { success: true };
+                    
+                    return { success: true, user };
                 } catch (err) {
                     const message = err.response?.data?.message || "Login failed";
                     set({ error: message, isLoading: false });
@@ -62,38 +66,60 @@ const useAuthStore = create(
             logout: async () => {
                 try {
                     await authAPI.logout();
-                } catch { }
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
 
                 set({
                     user: null,
                     accessToken: null,
                     isAuthenticated: false,
                     error: null,
+                    isReady: true,
                 });
             },
 
-            // Refresh access token
+            // Refresh access token (uses HttpOnly cookie)
             refreshAccessToken: async () => {
                 try {
                     const res = await authAPI.refresh();
                     const { accessToken, user } = res.data.data;
 
                     get().setAuth({ user, accessToken });
-
                     return accessToken;
                 } catch (err) {
-                    get().logout();
+                    console.error('Refresh token error:', err);
+                    // Clear state but mark ready so UI can respond
+                    set({ user: null, accessToken: null, isAuthenticated: false, isReady: true });
                     return null;
                 }
             },
+
+            // Hydrate (call on app init)
+            hydrate: async () => {
+                set({ isLoading: true });
+                try {
+                    await get().refreshAccessToken();
+                } catch (err) {
+                    console.error('Hydration failed:', err);
+                } finally {
+                    set({ isLoading: false, isReady: true });
+                }
+            },
+
+            // Update user info
+            updateUser: (userData) => {
+                set({ user: { ...get().user, ...userData } });
+            },
+
+            // Clear error
+            clearError: () => set({ error: null }),
         }),
 
         {
-            name: "auth-storage", // localStorage key
+            name: "auth-storage", 
             partialize: (state) => ({
                 user: state.user,
-                accessToken: state.accessToken,
-                isAuthenticated: state.isAuthenticated,
             }),
         }
     )

@@ -2,11 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiChevronDown, FiChevronUp, FiPlayCircle, FiFileText, FiDownload, FiLock, FiCheck } from 'react-icons/fi';
+import {FiChevronDown,FiChevronUp,FiPlayCircle,FiFileText,FiDownload,FiLock,FiCheck} from 'react-icons/fi';
 import { HiOutlineClock } from 'react-icons/hi';
 import { cn, formatDuration } from '@/lib/utils';
 
-export default function CourseCurriculum({ sections = [], isEnrolled }) {
+const getLessonIcon = (type, resources) => {
+    switch (type) {
+        case 'video':
+            return <FiPlayCircle className="w-5 h-5 text-primary-500" />;
+        case 'raw':
+            return <FiFileText className="w-5 h-5 text-blue-500" />;
+        default:
+
+            if (resources && resources.length > 0) {
+                return <FiDownload className="w-5 h-5 text-green-500" />;
+            }
+            return <FiFileText className="w-5 h-5 text-gray-500" />;
+    }
+};
+
+export default function CourseCurriculum({ sections = [], isEnrolled, courseId }) {
     const [expandedSections, setExpandedSections] = useState([sections[0]?._id]);
     const router = useRouter();
 
@@ -26,7 +41,10 @@ export default function CourseCurriculum({ sections = [], isEnrolled }) {
 
     const handleLessonClick = (lesson) => {
         if (!lesson.accessible) return;
-        router.push(`/courses/${lesson.course}/lesson/${lesson._id}`);
+        console.log("lesson test", lesson);
+        console.log("courseId test", courseId);
+        console.log("lessonId test", lesson._id);
+        router.push(`/courses/${courseId}/lesson/${lesson.id}`);
     };
 
     return (
@@ -50,10 +68,13 @@ export default function CourseCurriculum({ sections = [], isEnrolled }) {
                     const sectionDuration = section.lessons?.reduce((sum, l) => sum + (l.duration || 0), 0) || 0;
 
                     // include accessible flag
-                    const lessons = section.lessons?.map(lesson => ({
-                        ...lesson,
-                        accessible: lesson.isPreview || isEnrolled
-                    })) || [];
+                    const lessons = section.lessons?.map(lesson => {
+                        console.log("Lesson object:", lesson);  // ← Add this to see lesson structure
+                        return {
+                            ...lesson,
+                            accessible: lesson.isPreview || isEnrolled
+                        };
+                    }) || [];
 
                     return (
                         <div key={section._id} className="border border-white/10 rounded-lg overflow-hidden">
@@ -81,7 +102,7 @@ export default function CourseCurriculum({ sections = [], isEnrolled }) {
                                     {lessons.length > 0 ? (
                                         lessons.map((lesson, lessonIdx) => (
                                             <div
-                                                key={lesson._id}
+                                                key={lesson._id || `${section._id}_lesson_${lessonIdx}`}
                                                 onClick={() => handleLessonClick(lesson)}
                                                 className={cn(
                                                     'flex items-center justify-between p-4 border-b border-white/5 last:border-b-0 hover:bg-white/5 transition-colors',
@@ -89,15 +110,9 @@ export default function CourseCurriculum({ sections = [], isEnrolled }) {
                                                 )}
                                             >
                                                 <div className="flex items-center space-x-3 flex-1">
-                                                    {/* Icon */}
+                                                    {/* Icon (Uses updated function) */}
                                                     <div className="shrink-0">
-                                                        {lesson.type === 'video' ? (
-                                                            <FiPlayCircle className="w-5 h-5 text-primary-500" />
-                                                        ) : lesson.type === 'article' ? (
-                                                            <FiFileText className="w-5 h-5 text-blue-500" />
-                                                        ) : (
-                                                            <FiDownload className="w-5 h-5 text-green-500" />
-                                                        )}
+                                                        {getLessonIcon(lesson.type, lesson.resources)}
                                                     </div>
 
                                                     {/* Content */}

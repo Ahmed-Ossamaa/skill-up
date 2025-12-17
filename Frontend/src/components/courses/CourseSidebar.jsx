@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { FiPlay, FiClock, FiFileText, FiDownload, FiInbox, FiAward, FiSmartphone } from 'react-icons/fi';
 import { HiOutlineUsers } from 'react-icons/hi';
 import { AiFillStar } from 'react-icons/ai';
-import { formatPrice, formatDuration, calculateDiscount, isOnSale, getFinalPrice } from '@/lib/utils';
+import { formatPrice, formatDuration, isOnSale, getFinalPrice } from '@/lib/utils';
 import { courseAPI } from '@/lib/api';
 import useAuthStore from '@/store/authStore';
 import { toast } from 'react-hot-toast';
@@ -19,12 +19,13 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
 
     const finalPrice = getFinalPrice(course);
     const onSale = isOnSale(course);
-    const discount = calculateDiscount(course.price, course.salePrice);
+    const discount = course.discount;
+    const sections= course.sections;
+    const lessonsCounter = sections.reduce((total, section) => total + section.lessons.length, 0);
 
     const features = [
-        { icon: FiClock, label: `${formatDuration(course.duration)} on-demand video` },
+        { icon: FiClock, label: `${lessonsCounter  || 0} on-demand video` },
         { icon: FiFileText, label: `${course.articlesCount || 0} articles` },
-        { icon: FiDownload, label: `${course.resourcesCount || 0} downloadable resources` },
         { icon: FiInbox, label: 'Full lifetime access' },
         { icon: FiSmartphone, label: 'Access on mobile and TV' },
         { icon: FiAward, label: 'Certificate of completion' },
@@ -38,7 +39,6 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
             toast.error('You are already enrolled in this course');
             return;
         }else if (!course.isFree) {
-            console.log('Course ID before push:', course._id);
             router.push(`/checkout/${course._id || course.id}`);
             return;
         }
@@ -56,14 +56,14 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
             setLoading(false);
         }
     };
-
+console.log("course content", course);
     return (
         <div className="lg:sticky lg:top-24">
             <div className="glass-card overflow-hidden">
                 {/* Video Preview */}
                 <div className="relative aspect-video bg-gray-900">
                     {course.thumbnail ? (
-                        <Image src={course.thumbnail} alt={course.title} fill className="object-cover" />
+                        <Image src={course.thumbnail.url} alt={course.title} fill className="object-cover" />
                     ) : (
                         <div className="w-full h-full bg-linear-to-br from-primary-500 to-secondary-500"></div>
                     )}
@@ -158,14 +158,7 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
                             <HiOutlineUsers className="w-5 h-5" />
                             <span className="text-sm">Students</span>
                         </div>
-                        <span className="font-semibold">{course.enrollmentCount?.toLocaleString() || 0}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <FiPlay className="w-5 h-5" />
-                            <span className="text-sm">Lectures</span>
-                        </div>
-                        <span className="font-semibold">{course.lessonsCount || 0}</span>
+                        <span className="font-semibold">{course.students.length || 0}</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">

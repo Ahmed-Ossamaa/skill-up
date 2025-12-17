@@ -4,7 +4,7 @@ export const authAPI = {
     register: (data) => api.post('/auth/register', data),
     login: (data) => api.post('/auth/login', data),
     logout: () => api.post('/auth/logout'),
-    refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+    refresh: () => api.post('/auth/refresh'),
     forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
     resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
 };
@@ -19,7 +19,7 @@ export const courseAPI = {
     // getById: (id) => api.get(`/courses/${id}`),
     checkEnrollment: (id) => api.get(`/courses/${id}/enrollment`),
     getCourseContent: (id) => api.get(`/courses/${id}/content`),
-    getInstructorCourses: () => api.get('/courses/instructor/my-courses'),
+    getInstructorCourses: (params) => api.get('/courses/instructor/my-courses', { params }),
     create: (formData) => api.post('/courses', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     }),
@@ -31,7 +31,7 @@ export const courseAPI = {
     delete: (id) => api.delete(`/courses/${id}`),
     publish: (id, status) => api.patch(`/courses/${id}/status`, { status }),
     getAll: () => api.get('/courses/admin/all'),//admin
-    
+
 };
 
 export const sectionAPI = {
@@ -51,7 +51,7 @@ export const lessonAPI = {
 
     update: (id, data) => api.patch(`/lessons/${id}`, data),
     delete: (id) => api.delete(`/lessons/${id}`),
-    markComplete: (courseId, lessonId) => api.post(`/courses/${courseId}/lessons/${lessonId}/complete`),
+    markComplete: (courseId, lessonId) => api.post(`/lessons/courses/${courseId}/lessons/${lessonId}/complete`),
     uploadVideo: (formData, lessonId) => api.post(`/uploads/lessons/${lessonId}/video`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     }),
@@ -83,4 +83,9 @@ export const enrollmentAPI = {
     enroll: (courseId) => api.post(`/enrollments/courses/${courseId}/enroll`),
     getMyEnrollments: () => api.get('/enrollments/my-enrollments'),
 };
+
+export const instructorAPI = {
+    getAllInstructorStudents: () => api.get('/instructors/students'),
+    getInstructorDashboard: () => api.get('/instructors/stats'),
+}
 

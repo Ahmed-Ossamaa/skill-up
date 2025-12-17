@@ -37,7 +37,7 @@ export function formatNumber(num) {
     return new Intl.NumberFormat('en-US').format(num);
 }
 
-// Truncate text
+// Truncate text >> Ahmed Ossama >> ahmed...
 export function truncateText(text, maxLength) {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
@@ -96,7 +96,7 @@ export function groupBy(array, key) {
 // Sleep utility (for demos)
 export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Validate email
+// Validate email >> maybe wont be used (will use formik)
 export function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -108,12 +108,12 @@ export function getCourseLevelLabel(level) {
         beginner: 'Beginner',
         intermediate: 'Intermediate',
         advanced: 'Advanced',
-        all: 'All Levels',
+        "all levels": 'All Levels',
     };
     return levels[level] || level;
 }
 
-// Get course level color
+// Get course level color >> for cards and course page header
 export function getCourseLevelColor(level) {
     const colors = {
         beginner: 'bg-green-100 text-green-800',
@@ -124,18 +124,12 @@ export function getCourseLevelColor(level) {
     return colors[level] || colors.all;
 }
 
-// Calculate discount percentage
-export function calculateDiscount(originalPrice, salePrice) {
-    if (!salePrice || salePrice >= originalPrice) return 0;
-    return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
-}
-
 // Check if course is on sale
 export function isOnSale(course) {
-    return course.salePrice && course.salePrice < course.price;
+    return course.discount > 0 && course.price > 0;
 }
 
 // Get final price
 export function getFinalPrice(course) {
-    return isOnSale(course) ? course.salePrice : course.price;
+    return isOnSale(course) ? course.price - (course.price * course.discount )/ 100 : course.price;
 }

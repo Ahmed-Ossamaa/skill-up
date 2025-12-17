@@ -31,7 +31,17 @@ export default function LoginForm() {
   const onSubmit = async (data) => {
     const result = await login(data);
     if (result.success) {
-      router.push('/');
+      // Redirect based on user role
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.role === 'admin') {
+        router.push('/admin');
+      } else if (currentUser?.role === 'instructor') {
+        router.push('/instructor');
+      } else if (currentUser?.role === 'student') {
+        router.push('/student');
+      } else {
+        router.push('/');
+      }
     }
   };
 

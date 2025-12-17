@@ -42,7 +42,8 @@ export default function CourseDetailPage() {
                 let enrolled = false;
                 try {
                     const enrollmentRes = await courseAPI.checkEnrollment(params.id);
-                    enrolled = enrollmentRes.data?.data?.isEnrolled || false;
+                    enrolled = enrollmentRes.data?.data?.isEnrolled;
+                    console.log('Enrollment:', enrolled);
                 } catch (err) {
                     console.error('Error checking enrollment:', err);
                 }
@@ -249,6 +250,7 @@ export default function CourseDetailPage() {
                                     <CourseCurriculum
                                         sections={sections}
                                         isEnrolled={isEnrolled}
+                                        courseId={params.id}
 
                                     />
                                 )}
