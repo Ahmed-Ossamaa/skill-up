@@ -91,60 +91,76 @@ class InstructorService {
      *   - studentTrend {string}: Trend of students (in %) compared to the previous month
      *   - studentTrendDir {string}: Direction of student trend (up or down)
      */
-    async getInstructorStats(instructorId) {
-        const id = new mongoose.Types.ObjectId(String(instructorId));
+async getInstructorStats(instructorId) {
+    const id = new mongoose.Types.ObjectId(String(instructorId));
+    const now = new Date();
+    
+    // We only need the start of the CURRENT month to calculate growth "This Month"
+    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
-        const sixtyDaysAgo = new Date(now.getTime() - (60 * 24 * 60 * 60 * 1000));
+    const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
 
-        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
+    const [courseData, lifetimeStats, currentMonthStats] = await Promise.all([
+        // 1. Course Stats (Average Rating)
+        this.Course.aggregate([
+            { $match: { instructor: id } },
+            { 
+                $group: { 
+                    _id: null, 
+                    totalCourses: { $sum: 1 }, 
+                    avgRating: { 
+                        $avg: { $cond: [{ $gt: ["$ratingCount", 0] }, "$rating", "$$REMOVE"] } 
+                    } 
+                } 
+            }
+        ]),
+        
+        // 2. Lifetime Totals (The "Big Numbers" on your card)
+        this.Enrollment.aggregate([
+            { $match: { course: { $in: courseIds } } },
+            { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
+        ]),
 
-        const [courseData, lifetimeEnrollment, currentPeriod, previousPeriod] = await Promise.all([
-            // Total Courses & Rating
-            this.Course.aggregate([
-                { $match: { instructor: id } },
-                { $group: { _id: null, totalCourses: { $sum: 1 }, avgRating: { $avg: "$rating" } } }
-            ]),
-            // All-time Stats
-            this.Enrollment.aggregate([
-                { $match: { course: { $in: courseIds } } },
-                { $group: { _id: null, totalStudents: { $sum: 1 }, totalRevenue: { $sum: "$amountPaid" } } }
-            ]),
-            // Current Period
-            this.Enrollment.aggregate([
-                { $match: { course: { $in: courseIds }, enrolledAt: { $gte: thirtyDaysAgo } } },
-                { $group: { _id: null, revenue: { $sum: "$amountPaid" }, students: { $sum: 1 } } }
-            ]),
-            // Previous Period
-            this.Enrollment.aggregate([
-                { $match: { course: { $in: courseIds }, enrolledAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo } } },
-                { $group: { _id: null, revenue: { $sum: "$amountPaid" }, students: { $sum: 1 } } }
-            ])
-        ]);
+        // 3. Current Month Activity (To calculate how much we grew this month)
+        this.Enrollment.aggregate([
+            { $match: { course: { $in: courseIds }, enrolledAt: { $gte: startOfCurrentMonth } } },
+            { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
+        ])
+    ]);
 
-        const calculateTrend = (current, previous) => {
-            if (!previous || previous === 0) return current > 0 ? "100" : "0";
-            return (((current - previous) / previous) * 100).toFixed(1);
-        };
+    // --- Data Extraction ---
+    const total = lifetimeStats[0] || { count: 0, amount: 0 };
+    const current = currentMonthStats[0] || { count: 0, amount: 0 };
 
-        const cur = currentPeriod[0] || { revenue: 0, students: 0 };
-        const prev = previousPeriod[0] || { revenue: 0, students: 0 };
+    // --- The "Real World" Math ---
+    
+    // 1. Reconstruct the state at the start of the month
+    // If Total is 4 and we gained 3 this month, then Start was 1.
+    const startStudents = total.count - current.count;
+    const startRevenue = total.amount - current.amount;
 
-        const revTrend = calculateTrend(cur.revenue, prev.revenue);
-        const stuTrend = calculateTrend(cur.students, prev.students);
+    // 2. Helper for Cumulative Growth Trend
+    const calculateGrowth = (currentTotal, startTotal) => {
+        if (startTotal === 0) return currentTotal > 0 ? "100.0" : "0.0";
+        return (((currentTotal - startTotal) / startTotal) * 100).toFixed(1);
+    };
 
-        return {
-            courses: courseData[0]?.totalCourses || 0,
-            rating: courseData[0]?.avgRating?.toFixed(1) || 0,
-            students: lifetimeEnrollment[0]?.totalStudents || 0,
-            revenue: lifetimeEnrollment[0]?.totalRevenue || 0,
-            revenueTrend: `${revTrend}%`,
-            revenueTrendDir: parseFloat(revTrend) >= 0 ? 'up' : 'down',
-            studentTrend: `${stuTrend}%`,
-            studentTrendDir: parseFloat(stuTrend) >= 0 ? 'up' : 'down'
-        };
-    }
+    return {
+        courses: courseData[0]?.totalCourses || 0,
+        rating: courseData[0]?.avgRating?.toFixed(1) || "0.0",
+        
+        // Displaying Lifetime Totals
+        students: total.count,
+        revenue: total.amount,
+        
+        // Trend: "How much bigger is my total now compared to the start of the month?"
+        revenueTrend: `${calculateGrowth(total.amount, startRevenue)}%`,
+        revenueTrendDir: current.amount > 0 ? 'up' : 'down', // Simple logic: if we made money this month, the total went up.
+        
+        studentTrend: `${calculateGrowth(total.count, startStudents)}%`,
+        studentTrendDir: current.count > 0 ? 'up' : 'down'
+    };
+}
 
 
     /**

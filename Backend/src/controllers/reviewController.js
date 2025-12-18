@@ -9,7 +9,7 @@ class ReviewController {
     }
 
     getAllReviews = asyncHandler(async (req, res) => {
-        const courseId= req.query.course;
+        const courseId = req.query.course;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const reviews = await this.reviewService.getAllReviews(courseId, page, limit);
@@ -31,6 +31,22 @@ class ReviewController {
     deleteReview = asyncHandler(async (req, res) => {
         await this.reviewService.deleteReview(req.params.id, req.user.id, req.user.role);
         res.status(200).json({ message: 'Review deleted' });
+    });
+
+    getReviewsByInstructor = asyncHandler(async (req, res) => {
+        const instructorId = req.params.instructorId || req.user?.id;
+        if (!instructorId) {
+            return res.status(400).json({
+                success: false,
+                message: "No instructor identification provided."
+            });
+        }
+        const limit = parseInt(req.query.limit) || 10;
+        const reviews = await this.reviewService.getReviewsByInstructor(instructorId, limit);
+        res.status(200).json({
+            length: reviews.length,
+            data: reviews
+        });
     });
 }
 

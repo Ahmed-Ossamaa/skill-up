@@ -12,8 +12,11 @@ router.get('/', reviewController.getAllReviews);
 // //========================= Protected=============================
 router.use(protect);
 
+router.get('/instructor', reviewController.getReviewsByInstructor); // for teacher (owner)
+router.get('/instructor/:instructorId', reviewController.getReviewsByInstructor); // for admin or whatever (later)
+
 router.post('/:courseId', validate(createReviewSchema), authorize('student'), reviewController.createReview);
-router.patch('/:reviewId', validate(objIdSchema, 'params'), validate(updateReviewSchema), reviewController.updateReview);
-router.delete('/:id', validate(objIdSchema, 'params'), reviewController.deleteReview);
+router.patch('/:reviewId', validate(updateReviewSchema), authorize('student'), reviewController.updateReview);
+router.delete('/:id',authorize('student', 'admin'), reviewController.deleteReview);
 
 module.exports = router;

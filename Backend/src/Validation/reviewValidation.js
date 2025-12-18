@@ -2,7 +2,6 @@ const Joi = require('joi');
 const {objectIdValidator} = require('./objectIdValidation');
 
 const createReviewSchema = Joi.object({
-    course: objectIdValidator.required(),
     rating: Joi.number().min(1).max(5).required()
         .messages({
             'number.base': 'Rating must be a number',
