@@ -49,9 +49,9 @@ export default function AnalyticsPage() {
 
     return (
         <DashboardLayout role="instructor">
-            <div className="container mx-auto px-6 py-8 pt-30">
+
                 <header className="mb-10 max-w-6xl mx-auto">
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight italic uppercase">
+                    <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase">
                         Analytics Hub
                     </h1>
                     <p className="text-slate-500 mt-2 text-lg font-medium">
@@ -105,7 +105,7 @@ export default function AnalyticsPage() {
                     </div>
                     <CoursePerformanceTable />
                 </motion.div>
-            </div>
+
         </DashboardLayout>
     );
 }

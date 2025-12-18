@@ -65,6 +65,9 @@ export const lessonAPI = {
 
 export const reviewAPI = {
     getAll: (params) => api.get('/reviews', { params }),
+    getMyReviews: (limit = 10) => api.get('/reviews/instructor', { limit }), //instructor gets his own 
+    getInstructorReviews: (instructorId, limit = 10) =>
+        api.get(`/reviews/instructor/${instructorId}`, { limit }), // admin gets instructor reviews
     create: (data, courseId) => api.post(`/reviews/${courseId}`, data),
     update: (id, data) => api.patch(`/reviews/${id}`, data),
     delete: (id) => api.delete(`/reviews/${id}`),
@@ -88,4 +91,6 @@ export const instructorAPI = {
     getAllInstructorStudents: () => api.get('/instructors/students'),
     getInstructorDashboard: () => api.get('/instructors/stats'),
 }
+
+
 

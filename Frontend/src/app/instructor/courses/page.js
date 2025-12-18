@@ -104,7 +104,7 @@ export default function MyCoursesPage() {
         <DashboardLayout role="instructor">
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold">My Courses</h1>
+                    <h1 className="text-3xl font-black  tracking-tight italic uppercase">My Courses</h1>
                 </div>
                 <Link href="/instructor/courses/create" className="px-4 py-2 bg-primary-500 text-white rounded-md">Create Course</Link>
             </div>

@@ -151,7 +151,7 @@ console.log("course content", course);
                             <AiFillStar className="w-5 h-5 text-yellow-500" />
                             <span className="text-sm">Rating</span>
                         </div>
-                        <span className="font-semibold">{course.rating?.toFixed(1) || 'N/A'} ({course.reviewCount || 0})</span>
+                        <span className="font-semibold">{course.rating?.toFixed(1) || 'N/A'} ({course.ratingCount || 0})</span>
                     </div>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">

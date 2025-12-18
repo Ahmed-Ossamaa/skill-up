@@ -9,8 +9,11 @@ export default function Page() {
 
         <DashboardLayout role="instructor">
 
-            <div className="container mx-auto px-4 py-8 pt-30">
-                <h1>My Revenue</h1>
+            <div className="container mx-auto px-4 py-8 ">
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight italic uppercase mb-3">
+                    My Revnue
+                </h1>
+                <p>Coming Soon</p>
             </div>
 
         </DashboardLayout>

@@ -24,7 +24,7 @@ export default function StatsCard({ icon: Icon, label, value, change, color = 'p
                             )}>
                                 {trend === 'up' ? '↑' : '↓'} {change}
                             </span>
-                            <span className="text-xs text-gray-500">vs last month</span>
+                            <span className="text-xs text-gray-500">growth</span>
                         </div>
                     )}
                 </div>

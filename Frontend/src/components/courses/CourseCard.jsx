@@ -78,7 +78,7 @@ export default function CourseCard({ course, disableLink = false }) {
                             <div className="flex items-center space-x-1">
                                 <AiFillStar className="w-4 h-4 text-yellow-500" />
                                 <span className="font-semibold">{course.rating.toFixed(1)}</span>
-                                <span className="text-xs">({course.reviewCount || 0})</span>
+                                <span className="text-xs">({course.ratingCount || 0})</span>
                             </div>
                         ):
                         <div className="flex items-center space-x-1">

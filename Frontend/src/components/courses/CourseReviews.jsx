@@ -11,7 +11,7 @@ export default function CourseReviews({ reviews = [], averageRating = 0, totalRe
 
   // Calculate rating distribution
   const ratingDistribution = [5, 4, 3, 2, 1].map(star => {
-    const count = reviews.filter(r => Math.floor(r.rating) === star).length;
+    const count = reviews.filter(r => Math.floor(Number(r.rating)) === star).length;
     const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
     return { star, count, percentage };
   });

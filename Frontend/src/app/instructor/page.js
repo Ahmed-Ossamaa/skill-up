@@ -100,7 +100,6 @@ export default function InstructorDashboard() {
             <div className="mb-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Instructor Dashboard</h1>
                         <p className="text-slate-500">Welcome back, {user?.name}. Here is your current performance.</p>
                     </div>
                     <Link

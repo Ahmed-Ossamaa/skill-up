@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -15,6 +15,7 @@ import { HiOutlineUsers, HiOutlineClock, HiOutlineGlobeAlt } from 'react-icons/h
 import { FiPlay, FiAward } from 'react-icons/fi';
 import { formatNumber, formatDate, getCourseLevelLabel, getCourseLevelColor } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import ReviewForm from '@/components/form/ReviewForm';
 
 
 export default function CourseDetailPage() {
@@ -26,62 +27,52 @@ export default function CourseDetailPage() {
     const [isEnrolled, setIsEnrolled] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
 
-    useEffect(() => {
-        let isMounted = true;
+    const fetchCourseData = useCallback(async () => {
+        try {
+            // Fetch course details
+            const courseRes = await courseAPI.getCourseContent(params.id);
+            const courseData = courseRes.data?.data || courseRes.data;
 
-        const fetchCourseData = async () => {
+            // Fetch enrollment status
+            let enrolled = false;
             try {
-                setLoading(true);
-
-                // Fetch course details
-                const courseRes = await courseAPI.getCourseContent(params.id);
-                const courseData = courseRes.data?.data || courseRes.data;
-                console.log('Course:', courseData);
-
-                // Fetch enrollment status
-                let enrolled = false;
-                try {
-                    const enrollmentRes = await courseAPI.checkEnrollment(params.id);
-                    enrolled = enrollmentRes.data?.data?.isEnrolled;
-                    console.log('Enrollment:', enrolled);
-                } catch (err) {
-                    console.error('Error checking enrollment:', err);
-                }
-
-                // Fetch reviews
-                let reviewsData = [];
-                try {
-                    const reviewsRes = await reviewAPI.getAll({ courseId: params.id });
-                    reviewsData =
-                        reviewsRes.data?.data?.data ||
-                        reviewsRes.data?.data ||
-                        reviewsRes.data ||
-                        [];
-                } catch (err) {
-                    console.error('Error fetching reviews:', err);
-                }
-
-                // Update state only if component is still mounted
-                if (isMounted) {
-                    setCourse(courseData);
-                    setSections(courseData.sections || []);
-                    setIsEnrolled(enrolled);
-                    setReviews(reviewsData);
-                }
+                const enrollmentRes = await courseAPI.checkEnrollment(params.id);
+                enrolled = enrollmentRes.data?.data?.isEnrolled;
             } catch (err) {
-                console.error('Error fetching course data:', err);
-            } finally {
-                if (isMounted) setLoading(false);
+                console.error('Error checking enrollment:', err);
             }
-        };
 
-        fetchCourseData();
+            // Fetch reviews
+            let reviewsData = [];
+            try {
+                const reviewsRes = await reviewAPI.getAll({ course: params.id });
+                reviewsData = reviewsRes.data?.data?.data || [];
+            } catch (err) {
+                console.error('Error fetching reviews:', err);
+            }
 
-        return () => {
-            isMounted = false; // cleanup
-        };
+            setCourse(courseData);
+            setSections(courseData.sections || []);
+            setIsEnrolled(enrolled);
+            setReviews(reviewsData);
+            console.log('Reviews:', reviewsData);
+        } catch (err) {
+            console.error('Error fetching course data:', err);
+        } finally {
+            setLoading(false);
+        }
     }, [params.id]);
 
+    useEffect(() => {
+        fetchCourseData();
+    }, [fetchCourseData]);
+
+    const handleReviewAdded = () => {
+        fetchCourseData();
+
+        // Switch the tab to reviews
+        setActiveTab('reviews');
+    };
     const tabs = [
         { id: 'overview', label: 'Overview' },
         { id: 'content', label: 'Content' },
@@ -168,7 +159,7 @@ export default function CourseDetailPage() {
                                             />
                                         ))}
                                     </div>
-                                    <span className="text-gray-300">({formatNumber(course.reviewCount || 0)} ratings)</span>
+                                    <span className="text-gray-300">({formatNumber(course.ratingCount || 0)} ratings)</span>
                                 </div>
                             )}
 
@@ -260,12 +251,22 @@ export default function CourseDetailPage() {
                                 )}
 
                                 {activeTab === 'reviews' && (
-                                    <CourseReviews
-                                        reviews={reviews}
-                                        averageRating={course.rating}
-                                        totalReviews={course.reviewCount}
-                                    />
+                                    <>
+                                        <CourseReviews
+                                            reviews={reviews}
+                                            averageRating={course.rating}
+                                            totalReviews={course.ratingCount}
+                                        />
+                                        <ReviewForm
+                                            courseId={params.id}
+                                            isEnrolled={isEnrolled}
+                                            onReviewAdded={handleReviewAdded} />
+                                    </>
+
                                 )}
+                                {/* {activeTab === "review" && (
+
+                                )} */}
                             </div>
                         </div>
 

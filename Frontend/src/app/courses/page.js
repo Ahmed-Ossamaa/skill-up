@@ -118,7 +118,7 @@ export default function CoursesPage() {
             <main className="pt-32 pb-20 container mx-auto px-4">
                 {/* 1. Page Title Section */}
                 <div className="mb-10 text-center">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-slate-900  dark:text-white italic">
+                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter  dark:text-white italic">
                         EXPLORE <span className="text-primary-500">COURSES</span>
                     </h1>
                     <p className="text-slate-500 mt-2 font-medium">

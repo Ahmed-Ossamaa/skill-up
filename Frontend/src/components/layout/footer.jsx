@@ -65,11 +65,11 @@ export default function Footer() {
                             </div>
                             <div className="flex items-center space-x-3 text-gray-400">
                                 <FiPhone className="w-5 h-5" />
-                                <span>+1 (555) 123-4567</span>
+                                <span>+20 155 458 0561</span>
                             </div>
                             <div className="flex items-center space-x-3 text-gray-400">
                                 <FiMapPin className="w-5 h-5" />
-                                <span>San Francisco, CA</span>
+                                <span>Alexandria, Egypt</span>
                             </div>
                         </div>
                     </div>
