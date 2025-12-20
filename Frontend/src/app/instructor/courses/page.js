@@ -114,7 +114,7 @@ export default function MyCoursesPage() {
                     <InstructorCourseCard
                         key={course.id || course._id}
                         course={course}
-                        editHref={`/instructor/courses/${course.id || course._id}`}
+                        editHref={`/instructor/courses/${course.id || course._id}/curriculum`}
                         viewHref={`/courses/${course.id || course._id}`}
                         onTogglePublish={handleTogglePublish}
                         onDelete={handleDeleteCourse}

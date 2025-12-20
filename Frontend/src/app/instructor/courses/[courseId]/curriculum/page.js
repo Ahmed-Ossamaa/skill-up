@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import CurriculumWrapper from '@/components/courses/courseBuilder/CurriculumWrapper';
-import { courseAPI } from '@/lib/api'; // Assume courseAPI has a fetchCurriculum method
+import { courseAPI } from '@/lib/api';
 
 export default function CurriculumPage() {
     const params = useParams();
@@ -13,11 +13,9 @@ export default function CurriculumPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Initial Data Fetch
     const fetchContent = async () => {
         try {
             setLoading(true);
-            // API call to fetch Course and deeply populated Sections/Lessons
             const res = await courseAPI.getCourseContent(courseId);
             setCourse(res.data.data);
             setError(null);
@@ -53,8 +51,6 @@ export default function CurriculumPage() {
     }
 
     if (!course) return null;
-
-    // The main view delegates state management down to the wrapper
     return (
         <DashboardLayout role="instructor">
             <h1 className="text-3xl font-bold mb-4">Curriculum Builder: {course.title}</h1>
@@ -63,7 +59,7 @@ export default function CurriculumPage() {
             <CurriculumWrapper
                 initialCourse={course}
                 courseId={courseId}
-                refetch={fetchContent} // Pass refetch function for post-action updates
+                refetch={fetchContent}
             />
         </DashboardLayout>
     );

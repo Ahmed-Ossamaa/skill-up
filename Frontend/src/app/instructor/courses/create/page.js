@@ -2,31 +2,20 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-// React Hook Form & Zod
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-
-// Components & Hooks
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import useAuthStore from '@/store/authStore';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import useConfirmModal from '@/hooks/useConfirmModal';
 
-// APIs & Icons
 import { courseAPI, categoryAPI } from '@/lib/api';
-import {
-    FiSave,
-    FiX,
-    FiAlertCircle,
-    FiImage,
-    FiPlus, // Used for Add Array Item
-    FiTrash2, // Used for Remove Array Item
-} from 'react-icons/fi';
+import { FiSave, FiX, FiAlertCircle, FiImage, FiPlus, FiTrash2, } from 'react-icons/fi';
 import Image from 'next/image';
 
-// --- Zod Validation Schema (No Change) ---
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+// --- Zod Validation Schema  ---
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -46,22 +35,20 @@ const courseSchema = z
             .min(20, { message: 'Description must be at least 20 characters' }),
         category: z.string().min(1, { message: 'Category is required' }),
         level: z.enum(['beginner', 'intermediate', 'advanced', 'all levels']),
-        language: z.string().min(1, { message: 'Language is required' }),
+        language: z.string(),
         isFree: z.boolean(),
-        // Note: price and discount are validated in a refinement based on isFree
-        // Use z.string().pipe(z.coerce.number()) for better empty string handling if you don't use the ternary check below
         price: z.coerce.number().min(0, { message: 'Price must be a valid number' }),
         discount: z.coerce
             .number()
             .min(0, { message: 'Discount must be a valid number' })
             .max(100, { message: 'Discount cannot exceed 100%' }),
 
-        // Array fields, must have at least one non-empty item
+        // Array fields
         requirements: z.array(arrayItemSchema).min(1, { message: 'At least one requirement is required' }),
         learningOutcomes: z.array(arrayItemSchema).min(1, { message: 'At least one learning outcome is required' }),
         targetAudience: z.array(arrayItemSchema).min(1, { message: 'At least one target audience is required' }),
 
-        // Thumbnail validation (can be null/File)
+        // Thumbnail validation (Ok to be null)
         thumbnail: z
             .any()
             .refine((file) => file === null || file instanceof File, {
@@ -77,11 +64,11 @@ const courseSchema = z
                 }
             ),
     })
-    // Refinement for conditional logic (Price & Discount for paid courses)
+    // price & Discount for paid courses
     .superRefine((data, ctx) => {
         if (!data.isFree) {
             // Price required for paid course
-            // Check for price being 0 or equivalent to empty string after coercion
+            // Check for price being 0 or empty
             if (data.price <= 0 || data.price === null || data.price === undefined) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -90,8 +77,6 @@ const courseSchema = z
                 });
             }
 
-            // Discount check against price
-            // Ensure price is valid before checking discount against it
             if (data.price > 0 && data.discount >= data.price) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
@@ -102,9 +87,6 @@ const courseSchema = z
         }
     });
 
-// Infer the TypeScript type from the Zod schema
-// type CourseFormData = z.infer<typeof courseSchema>; // Kept as comment for context
-
 export default function CreateCoursePage() {
     const router = useRouter();
     const { user, isAuthenticated, isReady } = useAuthStore();
@@ -113,7 +95,7 @@ export default function CreateCoursePage() {
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
     const [message, setMessage] = useState({ type: '', text: '' });
-    const [thumbnailPreview, setThumbnailPreview] = useState(null); // Managed state for preview URL
+    const [thumbnailPreview, setThumbnailPreview] = useState(null);
 
     // --- React Hook Form Setup ---
     const {
@@ -130,7 +112,7 @@ export default function CreateCoursePage() {
             description: '',
             category: '',
             level: 'beginner',
-            price: 0, // Default to 0, will be validated based on isFree
+            price: 0, // Default 0, to be validated based on isFree
             discount: 0,
             isFree: false,
             language: 'English',
@@ -139,18 +121,18 @@ export default function CreateCoursePage() {
             targetAudience: [''],
             thumbnail: null,
         },
-        // Validate on blur/change for better UX
+        // Validate onBlur or onChange 
         mode: 'onTouched',
     });
 
-    // Watch fields for dynamic changes and progress calculation
+    // Watch fields for changes
     const watchedFields = watch();
     const isFreeWatched = watch('isFree');
     const priceWatched = watch('price');
     const discountWatched = watch('discount');
     const thumbnailWatched = watch('thumbnail');
 
-    // Use useFieldArray for dynamic lists (No Change)
+    // Array Fields
     const {
         fields: reqFields,
         append: appendReq,
@@ -194,7 +176,6 @@ export default function CreateCoursePage() {
             setThumbnailPreview(null);
         }
 
-        // Clean up the object URL that was created in THIS run
         return () => {
             if (newPreview) {
                 URL.revokeObjectURL(newPreview);
@@ -214,34 +195,32 @@ export default function CreateCoursePage() {
     // --- Helper Functions ---
     const handleThumbnailChange = (e) => {
         const file = e.target.files[0];
-        // RHF setValue to update the form state with the File object
+        //update the form state with the file
         setValue('thumbnail', file || null, { shouldValidate: true });
         e.target.value = null; // Clear the input so the same file can be selected again
     };
 
-    // NEW: Handler for isFree change to manage price/discount side effects
+    //  Handler for isFree change to manage price/discount 
     const handleIsFreeChange = (e) => {
         const isChecked = e.target.checked;
 
-        // 1. Update the isFree value
+        // Update the isFree value
         setValue('isFree', isChecked, { shouldValidate: true, shouldDirty: true });
 
-        // 2. Handle side effects on other fields
         if (isChecked) {
             // Set price/discount to 0 for free courses
             setValue('price', 0, { shouldValidate: true, shouldDirty: true });
             setValue('discount', 0, { shouldValidate: true, shouldDirty: true });
         } else {
-            // For paid courses, reset to default/empty if they were previously 0
+            //if they were not free >> the price is not 0
             if (priceWatched === 0) setValue('price', '', { shouldValidate: true, shouldDirty: true });
-            if (discountWatched === 0) setValue('discount', 0, { shouldValidate: true, shouldDirty: true }); // Keep discount at 0 or ''
+            if (discountWatched === 0) setValue('discount', 0, { shouldValidate: true, shouldDirty: true });
         }
     };
 
 
     const calculateFinalPrice = () => {
         if (isFreeWatched) return 0;
-        // Use the validated price and discount from RHF state
         const price = Number(priceWatched) || 0;
         const discount = Number(discountWatched) || 0;
 
@@ -273,17 +252,16 @@ export default function CreateCoursePage() {
         return Math.round((completed / total) * 100);
     }, [watchedFields, isFreeWatched]);
 
-    // --- Submission Handler (RHF) (No Change) ---
+    // --- Submission Handler ---
     const onSubmit = async (data) => {
-        // RHF has already validated the data via Zod
         setLoading(true);
         setMessage({ type: '', text: '' });
 
         try {
-            // Create FormData for file upload
+            //file upload
             const submitData = new FormData();
 
-            // Append basic fields (data is the validated object from Zod)
+            // Append basic fields
             submitData.append('title', data.title);
             submitData.append('description', data.description);
             submitData.append('category', data.category);
@@ -293,7 +271,7 @@ export default function CreateCoursePage() {
             submitData.append('price', data.isFree ? 0 : Number(data.price));
             submitData.append('discount', data.isFree ? 0 : Number(data.discount || 0));
 
-            // Append array fields (filter empty strings which shouldn't happen with Zod arrayItemSchema validation)
+            // Append array fields
             data.requirements.filter(r => r.trim()).forEach(req => {
                 submitData.append('requirements[]', req);
             });
@@ -314,7 +292,7 @@ export default function CreateCoursePage() {
 
             setMessage({ type: 'success', text: 'Course created successfully!' });
 
-            // Redirect to courses list after 1 second
+            // Redirect to courses list 
             setTimeout(() => {
                 router.push(`/instructor/courses`);
             }, 1000);
@@ -331,7 +309,6 @@ export default function CreateCoursePage() {
     };
 
     const handleCancel = () => {
-        // Check if form is dirty (RHF property) before confirming
         if (!isDirty) {
             router.push('/instructor/courses');
             return;
@@ -349,7 +326,6 @@ export default function CreateCoursePage() {
         });
     };
 
-    // --- Render Logic ---
     if (!isReady) {
         return (
             <DashboardLayout role="instructor">
@@ -362,7 +338,7 @@ export default function CreateCoursePage() {
 
     return (
         <DashboardLayout role="instructor">
-            {/* Progress Bar (No Change) */}
+            {/* Progress Bar*/}
             <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm p-4 mb-6 rounded-lg glass-card">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Form Progress</span>
@@ -376,7 +352,7 @@ export default function CreateCoursePage() {
                 </div>
             </div>
 
-            {/* Header (No Change) */}
+            {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold mb-2">Create New Course</h1>
                 <p className="text-gray-600 dark:text-gray-400">
@@ -384,12 +360,12 @@ export default function CreateCoursePage() {
                 </p>
             </div>
 
-            {/* Message Alert (No Change) */}
+            {/* Message Alert */}
             {message.text && (
                 <div
                     className={`mb-6 p-4 rounded-lg flex items-start space-x-3 animate-slide-down ${message.type === 'success'
-                            ? 'bg-green-500/20 border border-green-500/20 text-green-500'
-                            : 'bg-red-500/20 border border-red-500/20 text-red-500'
+                        ? 'bg-green-500/20 border border-green-500/20 text-green-500'
+                        : 'bg-red-500/20 border border-red-500/20 text-red-500'
                         }`}
                 >
                     <FiAlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
@@ -397,9 +373,9 @@ export default function CreateCoursePage() {
                 </div>
             )}
 
-            {/* Form - RHF's handleSubmit wraps the custom onSubmit */}
+            {/* Form  */}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                {/* Course Thumbnail (No Change) */}
+                {/* Course Thumbnail */}
                 <div className="glass-card p-6">
                     <h2 className="text-xl font-bold mb-4">Course Thumbnail</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -419,7 +395,6 @@ export default function CreateCoursePage() {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        // Clear the value in RHF state
                                         setValue('thumbnail', null, { shouldValidate: true });
                                     }}
                                     className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
@@ -453,7 +428,7 @@ export default function CreateCoursePage() {
                     </div>
                 </div>
 
-                {/* Basic Information (No Change) */}
+                {/* Basic Information*/}
                 <div className="glass-card p-6">
                     <h2 className="text-xl font-bold mb-6">Basic Information</h2>
 
@@ -465,7 +440,6 @@ export default function CreateCoursePage() {
                             </label>
                             <input
                                 type="text"
-                                // RHF registration
                                 {...register('title')}
                                 placeholder="e.g., Complete JavaScript Course for Beginners"
                                 className="w-full px-4 py-3 glass rounded-lg focus-ring"
@@ -485,7 +459,6 @@ export default function CreateCoursePage() {
                                 Description <span className="text-red-500">*</span>
                             </label>
                             <textarea
-                                // RHF registration
                                 {...register('description')}
                                 rows="6"
                                 placeholder="Describe what students will learn in this course..."
@@ -507,7 +480,6 @@ export default function CreateCoursePage() {
                                     Category <span className="text-red-500">*</span>
                                 </label>
                                 <select
-                                    // RHF registration
                                     {...register('category')}
                                     className="w-full px-4 py-3 glass rounded-lg focus-ring"
                                 >
@@ -526,7 +498,6 @@ export default function CreateCoursePage() {
                             <div>
                                 <label className="block text-sm font-medium mb-2">Level</label>
                                 <select
-                                    // RHF registration
                                     {...register('level')}
                                     className="w-full px-4 py-3 glass rounded-lg focus-ring"
                                 >
@@ -542,16 +513,18 @@ export default function CreateCoursePage() {
                         <div>
                             <label className="block text-sm font-medium mb-2">Language</label>
                             <select
-                                // RHF registration
                                 {...register('language')}
                                 className="w-full px-4 py-3 glass rounded-lg focus-ring"
                             >
                                 <option value="English">English</option>
-                                <option value="Spanish">Spanish</option>
-                                <option value="French">French</option>
-                                <option value="German">German</option>
                                 <option value="Arabic">Arabic</option>
+                                <option value="Spanish">Spanish</option>
+                                <option value="Portuguese">Portuguese</option>
+                                <option value="French">French</option>
+                                <option value="Italian">Italian</option>
+                                <option value="German">German</option>
                                 <option value="Chinese">Chinese</option>
+                                <option value="Russian">Russian</option>
                                 <option value="Hindi">Hindi</option>
                             </select>
                         </div>
@@ -562,14 +535,11 @@ export default function CreateCoursePage() {
                 <div className="glass-card p-6">
                     <h2 className="text-xl font-bold mb-4">Pricing</h2>
 
-                    {/* Free Course Toggle - UPDATED to use onChange handler */}
+                    {/* Free Course Toggle */}
                     <div className="mb-6 p-4 bg-primary-500/10 rounded-lg">
                         <label className="flex items-center cursor-pointer">
                             <input
                                 type="checkbox"
-                                // RHF registration for checkbox is REMOVED
-                                // {...register('isFree')}
-                                // RHF value/onChange used to manage side effects on other fields
                                 checked={isFreeWatched}
                                 onChange={handleIsFreeChange}
                                 className="w-5 h-5 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
@@ -593,8 +563,7 @@ export default function CreateCoursePage() {
                             </label>
                             <input
                                 type="number"
-                                // RHF registration (number fields must be coerced for number type validation)
-                                // Note: For an empty string to be validly set, the number type may need adjustment
+                                //needs test.......................
                                 {...register('price', { valueAsNumber: true })}
                                 placeholder="0"
                                 min="0"
@@ -614,7 +583,6 @@ export default function CreateCoursePage() {
                             </label>
                             <input
                                 type="number"
-                                // RHF registration
                                 {...register('discount', { valueAsNumber: true })}
                                 placeholder="0"
                                 min="0"
@@ -635,7 +603,7 @@ export default function CreateCoursePage() {
                     </div>
                 </div>
 
-                {/* Learning Outcomes (Array Field) (No Change) */}
+                {/* Learning Outcomes (Array Field)*/}
                 <div className="glass-card p-6">
                     <h2 className="text-xl font-bold mb-4">What Students Will Learn</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -647,7 +615,6 @@ export default function CreateCoursePage() {
                             <div key={field.id} className="flex items-center space-x-2">
                                 <input
                                     type="text"
-                                    // RHF registration for array field
                                     {...register(`learningOutcomes.${index}`)}
                                     placeholder={`Learning outcome ${index + 1}`}
                                     className="flex-1 px-4 py-2 glass rounded-lg focus-ring"
@@ -679,7 +646,7 @@ export default function CreateCoursePage() {
                     </button>
                 </div>
 
-                {/* Requirements (Array Field) (No Change) */}
+                {/* Requirements (Array Field)*/}
                 <div className="glass-card p-6">
                     <h2 className="text-xl font-bold mb-4">Requirements</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -691,7 +658,6 @@ export default function CreateCoursePage() {
                             <div key={field.id} className="flex items-center space-x-2">
                                 <input
                                     type="text"
-                                    // RHF registration for array field
                                     {...register(`requirements.${index}`)}
                                     placeholder={`Requirement ${index + 1}`}
                                     className="flex-1 px-4 py-2 glass rounded-lg focus-ring"
@@ -723,7 +689,7 @@ export default function CreateCoursePage() {
                     </button>
                 </div>
 
-                {/* Target Audience (Array Field) (No Change) */}
+                {/* Target Audience (Array Field)*/}
                 <div className="glass-card p-6">
                     <h2 className="text-xl font-bold mb-4">Target Audience</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
@@ -735,7 +701,6 @@ export default function CreateCoursePage() {
                             <div key={field.id} className="flex items-center space-x-2">
                                 <input
                                     type="text"
-                                    // RHF registration for array field
                                     {...register(`targetAudience.${index}`)}
                                     placeholder={`Target audience ${index + 1}`}
                                     className="flex-1 px-4 py-2 glass rounded-lg focus-ring"
@@ -767,7 +732,7 @@ export default function CreateCoursePage() {
                     </button>
                 </div>
 
-                {/* Actions (No Change) */}
+                {/* Actions*/}
                 <div className="flex justify-end space-x-4 sticky bottom-0 glass-card p-4">
                     <button
                         type="button"
@@ -799,8 +764,6 @@ export default function CreateCoursePage() {
                     </button>
                 </div>
             </form>
-
-            {/* Confirmation Modal (No Change) */}
             <ConfirmModal
                 isOpen={isOpen}
                 onClose={closeConfirm}

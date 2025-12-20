@@ -74,6 +74,7 @@ export const reviewAPI = {
 };
 
 export const userAPI = {
+    getMyProfile: () => api.get('/users/me'),
     getById: (id) => api.get(`/users/${id}`),
     update: (id, data) => api.patch(`/users/${id}`, data),
     uploadAvatar: (formData) => api.post('/uploads/users/me/avatar', formData, {
@@ -90,6 +91,7 @@ export const enrollmentAPI = {
 export const instructorAPI = {
     getAllInstructorStudents: () => api.get('/instructors/students'),
     getInstructorDashboard: () => api.get('/instructors/stats'),
+    getPublicProfile: (id) => api.get(`/instructors/profile/${id}`)
 }
 
 

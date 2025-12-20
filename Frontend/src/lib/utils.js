@@ -14,10 +14,10 @@ export function formatPrice(price, currency = 'USD') {
 
 // Format duration (sec >> h:mm | min)
 export function formatDuration(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    const hours = (seconds / 3600).toFixed(1);
+    const minutes = ((seconds % 3600) / 60).toFixed(1);
 
-    if (hours > 0) {
+    if (hours > 0.999) {
         return `${hours}h ${minutes}m`;
     }
     return `${minutes}m`;
