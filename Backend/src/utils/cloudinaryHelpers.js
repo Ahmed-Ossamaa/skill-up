@@ -6,7 +6,18 @@ const uploadToCloudinary = (fileBuffer, folder, resourceType = 'auto', options =
     return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             { folder, resource_type: resourceType, ...options },
-            (err, result) => (err ? reject(err) : resolve(result))
+            (err, result) => {
+                if (err) return reject(err);
+
+                resolve({
+                    secure_url: result.secure_url, 
+                    publicId: result.public_id,    
+                    format: result.format,
+                    resourceType: result.resource_type,
+                    duration: result.duration     
+                });
+            }
+
         );
 
         const pass = new PassThrough();
