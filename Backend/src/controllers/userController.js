@@ -17,7 +17,7 @@ class UserController {
 
     // GET /users/:id
     getUserById = asyncHandler(async (req, res) => {
-        const { id } = req.params;
+        const  id  = req.params.id || req.user.id;
 
         if (req.user.role !== 'admin' && req.user.id !== id) {
             throw ApiError.forbidden('Access denied');

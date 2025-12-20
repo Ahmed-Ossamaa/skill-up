@@ -13,11 +13,16 @@ class LessonController {
     }
 
     createLesson = asyncHandler(async (req, res) => {
-        const file = req.file? req.file: undefined;
+        const videoFile = req.files?.video ? req.files.video[0] : undefined;
+        const doc = req.files?.document ? req.files.document[0] : undefined;
+        const resourceFiles = req.files?.resourceFiles ? req.files.resourceFiles : [];
+
         const lesson = await this.lessonService.createLesson(
             {
                 ...req.body,
-                file
+                videoFile,
+                doc,
+                resourceFiles
             },
             req.user.id,
             req.user.role
@@ -26,15 +31,24 @@ class LessonController {
     });
 
     updateLesson = asyncHandler(async (req, res) => {
+        const videoFile = req.files?.video ? req.files.video[0] : undefined;
+        const doc = req.files?.document ? req.files.document[0] : undefined;
+        const resourceFiles = req.files?.resourceFiles ? req.files.resourceFiles : [];
 
         const lesson = await this.lessonService.updateLesson(
             req.params.id,
-            req.body,
+            {
+                ...req.body,
+                videoFile,
+                doc,
+                resourceFiles
+            },
             req.user.id,
             req.user.role
         );
         res.status(200).json({ message: 'Lesson updated', data: lesson });
     });
+
 
     deleteLesson = asyncHandler(async (req, res) => {
 
