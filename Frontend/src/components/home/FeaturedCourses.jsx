@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import { courseAPI } from '@/lib/api';
 import CourseCard from '@/components/courses/CourseCard';
 import { AiOutlineArrowRight } from 'react-icons/ai';
@@ -16,10 +17,18 @@ export default function FeaturedCourses() {
         const fetchCourses = async () => {
             try {
                 setLoading(true);
+
+                const sortMapping = {
+                    popular: '-studentsCount',
+                    new: '-createdAt',
+                    trending: '-ratingCount'
+                };
+
                 const params = {
                     limit: 8,
-                    sort: activeTab === 'popular' ? '-enrollmentCount' : '-createdAt',
+                    sort: sortMapping[activeTab] || '-createdAt',
                 };
+
                 const response = await courseAPI.getPublished(params);
                 const apiData = response.data?.data || {};
                 const coursesData = apiData.data || [];
@@ -123,6 +132,3 @@ export default function FeaturedCourses() {
     );
 }
 
-function cn(...classes) {
-    return classes.filter(Boolean).join(' ');
-}
