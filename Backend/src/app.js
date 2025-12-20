@@ -15,6 +15,7 @@ const enrollmentRoutes = require('./routes/enrollmentRoutes');
 const instructorRoutes = require('./routes/instructorRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const stripeWebhookRoute = require('./routes/stripeWebhook');
+const uploadRoutes = require('./routes/uploadRoutes');
 const ApiError = require('./utils/ApiError');
 const errorHandler = require('./middlewares/errorHandler');
 const cookieParser = require("cookie-parser");
@@ -46,6 +47,7 @@ app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/sections', sectionRoutes);
 app.use('/api/v1/feedback', feedbackRoutes);
 app.use("/api/v1/payments", paymentRoutes);
+app.use('/api/v1/upload',uploadRoutes);
 
 app.all(/.*/, (req, res, next) => {
     throw  ApiError.notFound(`Path ${req.originalUrl} not found`);
