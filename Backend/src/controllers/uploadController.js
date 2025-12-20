@@ -3,195 +3,230 @@ const ApiError = require('../utils/ApiError');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinaryHelpers');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
+const User = require('../models/User'); 
 
-// allowed types
+// Allowed MIME types
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const VIDEO_MIMES = ['video/mp4', 'video/mkv', 'video/webm', 'video/quicktime'];
-const RESOURCE_MIMES = ['application/pdf', 'application/vnd.openxmlformats-officedocument.presentationml.presentation']; // pdf + pptx
+const VIDEO_MIMES = ['video/mp4', 'video/mkv', 'video/webm', 'video/quicktime', 'video/x-matroska']; //mkv =matroska
+const RESOURCE_MIMES = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+    'application/vnd.ms-powerpoint' // .ppt
+];
 
-// ---------------------- Upload Avatar -------------------------
+// ======================= USER AVATAR =======================
+
 exports.uploadAvatar = asyncHandler(async (req, res) => {
-    if (!req.file) throw ApiError.badRequest('No file uploaded');
-    if (!IMAGE_MIMES.includes(req.file.mimetype)) throw ApiError.badRequest('Only images are allowed for avatars');
+    if (!req.file) throw ApiError.badRequest('No image file provided');
+    if (!IMAGE_MIMES.includes(req.file.mimetype)) throw ApiError.badRequest('Invalid image format');
 
-    const result = await uploadToCloudinary(req.file.buffer, `skillup/users/${req.user._id}/avatars`, 'image');
+    //  Upload new avatar
+    const folder = `skillup/users/${req.user._id}/avatars`;
+    const result = await uploadToCloudinary(req.file.buffer, folder, 'image');
 
-    // remove old avatar after new upload
-    const oldPublicId = req.user.avatarPublicId;
-    req.user.avatarUrl = result.secure_url;
-    req.user.avatarPublicId = result.publicId;
-    await req.user.save();
-
-    if (oldPublicId && oldPublicId !== result.publicId) {
+    // Delete old avatar
+    const oldPublicId = req.user.avatar?.publicId;
+    if (oldPublicId) {
         await deleteFromCloudinary(oldPublicId, 'image');
     }
 
-    res.status(200).json({ message: 'Avatar uploaded', url: result.secure_url, publicId: result.publicId });
+    // Update User
+    req.user.avatar = {
+        url: result.secure_url,
+        publicId: result.publicId,
+        type: req.file.mimetype
+    };
+    await req.user.save();
+
+    res.status(200).json({
+        status: 'success',
+        message: 'Avatar updated successfully',
+        data: req.user.avatar
+    });
 });
 
-// ---------------------- Delete Avatar -----------------------
 exports.deleteAvatar = asyncHandler(async (req, res) => {
-    const oldPublicId = req.user.avatarPublicId;
-    if (!oldPublicId) throw ApiError.notFound('No avatar to delete');
+    const publicId = req.user.avatar?.publicId;
+    if (!publicId) throw ApiError.notFound('No avatar to delete');
 
-    await deleteFromCloudinary(oldPublicId, 'image');
+    // Delete from Cloudinary
+    await deleteFromCloudinary(publicId, 'image');
 
-    req.user.avatarUrl = undefined;
-    req.user.avatarPublicId = undefined;
+    // Unset field in DB
+    req.user.avatar = undefined;
     await req.user.save();
 
-    res.json({ message: 'Avatar deleted' });
+    res.status(200).json({ status: 'success', message: 'Avatar deleted' });
 });
 
-// -------------------- Upload Course Thumbnail --------------------
+// ======================= COURSE THUMBNAIL =======================
+
 exports.uploadCourseThumbnail = asyncHandler(async (req, res) => {
-    if (!req.file) throw ApiError.badRequest('No file uploaded');
-    if (!IMAGE_MIMES.includes(req.file.mimetype)) throw ApiError.badRequest('Only images are allowed for thumbnails');
+    if (!req.file) throw ApiError.badRequest('No image file provided');
+    if (!IMAGE_MIMES.includes(req.file.mimetype)) throw ApiError.badRequest('Invalid image format');
 
-    const courseId = req.params.courseId;
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(req.params.courseId);
     if (!course) throw ApiError.notFound('Course not found');
 
+    // Ownership Check
     if (course.instructor.toString() !== req.user._id.toString()) {
-        throw ApiError.forbidden('You are not the owner of this course');
+        throw ApiError.forbidden('You are not authorized to modify this course');
     }
 
-    const result = await uploadToCloudinary(req.file.buffer, `skillup/courses/${courseId}/thumbnails`, 'image');
+    // Upload new thumbnail
+    const folder = `skillup/courses/${course._id}/thumbnails`;
+    const result = await uploadToCloudinary(req.file.buffer, folder, 'image');
 
-    const oldPublicId = course.thumbnailPublicId;
-    course.thumbnailUrl = result.secure_url;
-    course.thumbnailPublicId = result.publicId;
+    // Delete old thumbnail if exists
+    if (course.thumbnail?.publicId) {
+        await deleteFromCloudinary(course.thumbnail.publicId, 'image');
+    }
+
+    // Save to DB
+    course.thumbnail = {
+        url: result.secure_url,
+        publicId: result.publicId
+    };
     await course.save();
 
-    if (oldPublicId && oldPublicId !== result.publicId) {
-        await deleteFromCloudinary(oldPublicId, 'image');
-    }
-
-    res.status(200).json({ message: 'Thumbnail uploaded', url: result.secure_url, publicId: result.publicId });
+    res.status(200).json({
+        status: 'success',
+        message: 'Thumbnail uploaded',
+        data: course.thumbnail
+    });
 });
 
-// -------------------- Delete Course Thumbnail --------------------
 exports.deleteCourseThumbnail = asyncHandler(async (req, res) => {
-    const courseId = req.params.courseId;
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(req.params.courseId);
     if (!course) throw ApiError.notFound('Course not found');
 
     if (course.instructor.toString() !== req.user._id.toString()) {
-        throw ApiError.forbidden('You are not the owner of this course');
+        throw ApiError.forbidden('Not authorized');
     }
 
-    if (!course.thumbnailPublicId) throw ApiError.notFound('No thumbnail to delete');
+    if (!course.thumbnail?.publicId) throw ApiError.notFound('No thumbnail to delete');
 
-    await deleteFromCloudinary(course.thumbnailPublicId, 'image');
+    await deleteFromCloudinary(course.thumbnail.publicId, 'image');
 
-    course.thumbnailUrl = undefined;
-    course.thumbnailPublicId = undefined;
+    course.thumbnail = undefined;
     await course.save();
 
-    res.json({ message: 'Thumbnail deleted' });
+    res.status(200).json({ status: 'success', message: 'Thumbnail deleted' });
 });
 
-// ---------------------- Upload Lesson Video ----------------------
+// ======================= LESSON VIDEO =======================
+
 exports.uploadLessonVideo = asyncHandler(async (req, res) => {
-    if (!req.file) throw ApiError.badRequest('No file uploaded');
+    if (!req.file) throw ApiError.badRequest('No video file provided');
     if (!VIDEO_MIMES.includes(req.file.mimetype)) throw ApiError.badRequest('Invalid video format');
 
-    const lessonId = req.params.lessonId;
-    const lesson = await Lesson.findById(lessonId).populate('course', '_id title instructor');
+    const lesson = await Lesson.findById(req.params.lessonId).populate('course');
     if (!lesson) throw ApiError.notFound('Lesson not found');
 
     if (lesson.course.instructor.toString() !== req.user._id.toString()) {
-        throw ApiError.forbidden('You are not the owner of this course');
+        throw ApiError.forbidden('Not authorized');
     }
 
-    const result = await uploadToCloudinary(req.file.buffer, `skillup/lessons/${lessonId}/videos`, 'video');
+    // Upload Video
+    const folder = `skillup/lessons/${lesson._id}/videos`;
+    const result = await uploadToCloudinary(req.file.buffer, folder, 'video');
 
-    const oldPublicId = lesson.video.publicId;
-    lesson.video.url = result.url;
-    lesson.videoPublicId = result.publicId;
-    lesson.duration = result.duration || lesson.duration || null;
+    // Delete old video
+    if (lesson.video?.publicId) {
+        await deleteFromCloudinary(lesson.video.publicId, 'video');
+    }
+
+    // Update Lesson 
+    lesson.video = {
+        url: result.secure_url,
+        publicId: result.publicId,
+        duration: result.duration || 0 
+    };
+
+    lesson.markModified('video');
     await lesson.save();
 
-    if (oldPublicId && oldPublicId !== result.publicId) {
-        await deleteFromCloudinary(oldPublicId, 'video');
-    }
-
-    res.status(200).json({ message: 'Video uploaded', url: result.secure_url, publicId: result.publicId, duration: result.duration|| lesson.duration});
+    res.status(200).json({
+        status: 'success',
+        message: 'Video uploaded successfully',
+        data: lesson.video
+    });
 });
 
-// ----------------------- Delete Lesson Video -----------------------
 exports.deleteLessonVideo = asyncHandler(async (req, res) => {
-    const lessonId = req.params.lessonId;
-    const lesson = await Lesson.findById(lessonId).populate('course', '_id title instructor');
+    const lesson = await Lesson.findById(req.params.lessonId).populate('course');
     if (!lesson) throw ApiError.notFound('Lesson not found');
 
     if (lesson.course.instructor.toString() !== req.user._id.toString()) {
-        throw ApiError.forbidden('You are not the owner of this course');
+        throw ApiError.forbidden('Not authorized');
     }
 
-    if (!lesson.videoPublicId) throw ApiError.notFound('No video to delete');
+    if (!lesson.video?.publicId) throw ApiError.notFound('No video to delete');
 
-    await deleteFromCloudinary(lesson.videoPublicId, 'video');
+    await deleteFromCloudinary(lesson.video.publicId, 'video');
 
-    lesson.videoUrl = undefined;
-    lesson.videoPublicId = undefined;
-    lesson.duration = undefined;
+    lesson.video = undefined;
     await lesson.save();
 
-    res.json({ message: 'Lesson video deleted' });
+    res.status(200).json({ status: 'success', message: 'Video deleted' });
 });
 
-// -------------------- Upload Lesson Resource  --------------------
+// ======================= LESSON RESOURCES =======================
+
 exports.uploadLessonResource = asyncHandler(async (req, res) => {
     if (!req.file) throw ApiError.badRequest('No file uploaded');
-    if (!RESOURCE_MIMES.includes(req.file.mimetype)) {
-        throw ApiError.badRequest('Only PDF and PPTX are allowed')
-    };
+    if (!RESOURCE_MIMES.includes(req.file.mimetype)) throw ApiError.badRequest('Only PDF and PowerPoint files are allowed');
 
-    const lessonId = req.params.lessonId;
-    const lesson = await Lesson.findById(lessonId).populate('course', '_id title instructor');
+    const lesson = await Lesson.findById(req.params.lessonId).populate('course');
     if (!lesson) throw ApiError.notFound('Lesson not found');
 
     if (lesson.course.instructor.toString() !== req.user._id.toString()) {
-        throw ApiError.forbidden('You are not the owner of this course');
+        throw ApiError.forbidden('Not authorized');
     }
 
-    const folderPath = `skillup/lessons/${lessonId}/resources`;
-    const result = await uploadToCloudinary(req.file.buffer, folderPath, 'raw');
+    //  Upload Resource 
+    const folder = `skillup/lessons/${lesson._id}/resources`;
+    const result = await uploadToCloudinary(req.file.buffer, folder, 'auto');
 
-    const fileData = {
-        fileUrl: result.secure_url,
-        filePublicId: result.publicId,
-        fileName: req.file.originalname,
-        fileType: req.file.mimetype
+    const newResource = {
+        name: req.file.originalname,
+        url: result.secure_url,
+        publicId: result.publicId,
+        type: req.file.mimetype,
+        size: req.file.size 
     };
 
-    lesson.resources = lesson.resources || [];
-    lesson.resources.push(fileData);
+    // Push to array
+    lesson.resources.push(newResource);
     await lesson.save();
 
-    res.status(200).json({ message: 'Resource uploaded', resource: fileData });
+    res.status(200).json({
+        status: 'success',
+        message: 'Resource added',
+        data: newResource
+    });
 });
-
-// -------------------- Delete Lesson Resource --------------------
+// :lessonId/resources/:publicId
 exports.deleteLessonResource = asyncHandler(async (req, res) => {
-    const lessonId = req.params.lessonId;
-    const publicId = req.params.publicId;
-    if (!publicId) throw ApiError.badRequest('publicId is required');
+    const { lessonId, publicId } = req.params; 
 
     const lesson = await Lesson.findById(lessonId).populate('course');
     if (!lesson) throw ApiError.notFound('Lesson not found');
 
     if (lesson.course.instructor.toString() !== req.user._id.toString()) {
-        throw ApiError.forbidden('You are not the owner of this course');
+        throw ApiError.forbidden('Not authorized');
     }
 
-    // remove resource from lesson.resources
-    lesson.resources = (lesson.resources || []).filter(r => r.filePublicId !== publicId);
+    // Find the resource to ensure it exists
+    const resourceIndex = lesson.resources.findIndex(r => r.publicId === publicId);
+    if (resourceIndex === -1) throw ApiError.notFound('Resource not found in this lesson');
+
+    //  Delete from Cloudinary
+    await deleteFromCloudinary(publicId, 'image'); // cloudinary loves images idk why
+
+    // Remove from Array
+    lesson.resources.splice(resourceIndex, 1);
     await lesson.save();
 
-    // delete from cloudinary
-    await deleteFromCloudinary(publicId, 'raw');
-
-    res.json({ message: 'Resource deleted' });
+    res.status(200).json({ status: 'success', message: 'Resource deleted' });
 });

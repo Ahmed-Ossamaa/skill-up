@@ -13,6 +13,7 @@ router.get('/', isAdmin, userController.getAllUsers);
 router.delete('/:id', isAdmin, validate(objIdSchema, 'params'), userController.deleteUser);
 
 // ================== User Routes ==================
+router.get('/me', userController.getUserById);
 router.get('/:id', validate(objIdSchema, 'params'), userController.getUserById);
 router.patch('/:id', validate(objIdSchema, 'params'), validate(updateUserSchema), userController.updateUser);
 
