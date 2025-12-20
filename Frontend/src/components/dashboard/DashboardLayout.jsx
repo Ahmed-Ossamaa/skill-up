@@ -45,7 +45,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 { icon: FiBarChart, label: 'Analytics', href: '/instructor/analytics' },
                 { icon: FiDollarSign, label: 'Revenue', href: '/instructor/revenue' },
                 { icon: FiMessageSquare, label: 'Reviews', href: '/instructor/reviews' },
-                { icon: FiSettings, label: 'Profile', href: '/instructor/profile' },
+                { icon: FiSettings, label: 'Profile', href: '/profile' },
             ];
         } else {
             return [
@@ -54,7 +54,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 { icon: FiBookOpen, label: 'Courses', href: '/courses' },
                 { icon: FiAward, label: 'Certificates', href: '/student/certificates' },
                 { icon: FiTrendingUp, label: 'Progress', href: '/student/progress' },
-                { icon: FiSettings, label: 'Profile', href: '/student/profile' },
+                { icon: FiSettings, label: 'Profile', href: '/profile' },
             ];
         }
     };
