@@ -31,7 +31,14 @@ class EnrollmentService {
 
     async getMyEnrollments(studentId) {
         return Enrollment.find({ student: studentId })
-            .populate("course", "title thumbnail instructor slug rating price");
+            .populate({
+                path: "course",
+                select: "title thumbnail instructor slug rating price",
+                populate: {
+                    path: "instructor",
+                    select: "name email"
+                }
+            })
     }
 
     async isUserEnrolled(studentId, courseId) {

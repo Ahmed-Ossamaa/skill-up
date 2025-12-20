@@ -113,12 +113,14 @@ class LessonService {
             data.section,
             { $push: { lessons: lesson._id } }
         );
+        //to fix progress of students after adding a new lesson
+        await this.recalculateCourseProgress(data.course);
 
         return lesson;
     }
 
 
-async updateLesson(lessonId, data, userId, userRole) {
+    async updateLesson(lessonId, data, userId, userRole) {
         const lesson = await this.Lesson.findById(lessonId).populate({
             path: 'section',
             populate: { path: 'course' }
@@ -264,6 +266,8 @@ async updateLesson(lessonId, data, userId, userRole) {
                 { $pull: { lessons: lesson._id } }
             );
         }
+        // Recalculate course progress for students after deleteing a lesson
+        await this.recalculateCourseProgress(data.course);
 
         await lesson.deleteOne();
     }
@@ -338,6 +342,52 @@ async updateLesson(lessonId, data, userId, userRole) {
         return enrollment;
     }
 
+
+    /**
+     * Recalculates course progress for all enrolled students in the given course
+     * @param {ObjectId} courseId - the ID of the course to recalculate progress for
+     */
+    async recalculateCourseProgress(courseId) {
+        const totalLessons = await this.Lesson.countDocuments({ course: courseId });
+
+        if (totalLessons === 0) return;
+
+        await this.Enrollment.updateMany(
+            { course: courseId },
+            [
+                {
+                    $set: {
+                        "progress.percentage": {
+                            $multiply: [
+                                { $divide: [{ $size: "$progress.completedLessons" }, totalLessons] },
+                                100
+                            ]
+                        }
+                    }
+                },
+                //  If progress drops below 100%, staus:enrolled instead of :completed
+                {
+                    $set: {
+                        status: {
+                            $cond: {
+                                if: { $lt: ["$progress.percentage", 100] },
+                                then: "enrolled",
+                                else: "completed" //
+                            }
+                        },
+                        // reset CompletedAt if not 100%
+                        completedAt: {
+                            $cond: {
+                                if: { $lt: ["$progress.percentage", 100] },
+                                then: null,
+                                else: "$completedAt"
+                            }
+                        }
+                    }
+                }
+            ]
+        );
+    }
 }
 
 module.exports = LessonService;
