@@ -2,9 +2,10 @@ const mongoose = require('mongoose');
 
 
 class InstructorService {
-    constructor(CourseModel, EnrollmentModel) {
+    constructor(CourseModel, EnrollmentModel, UserModel) {
         this.Course = CourseModel;
         this.Enrollment = EnrollmentModel;
+        this.User = UserModel;
     }
 
 
@@ -78,89 +79,74 @@ class InstructorService {
 
 
     /**
-     * Retrieves instructor statistics.
+     * Get instructor stats, including course stats, lifetime totals, and current month activity
      * @param {ObjectId} instructorId
-     * @returns {Promise<Object>}
-     * @fulfill {Object} with the following properties:
-     *   - courses {number}: Total number of courses created by the instructor
-     *   - rating {number}: Average rating of the instructor's courses
-     *   - students {number}: Total number of students enrolled in the instructor's courses
-     *   - revenue {number}: Total revenue earned by the instructor
-     *   - revenueTrend {string}: Trend of revenue (in %) compared to the previous month
-     *   - revenueTrendDir {string}: Direction of revenue trend (up or down)
-     *   - studentTrend {string}: Trend of students (in %) compared to the previous month
-     *   - studentTrendDir {string}: Direction of student trend (up or down)
+     * @returns {Promise<Object>} containing course stats, lifetime totals, and current month activity
      */
-async getInstructorStats(instructorId) {
-    const id = new mongoose.Types.ObjectId(String(instructorId));
-    const now = new Date();
-    
-    // We only need the start of the CURRENT month to calculate growth "This Month"
-    const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    async getInstructorStats(instructorId) {
+        const id = new mongoose.Types.ObjectId(String(instructorId));
+        const now = new Date();
 
-    const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
+        const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [courseData, lifetimeStats, currentMonthStats] = await Promise.all([
-        // 1. Course Stats (Average Rating)
-        this.Course.aggregate([
-            { $match: { instructor: id } },
-            { 
-                $group: { 
-                    _id: null, 
-                    totalCourses: { $sum: 1 }, 
-                    avgRating: { 
-                        $avg: { $cond: [{ $gt: ["$ratingCount", 0] }, "$rating", "$$REMOVE"] } 
-                    } 
-                } 
-            }
-        ]),
-        
-        // 2. Lifetime Totals (The "Big Numbers" on your card)
-        this.Enrollment.aggregate([
-            { $match: { course: { $in: courseIds } } },
-            { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
-        ]),
+        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
 
-        // 3. Current Month Activity (To calculate how much we grew this month)
-        this.Enrollment.aggregate([
-            { $match: { course: { $in: courseIds }, enrolledAt: { $gte: startOfCurrentMonth } } },
-            { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
-        ])
-    ]);
+        const [courseData, lifetimeStats, currentMonthStats] = await Promise.all([
+            // Course Stats (Average Rating)
+            this.Course.aggregate([
+                { $match: { instructor: id } },
+                {
+                    $group: {
+                        _id: null,
+                        totalCourses: { $sum: 1 },
+                        avgRating: {
+                            $avg: { $cond: [{ $gt: ["$ratingCount", 0] }, "$rating", "$$REMOVE"] }
+                        }
+                    }
+                }
+            ]),
 
-    // --- Data Extraction ---
-    const total = lifetimeStats[0] || { count: 0, amount: 0 };
-    const current = currentMonthStats[0] || { count: 0, amount: 0 };
+            // Lifetime Totals 
+            this.Enrollment.aggregate([
+                { $match: { course: { $in: courseIds } } },
+                { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
+            ]),
 
-    // --- The "Real World" Math ---
-    
-    // 1. Reconstruct the state at the start of the month
-    // If Total is 4 and we gained 3 this month, then Start was 1.
-    const startStudents = total.count - current.count;
-    const startRevenue = total.amount - current.amount;
+            // Current Month Activity 
+            this.Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, enrolledAt: { $gte: startOfCurrentMonth } } },
+                { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
+            ])
+        ]);
 
-    // 2. Helper for Cumulative Growth Trend
-    const calculateGrowth = (currentTotal, startTotal) => {
-        if (startTotal === 0) return currentTotal > 0 ? "100.0" : "0.0";
-        return (((currentTotal - startTotal) / startTotal) * 100).toFixed(1);
-    };
+        // --- Data Extraction ---
+        const total = lifetimeStats[0] || { count: 0, amount: 0 };
+        const current = currentMonthStats[0] || { count: 0, amount: 0 };
 
-    return {
-        courses: courseData[0]?.totalCourses || 0,
-        rating: courseData[0]?.avgRating?.toFixed(1) || "0.0",
-        
-        // Displaying Lifetime Totals
-        students: total.count,
-        revenue: total.amount,
-        
-        // Trend: "How much bigger is my total now compared to the start of the month?"
-        revenueTrend: `${calculateGrowth(total.amount, startRevenue)}%`,
-        revenueTrendDir: current.amount > 0 ? 'up' : 'down', // Simple logic: if we made money this month, the total went up.
-        
-        studentTrend: `${calculateGrowth(total.count, startStudents)}%`,
-        studentTrendDir: current.count > 0 ? 'up' : 'down'
-    };
-}
+        const startStudents = total.count - current.count;
+        const startRevenue = total.amount - current.amount;
+
+        //Cumulative Growth
+        const calculateGrowth = (currentTotal, startTotal) => {
+            if (startTotal === 0) return currentTotal > 0 ? "100.0" : "0.0";
+            return (((currentTotal - startTotal) / startTotal) * 100).toFixed(1);
+        };
+
+        return {
+            courses: courseData[0]?.totalCourses || 0,
+            rating: courseData[0]?.avgRating?.toFixed(1) || "0.0",
+
+            // Displaying Lifetime Totals
+            students: total.count,
+            revenue: total.amount,
+
+            revenueTrend: `${calculateGrowth(total.amount, startRevenue)}%`,
+            revenueTrendDir: current.amount > 0 ? 'up' : 'down',
+
+            studentTrend: `${calculateGrowth(total.count, startStudents)}%`,
+            studentTrendDir: current.count > 0 ? 'up' : 'down'
+        };
+    }
 
 
     /**
@@ -240,6 +226,66 @@ async getInstructorStats(instructorId) {
             },
             { $sort: { studentCount: -1 } } // Sort by most popular
         ]);
+    }
+
+
+    /**
+     * Retrieves the public profile of an instructor with the given id.
+     * The public profile includes the instructor's basic information, stats, and published courses.
+     * @param {string} instructorId - The id of the instructor
+     * @returns {Promise<Object>} - An object containing the instructor's public profile
+     */
+    async getPublicProfile(instructorId) {
+        const id = new mongoose.Types.ObjectId(String(instructorId));
+
+        // all course _IDs 
+        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
+
+        const [instructor, stats, courses] = await Promise.all([
+            // Basic Public Info
+            this.User.findById(id).select('name avatar bio headline website linkedin github twitter'),
+
+            // stats 
+            (async () => {
+                const [courseStats, studentCount] = await Promise.all([
+                    this.Course.aggregate([
+                        { $match: { _id: { $in: courseIds }, status: 'published' } },
+                        {
+                            $group: {
+                                _id: null,
+                                totalReviews: { $sum: "$ratingCount" },
+                                avgRating: {
+                                    $avg: { $cond: [{ $gt: ["$ratingCount", 0] }, "$rating", "$$REMOVE"] }
+                                }
+                            }
+                        }
+                    ]),
+                    // Live count of students from the Enrollment
+                    this.Enrollment.countDocuments({ course: { $in: courseIds } })
+                ]);
+
+                return {
+                    totalStudents: studentCount || 0,
+                    totalReviews: courseStats[0]?.totalReviews || 0,
+                    avgRating: courseStats[0]?.avgRating?.toFixed(1) || 0
+                };
+            })(),
+
+            //instructor published courses
+            this.Course.find({ instructor: id, status: 'published' })
+                .select('title thumbnail price rating ratingCount level slug category instructor')
+                .populate('instructor', 'name')
+                .populate('category', 'name')
+                .sort({ createdAt: -1 })
+        ]);
+
+        if (!instructor) throw new Error('Instructor not found');
+
+        return {
+            instructor,
+            stats: stats || { totalStudents: 0, totalReviews: 0, avgRating: 0 },
+            courses
+        };
     }
 }
 

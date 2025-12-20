@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
+const User = require('../models/User');
 const InstructorService = require('../services/InstructorService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
@@ -8,7 +9,7 @@ const ApiError = require('../utils/ApiError');
 
 class InstructorController {
     constructor() {
-        this.instructorService = new InstructorService(Course, Enrollment,);
+        this.instructorService = new InstructorService(Course, Enrollment, User);
     }
 
     getAllInstructorStudents = asyncHandler(async (req, res) => {
@@ -24,7 +25,7 @@ class InstructorController {
         const [stats, chartData, coursePerformance] = await Promise.all([
             this.instructorService.getInstructorStats(instructorId),
             this.instructorService.getRevenueAnalytics(instructorId),
-            this.instructorService.getCoursePerformance(instructorId) 
+            this.instructorService.getCoursePerformance(instructorId)
         ]);
 
         res.status(200).json({
@@ -35,6 +36,13 @@ class InstructorController {
                 coursePerformance  // table
             }
         });
+    });
+
+
+    getPublicProfile = asyncHandler(async (req, res) => {
+        const instructorId = req.params.instructorId;
+        const profile = await this.instructorService.getPublicProfile(instructorId);
+        res.status(200).json({ data: profile });
     });
 
 }
