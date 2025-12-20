@@ -1,12 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { HiOutlineAcademicCap, HiOutlineUsers, HiOutlineStar } from 'react-icons/hi';
-import { FiPlay } from 'react-icons/fi';
-import { formatNumber } from '@/lib/utils';
+
 
 export default function CourseInstructor({ instructor }) {
     if (!instructor) return null;
-
+    console.log("instructor", instructor);
     return (
         <div className="glass-card p-6">
             <h2 className="text-2xl font-bold mb-6">Instructor</h2>
@@ -16,7 +14,7 @@ export default function CourseInstructor({ instructor }) {
                 <Link href={`/instructor/${instructor._id}`} className="shrink-0">
                     {instructor.avatar ? (
                         <Image
-                            src={instructor.avatar}
+                            src={instructor.avatar.url }
                             alt={instructor.name}
                             width={80}
                             height={80}
@@ -31,50 +29,20 @@ export default function CourseInstructor({ instructor }) {
 
                 {/* Info */}
                 <div className="flex-1">
-                    <Link href={`/instructor/${instructor._id}`} className="hover:text-primary-500 transition-colors">
-                        <h3 className="text-xl font-bold mb-1">{instructor.name}</h3>
+                    <Link href={`/instructor/${instructor._id}`} className="hover:text-primary-500 transition-colors flex items-center ">
+                        <h3 className="text-xl font-bold mb-1 underline">{instructor.name} </h3>
                     </Link>
-                    {instructor.title && (
-                        <p className="text-gray-600 dark:text-gray-400 mb-3">{instructor.title}</p>
+                    {instructor.headline && (
+                        <p className="text-gray-600 dark:text-gray-400 mb-3">{instructor.headline}</p>
                     )}
 
-                    {/* Stats */}
-                    <div className="flex flex-wrap gap-4 text-sm">
-                        {instructor.rating && (
-                            <div className="flex items-center space-x-1">
-                                <HiOutlineStar className="w-4 h-4 text-yellow-500" />
-                                <span className="font-semibold">{instructor.rating.toFixed(1)}</span>
-                                <span className="text-gray-500">Instructor Rating</span>
-                            </div>
-                        )}
-                        {instructor.reviewCount && (
-                            <div className="flex items-center space-x-1">
-                                <span className="font-semibold">{formatNumber(instructor.reviewCount)}</span>
-                                <span className="text-gray-500">Reviews</span>
-                            </div>
-                        )}
-                        {instructor.studentsCount && (
-                            <div className="flex items-center space-x-1">
-                                <HiOutlineUsers className="w-4 h-4" />
-                                <span className="font-semibold">{formatNumber(instructor.studentsCount)}</span>
-                                <span className="text-gray-500">Students</span>
-                            </div>
-                        )}
-                        {instructor.coursesCount && (
-                            <div className="flex items-center space-x-1">
-                                <HiOutlineAcademicCap className="w-4 h-4" />
-                                <span className="font-semibold">{instructor.coursesCount}</span>
-                                <span className="text-gray-500">Courses</span>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </div>
 
             {/* Bio */}
             {instructor.bio && (
-                <div className="prose prose-gray dark:prose-invert max-w-none">
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                <div className="my-2 py-5">
+                    <p className="text-gray-800 dark:text-gray-300 leading-relaxed">
                         {instructor.bio}
                     </p>
                 </div>
