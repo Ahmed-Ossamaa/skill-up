@@ -14,12 +14,12 @@ class CourseService {
 
     async getCourseForUser(courseId, user = null) {
         const course = await this.Course.findById(courseId)
-            .populate('instructor', 'name email avatar title')
+            .populate('instructor', 'name email avatar title headline bio')
             .populate({
                 path: 'sections',
                 populate: {
                     path: 'lessons',
-                    select: 'title type duration isPreview video description'
+                    select: 'title type duration isPreview video description documents resources duration'
                 }
             });
 
@@ -46,11 +46,11 @@ class CourseService {
                 duration: lesson.duration,
                 isPreview: lesson.isPreview,
                 accessible: isOwnerOrAdmin || isEnrolled || lesson.isPreview,
-                // Only include sensitive info if accessible
-                ...(isOwnerOrAdmin || isEnrolled ? {
+                    video: lesson.video,
                     videoUrl: lesson.video?.url,
                     description: lesson.description,
-                } : {})
+                    documents: lesson.documents,
+                    resources: lesson.resources
             })),
         }));
 
@@ -76,7 +76,7 @@ class CourseService {
             : null;
 
         const thumbnail = uploadResults
-            ? { url: uploadResults.secure_url, publicId: uploadResults.public_id, type: "image" }
+            ? { url: uploadResults.secure_url, publicId: uploadResults.publicId, type: "image" }
             : undefined;
 
         const course = await this.Course.create({
@@ -150,20 +150,51 @@ class CourseService {
 
     // ==================== Listings ====================
 
-    async getPublishedCourses(page = 1, limit = 10, filters = {}) {
+async getPublishedCourses(page = 1, limit = 10, filters = {}) {
         const skip = (page - 1) * limit;
         const query = { status: 'published' };
+
+        // Text Search 
+        if (filters.search) {
+            query.$or = [
+                { title: { $regex: filters.search, $options: 'i' } },
+            ];
+        }
+
+        // Exact Filters
         if (filters.level) query.level = filters.level;
         if (filters.category) query.category = filters.category;
-        if (filters.priceMin !== undefined) query.price = { $gte: filters.priceMin };
-        if (filters.priceMax !== undefined) query.price = { ...query.price, $lte: filters.priceMax };
         if (filters.instructor) query.instructor = filters.instructor;
 
+        // Price Filter 
+        if (filters.priceMin !== undefined || filters.priceMax !== undefined) {
+            query.price = {};
+            if (filters.priceMin !== undefined) query.price.$gte = Number(filters.priceMin);
+            if (filters.priceMax !== undefined) query.price.$lte = Number(filters.priceMax);
+        }
+        if (filters.isFree === 'true' || filters.isFree === true) query.price = 0;
+        if (filters.isFree === 'false' || filters.isFree === false) query.price = { $ne: 0};
+
+        // Rating Filter
+        if (filters.rating) {
+            query.averageRating = { $gte: Number(filters.rating) }; 
+        }
+
+        //Sorting
+        let sort = { createdAt: -1 }; // Default
+        if (filters.sort) {
+            const sortField = filters.sort.replace('-', '');
+            const direction = filters.sort.startsWith('-') ? -1 : 1;
+            sort = { [sortField]: direction };
+        }
+
         const [courses, total] = await Promise.all([
-            this.Course.find(query).skip(skip).limit(limit)
+            this.Course.find(query)
+                .skip(skip)
+                .limit(limit)
                 .populate('instructor', 'name')
                 .populate('category', 'name')
-                .sort({ createdAt: -1 }),
+                .sort(sort), 
             this.Course.countDocuments(query)
         ]);
 
@@ -175,7 +206,6 @@ class CourseService {
             data: courses
         };
     }
-
     async getInstructorCourses(instructorId, page = 1, limit = 10) {
         const skip = (page - 1) * limit;
         const [courses, total] = await Promise.all([

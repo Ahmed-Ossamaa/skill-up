@@ -57,6 +57,7 @@ exports.webhookHandler = async (req, res) => {
 
                 await Course.findByIdAndUpdate(courseId, {
                     $addToSet: { students: userId },
+                    $inc: { studentsCount: 1 }
                 });
             }
 

@@ -20,7 +20,11 @@ class CourseController {
             category: req.query.category,
             priceMin: req.query.priceMin ? parseFloat(req.query.priceMin) : undefined,
             priceMax: req.query.priceMax ? parseFloat(req.query.priceMax) : undefined,
-            instructor: req.query.instructor
+            isFree: req.query.isFree, 
+            instructor: req.query.instructor,
+            search: req.query.search, 
+            rating: req.query.rating, 
+            sort: req.query.sort     
         };
         const courses = await this.courseService.getPublishedCourses(page, limit, filters);
         res.status(200).json({ data: courses });
@@ -87,13 +91,13 @@ class CourseController {
 
     //checkEnrollment 
     checkEnrollment = asyncHandler(async (req, res) => {
-    const courseId = req.params.id;
-    const isEnrolled = await this.courseService.checkEnrollment(courseId, req.user?._id);
-    res.status(200).json({ 
-        success: true,
-        data: { isEnrolled }
+        const courseId = req.params.id;
+        const isEnrolled = await this.courseService.checkEnrollment(courseId, req.user?._id);
+        res.status(200).json({
+            success: true,
+            data: { isEnrolled }
+        });
     });
-});
 }
 
 module.exports = new CourseController();

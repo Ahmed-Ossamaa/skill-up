@@ -47,7 +47,7 @@ app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/sections', sectionRoutes);
 app.use('/api/v1/feedback', feedbackRoutes);
 app.use("/api/v1/payments", paymentRoutes);
-app.use('/api/v1/upload',uploadRoutes);
+app.use('/api/v1/uploads',uploadRoutes);
 
 app.all(/.*/, (req, res, next) => {
     throw  ApiError.notFound(`Path ${req.originalUrl} not found`);
