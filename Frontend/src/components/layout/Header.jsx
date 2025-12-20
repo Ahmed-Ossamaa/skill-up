@@ -2,19 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { FiSearch, FiShoppingCart, FiUser, FiMenu, FiX } from 'react-icons/fi';
+import { usePathname, useRouter } from 'next/navigation';
+import { FiSearch, FiUser, FiMenu, FiX } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi';
 import useAuthStore from '@/store/authStore';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
+
 
 export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const pathname = usePathname();
+    const router = useRouter();
 
     const { isAuthenticated, user, logout } = useAuthStore();
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/');
+    };
 
     // Dashboard path per role
     const dashboardHref = user?.role === 'admin' ? '/admin' : user?.role === 'instructor' ? '/instructor' : user?.role === 'student' ? '/student' : '/dashboard';
@@ -82,7 +90,7 @@ export default function Header() {
                     </nav>
 
                     {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-md mx-8">
+                    <form onSubmit={handleSearch} className="border border-gray-300 rounded-full md:flex items-center flex-1 max-w-md mx-8">
                         <div className="relative w-full">
                             <input
                                 type="text"
@@ -97,39 +105,45 @@ export default function Header() {
 
                     {/* Right Side Actions */}
                     <div className="flex items-center space-x-4">
-                        {/* Cart */}
-                        <button className="relative p-2 hover:bg-white/10 rounded-full transition-colors">
-                            <FiShoppingCart className="w-6 h-6" />
-                            <span className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                0
-                            </span>
-                        </button>
 
                         {/* User Menu */}
                         {isAuthenticated ? (
                             <div className="relative group">
                                 <button className="flex items-center space-x-2 glass-button">
                                     <div className="w-8 h-8 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                        {user?.name?.charAt(0) || 'U'}
+                                        {user?.avatar?.url ?
+                                            <Image
+                                                src={user?.avatar?.url}
+                                                width={38}
+                                                height={38}
+                                                className="rounded-full"
+                                                alt={user?.name}
+                                            /> :
+                                            (user?.name?.charAt(0) || 'U')
+                                        }
+                                    </div>
+                                    <div className="hidden sm:block">
+                                        <span className="font-semibold">{user?.name}</span>
+                                        <br />
                                     </div>
                                 </button>
 
                                 {/* Dropdown */}
                                 <div className="absolute right-0 mt-2 w-48 glass-card opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                                     <div className="p-2">
-                                        <Link href={dashboardHref} className="block px-4 py-2 text-sm hover:bg-white/10 rounded-lg transition-colors">
+                                        <Link href={dashboardHref} className="block px-4 py-2 text-sm hover:bg-primary-500/30 rounded-lg transition-colors">
                                             Dashboard
                                         </Link>
-                                        <Link href="/my-learning" className="block px-4 py-2 text-sm hover:bg-white/10 rounded-lg transition-colors">
+                                        <Link href="/my-learning" className="block px-4 py-2 text-sm hover:bg-primary-500/30 rounded-lg transition-colors">
                                             My Learning
                                         </Link>
-                                        <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-white/10 rounded-lg transition-colors">
+                                        <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-primary-500/30 rounded-lg transition-colors">
                                             Profile
                                         </Link>
-                                        <hr className="my-2 border-white/10" />
+                                        <hr className="my-2 border-gray-500/10" />
                                         <button
-                                            onClick={logout}
-                                            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-white/10 rounded-lg transition-colors"
+                                            onClick={handleLogout}
+                                            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                         >
                                             Logout
                                         </button>
