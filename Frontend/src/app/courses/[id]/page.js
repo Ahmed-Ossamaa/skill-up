@@ -16,6 +16,8 @@ import { FiPlay, FiAward } from 'react-icons/fi';
 import { formatNumber, formatDate, getCourseLevelLabel, getCourseLevelColor } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import ReviewForm from '@/components/form/ReviewForm';
+import Link from 'next/link';
+import useAuthStore from '@/store/authStore';
 
 
 export default function CourseDetailPage() {
@@ -26,6 +28,7 @@ export default function CourseDetailPage() {
     const [loading, setLoading] = useState(true);
     const [isEnrolled, setIsEnrolled] = useState(false);
     const [activeTab, setActiveTab] = useState('overview');
+    const { user } = useAuthStore();
 
     const fetchCourseData = useCallback(async () => {
         try {
@@ -88,14 +91,14 @@ export default function CourseDetailPage() {
                     <div className="container mx-auto px-4">
                         {/* Loading Skeleton */}
                         <div className="animate-pulse space-y-6">
-                            <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
-                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
+                            <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+                            <div className="h-4 bg-gray-300 rounded w-1/2"></div>
                             <div className="grid lg:grid-cols-3 gap-8">
                                 <div className="lg:col-span-2 space-y-4">
-                                    <div className="h-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
-                                    <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                                    <div className="h-64 bg-gray-300 rounded"></div>
+                                    <div className="h-32 bg-gray-300 rounded"></div>
                                 </div>
-                                <div className="h-96 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                                <div className="h-96 bg-gray-300 rounded"></div>
                             </div>
                         </div>
                     </div>
@@ -120,6 +123,7 @@ export default function CourseDetailPage() {
         );
     }
 
+    const isPermitted = user?._id === course.instructor._id || user?.role === 'admin';
     return (
         <div className="min-h-screen">
             <Header />
@@ -182,7 +186,9 @@ export default function CourseDetailPage() {
                         {/* Instructor */}
                         <div className="flex items-center space-x-3">
                             <span className="text-gray-300">Created by</span>
-                            <span className="font-semibold">{course.instructor?.name || 'Instructor'}</span>
+                            <Link href={`/instructor/${course.instructor?._id}`}>
+                                <span className="font-semibold hover:text-primary-500 hover:underline">{course.instructor?.name || 'Instructor'}</span>
+                            </Link>
                         </div>
 
                         {/* Last Updated & Language */}
@@ -242,6 +248,7 @@ export default function CourseDetailPage() {
                                         sections={sections}
                                         isEnrolled={isEnrolled}
                                         courseId={params.id}
+                                        isPermitted={isPermitted}
 
                                     />
                                 )}
@@ -264,9 +271,6 @@ export default function CourseDetailPage() {
                                     </>
 
                                 )}
-                                {/* {activeTab === "review" && (
-
-                                )} */}
                             </div>
                         </div>
 

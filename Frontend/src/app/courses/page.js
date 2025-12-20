@@ -17,11 +17,11 @@ export default function CoursesPage() {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
-    
+
     // Search & Sort State
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
     const [sortBy, setSortBy] = useState('-createdAt');
-    
+
     // Pagination State
     const [pagination, setPagination] = useState({
         currentPage: 1,
@@ -42,7 +42,7 @@ export default function CoursesPage() {
     // --- Memoized Options ---
     const sortOptions = useMemo(() => [
         { value: '-createdAt', label: 'Newest First' },
-        { value: '-enrollmentCount', label: 'Most Popular' },
+        { value: '-studentsCount', label: 'Most Popular' },
         { value: '-rating', label: 'Highest Rated' },
         { value: 'price', label: 'Price: Low to High' },
         { value: '-price', label: 'Price: High to Low' },
@@ -64,18 +64,23 @@ export default function CoursesPage() {
 
             // Price range parsing logic
             if (filters.priceRange) {
-                if (filters.priceRange === 'free') params.isFree = true;
-                else if (filters.priceRange === 'paid') params.isFree = false;
-                else if (filters.priceRange.includes('-')) {
+                if (filters.priceRange === 'free') {
+                    params.isFree = true;
+                } else if (filters.priceRange === 'paid') {
+                    params.isFree = false;
+                } else if (filters.priceRange.includes('-')) {
                     const [min, max] = filters.priceRange.split('-');
-                    params.minPrice = min;
-                    if (max !== '+') params.maxPrice = max;
+                    params.priceMin = min;
+                    if (max !== '+') params.priceMax = max;
+                } else if (filters.priceRange.includes('+')) {
+                    const min = filters.priceRange.replace('+', '');
+                    params.priceMin = min;
                 }
             }
 
             const { data: response } = await courseAPI.getPublished(params);
             const apiData = response?.data || {};
-            
+
             setCourses(apiData.data || []);
             setPagination(prev => ({
                 ...prev,
@@ -205,12 +210,12 @@ export default function CoursesPage() {
             {/* Mobile Filter Overlay */}
             <AnimatePresence>
                 {showMobileFilters && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 lg:hidden bg-slate-900/60 backdrop-blur-sm"
                         onClick={() => setShowMobileFilters(false)}
                     >
-                        <motion.div 
+                        <motion.div
                             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                             className="absolute right-0 top-0 bottom-0 w-[85%] bg-white dark:bg-slate-950 p-6"
