@@ -9,19 +9,26 @@ const lessonSchema = new mongoose.Schema(
         description: { type: String },
         type: {
             type: String,
-            enum: ["video", "raw"],
+            enum: ["video", "raw", "document"],
             default: "video"
         },
         video: {
             url: { type: String },
             publicId: { type: String },
-            type: { type: String }
+            duration: { type: Number }
         },
+        documents: {
+            name: { type: String },
+            url: { type: String },
+            publicId: { type: String },
+            type: { type: String },
+        },
+
         resources: [{
-            fileUrl: { type: String },
-            filePublicId: { type: String },
-            fileName: { type: String },
-            fileType: { type: String }
+            name: { type: String },
+            url: { type: String },
+            publicId: { type: String },
+            type: { type: String },
         }],
         content: { type: String },
         duration: {
