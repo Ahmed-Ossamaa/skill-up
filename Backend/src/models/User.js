@@ -25,6 +25,31 @@ const userSchema = new mongoose.Schema({
         enum: ['student', 'admin', 'instructor'],
         default: 'student'
     },
+    bio: {
+        type: String,
+        maxLength: [200, 'Bio must be at most 200 characters'],
+    },
+    headline: {
+        type: String,
+        maxLength: [50, 'Headline must be at most 50 characters'],
+    },
+    website: {
+        type: String,
+        maxLength: [100, 'Website must be at most 100 characters'],
+    },
+    github: {
+        type: String,
+        maxLength: [100, 'Github must be at most 100 characters'],
+    },
+    linkedin: {
+        type: String,
+        maxLength: [100, 'Linkedin must be at most 100 characters'],
+    },
+    twitter: {
+        type: String,
+        maxLength: [100, 'Twitter must be at most 100 characters'],
+    },
+
     resetPasswordToken: {
         type: String,
         select: false 
@@ -38,10 +63,10 @@ const userSchema = new mongoose.Schema({
         select: false  
     },
     avatar: {
-        type: String,
-        default: ''
+        url: { type: String },
+        publicId: { type: String },
+        type: { type: String },
     },
-    avatarPublicId: {type: String},
     status: {
         type: String,
         enum: ['active', 'banned'],
