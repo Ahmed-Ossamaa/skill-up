@@ -20,12 +20,21 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
     const finalPrice = getFinalPrice(course);
     const onSale = isOnSale(course);
     const discount = course.discount;
-    const sections= course.sections;
-    const lessonsCounter = sections.reduce((total, section) => total + section.lessons.length, 0);
+    const sections = course.sections;
+    const videoCount = sections.reduce((total, section) => {
+        return total + (section.lessons?.filter(l => l.type === 'video').length || 0);
+    }, 0);
+    const documentsCount = sections.reduce((total, section) => {
+        return total + (section.lessons?.filter(l => l.type === 'document' || l.type === 'raw').length || 0);
+    }, 0);
+    const totalDuration = sections.reduce((acc, section) => {
+        const sectionTime = section.lessons?.reduce((sum, lesson) => sum + (lesson.duration || 0), 0) || 0;
+        return acc + sectionTime;
+    }, 0);
 
     const features = [
-        { icon: FiClock, label: `${lessonsCounter  || 0} on-demand video` },
-        { icon: FiFileText, label: `${course.articlesCount || 0} articles` },
+        { icon: FiClock, label: `${videoCount || 0} on-demand video` },
+        { icon: FiFileText, label: `${documentsCount|| 0} articles` },
         { icon: FiInbox, label: 'Full lifetime access' },
         { icon: FiSmartphone, label: 'Access on mobile and TV' },
         { icon: FiAward, label: 'Certificate of completion' },
@@ -38,7 +47,7 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
         } else if (enrolled) {
             toast.error('You are already enrolled in this course');
             return;
-        }else if (!course.isFree) {
+        } else if (!course.isFree) {
             router.push(`/checkout/${course._id || course.id}`);
             return;
         }
@@ -48,7 +57,7 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
             await courseAPI.enroll(course._id);
             setEnrolled(true);
             toast.success('Enrolled successfully');
-            if (onEnroll) onEnroll(); 
+            if (onEnroll) onEnroll();
         } catch (err) {
             console.error(err);
             toast.error(err.response?.data?.message || 'Enrollment failed');
@@ -56,7 +65,6 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
             setLoading(false);
         }
     };
-console.log("course content", course);
     return (
         <div className="lg:sticky lg:top-24">
             <div className="glass-card overflow-hidden">
@@ -104,9 +112,9 @@ console.log("course content", course);
                     {/* CTA Buttons */}
                     <div className="space-y-3 mb-6">
                         {enrolled ? (
-                            <button 
-                            disabled={true}
-                            className="w-full py-3 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-semibold cursor-not-allowed">
+                            <button
+                                disabled={true}
+                                className="w-full py-3 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-semibold cursor-not-allowed">
                                 Enrolled
                             </button>
                         ) : (
@@ -165,7 +173,7 @@ console.log("course content", course);
                             <FiClock className="w-5 h-5" />
                             <span className="text-sm">Duration</span>
                         </div>
-                        <span className="font-semibold">{formatDuration(course.duration)}</span>
+                        <span className="font-semibold">{formatDuration(totalDuration) || 0}</span>
                     </div>
                 </div>
             </div>
