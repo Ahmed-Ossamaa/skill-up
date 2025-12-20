@@ -2,27 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { categoryAPI } from '@/lib/api';
-import { FiChevronDown, FiChevronUp, FiX } from 'react-icons/fi';
-import { cn } from '@/lib/utils';
+import { FiChevronDown, FiChevronUp, FiX, FiPlus, FiMinus } from 'react-icons/fi'; 
 
 export default function Filters({ filters, onFilterChange, onClearFilters }) {
     const [categories, setCategories] = useState([]);
+    const [showAllCategories, setShowAllCategories] = useState(false); 
     const [expandedSections, setExpandedSections] = useState({
         category: true,
-        price: true,
-        level: true,
-        rating: true,
+        price: false,
+        level: false,
+        rating: false,
     });
-
-
 
     useEffect(() => {
         const getCategories = async () => {
             try {
                 const response = await categoryAPI.getAll();
                 setCategories(response.data.data || []);
-             
-                
             } catch (error) {
                 console.error("Error fetching categories:", error);
             }
@@ -38,11 +34,13 @@ export default function Filters({ filters, onFilterChange, onClearFilters }) {
         }));
     };
 
+    const visibleCategories = showAllCategories ? categories : categories.slice(0, 10);
+
     const levels = [
         { value: 'beginner', label: 'Beginner' },
         { value: 'intermediate', label: 'Intermediate' },
         { value: 'advanced', label: 'Advanced' },
-        // { value: 'all', label: 'All Levels' },
+        { value: 'all levels', label: 'All Levels' },
     ];
 
     const priceRanges = [
@@ -59,6 +57,7 @@ export default function Filters({ filters, onFilterChange, onClearFilters }) {
     const activeFiltersCount = Object.values(filters).filter(v =>
         v !== null && v !== undefined && v !== '' && (Array.isArray(v) ? v.length > 0 : true)
     ).length;
+
     return (
         <div className="glass-card p-6 sticky top-24">
             {/* Header */}
@@ -82,7 +81,7 @@ export default function Filters({ filters, onFilterChange, onClearFilters }) {
                 onToggle={() => toggleSection('category')}
             >
                 <div className="space-y-2">
-                    {categories.map((category) => (
+                    {visibleCategories.map((category) => (
                         <label key={category._id || category.id} className="flex items-center space-x-2 cursor-pointer group">
                             <input
                                 type="checkbox"
@@ -100,6 +99,24 @@ export default function Filters({ filters, onFilterChange, onClearFilters }) {
                             )}
                         </label>
                     ))}
+
+                    {/*  View all / Show less btn */}
+                    {categories.length > 10 && (
+                        <button
+                            onClick={() => setShowAllCategories(!showAllCategories)}
+                            className="text-sm text-primary-500 font-medium hover:text-primary-600 flex items-center gap-1 mt-2"
+                        >
+                            {showAllCategories ? (
+                                <>
+                                    <FiMinus className="w-3 h-3" /> Show Less
+                                </>
+                            ) : (
+                                <>
+                                    <FiPlus className="w-3 h-3" /> View All ({categories.length})
+                                </>
+                            )}
+                        </button>
+                    )}
                 </div>
             </FilterSection>
 
