@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const ApiError = require('../utils/ApiError');
 
 class InstructorService {
     constructor(CourseModel, EnrollmentModel, UserModel) {
@@ -78,7 +79,7 @@ class InstructorService {
         // Get Course IDs for filtering
         const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
 
-        const [instructor, currentMonthStats, prevMonthStats, ratingData,totalCoursesCount, activeCoursesCount] = await Promise.all([
+        const [instructor, currentMonthStats, prevMonthStats, ratingData, totalCoursesCount, activeCoursesCount] = await Promise.all([
             // Lifetime Totals 
             this.User.findById(id).select('instructorStats'),
 
@@ -123,7 +124,7 @@ class InstructorService {
         };
 
         return {
-            courses:totalCoursesCount || 0,
+            courses: totalCoursesCount || 0,
             activeCourses: activeCoursesCount,
             students: stats.totalStudentsTaught || 0,
             revenue: stats.totalEarnings || 0,
@@ -235,7 +236,7 @@ class InstructorService {
     async getPublicProfile(instructorId) {
         const id = new mongoose.Types.ObjectId(String(instructorId));
 
-        const [instructor, courses] = await Promise.all([
+        const [instructor, courses,statsAggregate] = await Promise.all([
 
             this.User.findById(id)
                 .select('name avatar bio headline website linkedin github twitter instructorStats'),
@@ -245,16 +246,31 @@ class InstructorService {
                 .select('title thumbnail price rating ratingCount level slug category instructor')
                 .populate('instructor', 'name')
                 .populate('category', 'name')
-                .sort({ createdAt: -1 })
+                .sort({ createdAt: -1 }),
+
+            this.Course.aggregate([
+                {
+                    $match: {
+                        instructor: id,
+                        status: 'published',
+                        ratingCount: { $gt: 0 } // exclude unrated 
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        totalReviews: { $sum: "$ratingCount" },
+                        avgRating: { $avg: "$rating" }
+                    }
+                }
+            ])
+
+
         ]);
 
-        if (!instructor) throw new Error('Instructor not found');
+        if (!instructor) throw ApiError.notFound('Instructor not found');
 
-        // Calculate course stats (Reviews/Ratings)
-        const totalReviews = courses.reduce((acc, c) => acc + (c.ratingCount || 0), 0);
-        const avgRating = courses.length > 0
-            ? (courses.reduce((acc, c) => acc + (c.rating || 0), 0) / courses.length).toFixed(1)
-            : "0.0";
+        const stats = statsAggregate[0] || { totalReviews: 0, avgRating: 0 };
 
         return {
             instructor: {
@@ -263,8 +279,8 @@ class InstructorService {
             },
             stats: {
                 totalStudents: instructor.instructorStats?.totalStudentsTaught || 0,
-                totalReviews,
-                avgRating
+                totalReviews: stats.totalReviews,
+                avgRating: parseFloat(stats.avgRating.toFixed(1))
             },
             courses
         };

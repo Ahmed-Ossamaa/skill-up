@@ -22,7 +22,8 @@ class CourseService {
                     path: 'lessons',
                     select: 'title type duration isPreview video description documents resources duration'
                 }
-            });
+            })
+            .populate('category', 'name');
 
         if (!course) throw ApiError.notFound('Course not found');
 
