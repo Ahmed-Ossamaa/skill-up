@@ -71,7 +71,7 @@ export default function InstructorDashboard() {
             title: 'Delete Course',
             message: 'Are you sure? This action cannot be undone.',
             confirmText: 'Delete',
-            variant: 'danger',
+            type: 'danger',
             onConfirm: async () => {
                 try {
                     await courseAPI.delete(courseId);
@@ -176,8 +176,8 @@ export default function InstructorDashboard() {
             <ConfirmModal
                 isOpen={isOpen}
                 onClose={closeConfirm}
-                onConfirm={handleConfirm}
                 {...config}
+                onConfirm={handleConfirm}
             />
         </DashboardLayout>
     );

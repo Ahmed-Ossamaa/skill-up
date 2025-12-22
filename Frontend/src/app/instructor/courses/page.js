@@ -33,6 +33,7 @@ export default function MyCoursesPage() {
             setPages(payload?.pages || 1);
         } catch (err) {
             console.error('Error fetching instructor courses:', err);
+            toast.error('Error fetching data, please try again');
         } finally {
             setLoading(false);
         }
@@ -54,14 +55,12 @@ export default function MyCoursesPage() {
     // Publish / Unpublish
     const handleTogglePublish = async (courseId, currentStatus) => {
         try {
-            setLoading(true);
             const newStatus = currentStatus === 'published' ? 'draft' : 'published';
             await courseAPI.publish(courseId, newStatus);
+            toast.success(`Course ${newStatus}`);
             await fetchPage(page);
         } catch (error) {
             console.error('Error toggling publish status:', error);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -72,18 +71,15 @@ export default function MyCoursesPage() {
             title: 'Delete Course',
             message: 'Are you sure you want to delete this course? This action cannot be undone.',
             confirmText: 'Delete',
-            cancelText: 'Cancel',
-            variant: 'danger',
+            type: 'danger',
             onConfirm: async () => {
                 try {
-                    setLoading(true);
                     await courseAPI.delete(courseId);
-                    await fetchDashboardData();
+                    toast.success('Course deleted');
+                    await fetchPage(page);
                 } catch (error) {
                     toast.error('Error deleting course');
                     console.error('Error deleting course:', error);
-                } finally {
-                    setLoading(false);
                 }
             }
         });
@@ -160,8 +156,8 @@ export default function MyCoursesPage() {
             <ConfirmModal
                 isOpen={isOpen}
                 onClose={closeConfirm}
-                onConfirm={handleConfirm}
                 {...config}
+                onConfirm={handleConfirm}
             />
         </DashboardLayout>
     );
