@@ -32,7 +32,6 @@ class EnrollmentService {
                 completedLessons: [],
                 percentage: 0
             },
-            amountPaid: 0, //def value for free courses
             status: "enrolled",
             enrolledAt: new Date(),
         });

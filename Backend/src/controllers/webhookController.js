@@ -54,18 +54,6 @@ exports.webhookHandler = async (req, res) => {
                 paymentIntent.id
             );
 
-            // await Course.findByIdAndUpdate(courseId, {
-            //     $addToSet: { students: userId },
-            //     $inc: { studentsCount: 1 }
-            // });
-
-            // await User.findByIdAndUpdate(userId, {
-            //     $inc: {
-            //         'studentStats.totalEnrolledCourses': 1,
-            //         'studentStats.totalAmountPaid': realAmountPaid
-            //     }
-            // });
-
             console.log("User enrolled successfully:", userId);
         } catch (err) {
             if (err.message && err.message.includes("already enrolled")) {
