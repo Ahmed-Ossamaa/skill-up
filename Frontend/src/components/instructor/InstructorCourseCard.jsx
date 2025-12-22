@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { FiBook, FiUsers, FiEdit, FiEye, FiTrash, FiUpload } from 'react-icons/fi';
 import { AiFillStar } from 'react-icons/ai';
 import { formatPrice, formatNumber } from '@/lib/utils';
+import Image from 'next/image';
+import { CiBank } from "react-icons/ci";
 
 export default function InstructorCourseCard({ course, editHref, viewHref, onTogglePublish, onDelete, loading = false }) {
     const id = course.id ?? course._id;
-    const title = course.title;
+    const title = (course.title).charAt(0).toUpperCase() + (course.title).slice(1);
     const thumbnail =  course.thumbnail?.url || null;
     const students = course.studentsCount ?? (course.students ? course.students.length : 0) ?? course.students ?? 0;
     const rating = (course.rating ?? 0);
@@ -16,11 +18,16 @@ export default function InstructorCourseCard({ course, editHref, viewHref, onTog
     const status = course.status ?? 'draft';
 
     return (
-        <div className="glass rounded-xl overflow-hidden hover-lift">
+        <div className="glass rounded-xl overflow-hidden shadow hover:shadow-lg hover:scale-[1.01] transition-all">
             <div className="aspect-video bg-linear-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
                 {thumbnail ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumbnail} alt={title} className="object-cover w-full h-full" />
+                    <Image 
+                    src={thumbnail} 
+                    alt={title} 
+                    width={100}
+                    height={100}
+                    loading='eager'
+                    className="object-cover w-full h-full" />
                 ) : (
                     <FiBook className="w-12 h-12 text-white/50" />
                 )}
@@ -39,7 +46,9 @@ export default function InstructorCourseCard({ course, editHref, viewHref, onTog
                         <span className="font-semibold">{rating.toFixed ? rating.toFixed(1) : rating}</span>
                     </div>
                     <div className="font-semibold text-primary-500">{formatPrice(price)}</div>
-                    <div className="font-semibold text-primary-500">{formatPrice(revenue)}</div>
+                    <div className="font-semibold text-green-500 flex items-center">
+                        <CiBank/>
+                        {formatPrice(revenue)}</div>
                 </div>
 
                 <div className="flex items-center justify-between">

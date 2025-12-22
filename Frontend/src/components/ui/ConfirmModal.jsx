@@ -47,10 +47,10 @@ export default function ConfirmModal({
     const style = typeStyles[type];
     const Icon = style.icon;
 
-    const handleConfirm = () => {
-        onConfirm();
-        onClose();
-    };
+    // const handleConfirm = () => {
+    //     onConfirm();
+    //     onClose();
+    // };
 
     return (
         <div
@@ -84,7 +84,7 @@ export default function ConfirmModal({
                         {cancelText}
                     </button>
                     <button
-                        onClick={handleConfirm}
+                        onClick={onConfirm}
                         disabled={loading}
                         className={cn(
                             'flex-1 px-4 py-3 text-white rounded-lg font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed',

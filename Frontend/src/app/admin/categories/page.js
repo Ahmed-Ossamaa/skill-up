@@ -6,6 +6,7 @@ export default function Page() {
           <DashboardLayout role="admin">
         <div>
             <h1>Categories</h1>
+            <p>Coming Soon ..</p>
         </div>
          </DashboardLayout>
     );

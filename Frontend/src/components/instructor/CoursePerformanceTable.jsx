@@ -42,7 +42,7 @@ export default function CoursePerformanceTable() {
                             </td>
                             <td className="px-4 py-4">
                                 <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">
-                                    {course.studentCount} Students
+                                    {course.studentsCount} Students
                                 </span>
                             </td>
                             <td className="px-4 py-4 text-right font-black text-slate-700">

@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import useAuthStore from '@/store/authStore';
 import { FiUser, FiMail, FiLock, FiUpload, FiSave } from 'react-icons/fi';
 import Image from 'next/image';
-import api from '@/lib/api';
+import {userAPI} from '@/lib/api';
 
 
 export default function ProfileSettingsPage() {
@@ -19,7 +19,6 @@ export default function ProfileSettingsPage() {
     const [profileData, setProfileData] = useState({
         name: '',
         email: '',
-        bio: '',
         avatar: null,
     });
 
@@ -30,7 +29,6 @@ export default function ProfileSettingsPage() {
     });
 
     useEffect(() => {
-        // wait for auth hydration
         if (!isReady) return;
 
         if (!isAuthenticated) {
@@ -42,13 +40,12 @@ export default function ProfileSettingsPage() {
             setProfileData({
                 name: user.name || '',
                 email: user.email || '',
-                bio: user.bio || '',
                 avatar: user.avatar || null,
             });
         }
     }, [isReady, isAuthenticated, user, router]);
 
-    // Show spinner while auth is being hydrated
+    // Spinner
     if (!isReady) {
         return (
             <DashboardLayout role={user?.role || 'student'}>
@@ -64,8 +61,8 @@ export default function ProfileSettingsPage() {
         setMessage({ type: '', text: '' });
 
         try {
-            // TODO: Replace with actual API call
-            // const response = await userAPI.update(user._id, profileData);
+            
+            const response = await userAPI.update(user._id, profileData);
 
             // Mock success
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -97,11 +94,10 @@ export default function ProfileSettingsPage() {
         setMessage({ type: '', text: '' });
 
         try {
-            // TODO: Replace with actual API call
-            // await api.patch('/auth/change-password', {
-            //   currentPassword: passwordData.currentPassword,
-            //   newPassword: passwordData.newPassword,
-            // });
+            await userAPI.patch('/auth/change-password', {
+              currentPassword: passwordData.currentPassword,
+              newPassword: passwordData.newPassword,
+            });
 
             // Mock success
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -134,12 +130,9 @@ export default function ProfileSettingsPage() {
 
         try {
             setLoading(true);
-
             const formData = new FormData();
             formData.append('avatar', file);
-
-            // TODO: Replace with actual API call
-            // const response = await userAPI.uploadAvatar(formData);
+            const response = await userAPI.uploadAvatar(formData);
 
             // Mock success - create preview
             const reader = new FileReader();
@@ -208,10 +201,12 @@ export default function ProfileSettingsPage() {
                             {/* Avatar Upload */}
                             <div className="mb-8 flex items-center space-x-6">
                                 <div className="relative">
-                                    {profileData.avatar ? (
+                                    {profileData?.avatar?.url ? (
                                         <Image
-                                            src={profileData.avatar}
+                                            src={profileData.avatar.url}
                                             alt="Avatar"
+                                            width={96}
+                                            height={96}
                                             className="w-24 h-24 rounded-full object-cover ring-4 ring-primary-500/20"
                                         />
                                     ) : (
@@ -223,7 +218,7 @@ export default function ProfileSettingsPage() {
                                 <div>
                                     <h3 className="font-semibold mb-2">Profile Picture</h3>
                                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                        JPG, PNG or GIF. Max size 5MB
+                                        JPG, PNG Max size 5MB
                                     </p>
                                     <label className="items-center space-x-2 px-4 py-2 glass-button cursor-pointer inline-flex">
                                         <FiUpload className="w-4 h-4" />
@@ -270,17 +265,6 @@ export default function ProfileSettingsPage() {
                                             placeholder="john@example.com"
                                         />
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium mb-2">Bio</label>
-                                    <textarea
-                                        value={profileData.bio}
-                                        onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                                        rows="4"
-                                        className="w-full px-4 py-3 glass rounded-lg focus-ring"
-                                        placeholder="Tell us about yourself..."
-                                    />
                                 </div>
 
                                 <button
