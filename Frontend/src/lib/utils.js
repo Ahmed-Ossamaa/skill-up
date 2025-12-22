@@ -54,7 +54,7 @@ export function getInitials(name) {
 }
 
 // Debounce function
-export function debounce(func, wait) {
+export function debounce(func, wait=500) {
     let timeout;
     return function executedFunction(...args) {
         const later = () => {

@@ -30,7 +30,7 @@ export const courseAPI = {
     update: (id, data) => api.patch(`/courses/${id}`, data),
     delete: (id) => api.delete(`/courses/${id}`),
     publish: (id, status) => api.patch(`/courses/${id}/status`, { status }),
-    getAll: () => api.get('/courses/admin/all'),//admin
+    getAll: (params) => api.get('/courses/admin/all', { params }),//admin
 
 };
 
