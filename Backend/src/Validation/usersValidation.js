@@ -47,12 +47,12 @@ const updateUserSchema = joi.object({
         'string.min': 'Password must be at least 8 characters'
     }),
     role: joi.string().valid('student', 'instructor', 'admin'),
-    bio: joi.string().max(200),
-    headline: joi.string().max(50),
-    website: joi.string().max(100),
-    github: joi.string().max(100),
-    linkedin: joi.string().max(100),
-    twitter: joi.string().max(100),
+    bio: joi.string().max(200).allow(''),
+    headline: joi.string().max(50).allow(''),
+    website: joi.string().max(100).allow(''),
+    github: joi.string().max(100).allow(''),
+    linkedin: joi.string().max(100).allow(''),
+    twitter: joi.string().max(100).allow(''),
     status: joi.string().valid('active', 'banned').default('active')
 }).min(1); // require at least one field to be updated
 

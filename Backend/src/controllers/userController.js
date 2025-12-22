@@ -2,22 +2,32 @@ const User = require('../models/User');
 const UserService = require('../services/userService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
-const cloudinary = require('cloudinary').v2;
+const Course = require('../models/Course');
+const Enrollment = require('../models/Enrollment');
 
 class UserController {
     constructor() {
-        this.userService = new UserService(User);
+        this.userService = new UserService(User, Course, Enrollment);
+
     }
 
     // GET /users
     getAllUsers = asyncHandler(async (req, res) => {
-        const users = await this.userService.getAllUsers();
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const filters = {
+            status: req.query.status,
+            role: req.query.role,
+            search: req.query.search,
+            sort: req.query.sort
+        };
+        const users = await this.userService.getAllUsers(page, limit, filters);
         res.status(200).json({ data: users });
     });
 
     // GET /users/:id
     getUserById = asyncHandler(async (req, res) => {
-        const  id  = req.params.id || req.user.id;
+        const id = req.params.id || req.user.id;
 
         if (req.user.role !== 'admin' && req.user.id !== id) {
             throw ApiError.forbidden('Access denied');
@@ -31,7 +41,7 @@ class UserController {
 
     // PATCH /users/:id
     updateUser = asyncHandler(async (req, res) => {
-        const { id } = req.params;
+        const id = req.params.id || req.user.id;
 
         if (req.user.role !== 'admin' && req.user.id !== id) {
             throw ApiError.forbidden('Access denied');
@@ -55,6 +65,15 @@ class UserController {
         if (!user) throw ApiError.notFound('User not found');
 
         res.status(200).json({ message: `User deleted successfully: ${user.email}` });
+    });
+
+    getDashboardStats = asyncHandler(async (req, res) => {
+        const stats = await this.userService.getDashboardStats();
+
+        res.status(200).json({
+            success: true,
+            data: stats
+        });
     });
 }
 
