@@ -3,7 +3,6 @@ const Enrollment = require('../models/Enrollment');
 const User = require('../models/User');
 const InstructorService = require('../services/InstructorService');
 const asyncHandler = require('express-async-handler');
-const ApiError = require('../utils/ApiError');
 
 
 

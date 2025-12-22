@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-
 class InstructorService {
     constructor(CourseModel, EnrollmentModel, UserModel) {
         this.Course = CourseModel;
@@ -8,28 +7,21 @@ class InstructorService {
         this.User = UserModel;
     }
 
-
     /**
-     * Fetches all students enrolled in instructor's courses
-     * @param {String} instructorId - The id of the instructor
-     * @returns {Promise<Object[]>} - An array of objects containing course title, student count, and an array of enrolled students
+     * Returns all students enrolled in instructor's courses
+     * @param {string} instructorId - The instructor's MongoDB ObjectId
+     * @returns {Promise<object[]>} - A promise that resolves with an array of objects containing course information and student details
      */
     async getAllInstructorStudents(instructorId) {
-        // Get all courses owned by this instructor
-        const instructorCourses = await this.Course
-            .find({ instructor: instructorId })
-            .select('_id title');
+        const id = new mongoose.Types.ObjectId(String(instructorId));
 
-        const courseIds = instructorCourses.map(c => c._id);
+        // Get courses to filter enrollments
+        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
 
-        // Aggregate Enrollments
-        const data = await this.Enrollment.aggregate([
+        return await this.Enrollment.aggregate([
+            { $match: { course: { $in: courseIds } } },
+            // Join Student Info
             {
-                //get enrollments matching this instructor's courses
-                $match: { course: { $in: courseIds } }
-            },
-            {
-                // Join with User collection to get student details
                 $lookup: {
                     from: 'users',
                     localField: 'student',
@@ -38,14 +30,26 @@ class InstructorService {
                 }
             },
             { $unwind: '$studentDetails' },
+            // Join Course Info
             {
-                // Group by course to categorize them  by course in Frontend
+                $lookup: {
+                    from: 'courses',
+                    localField: 'course',
+                    foreignField: '_id',
+                    as: 'courseInfo'
+                }
+            },
+            { $unwind: '$courseInfo' },
+            // Group By Course
+            {
                 $group: {
                     _id: '$course',
-                    studentCount: { $sum: 1 },
+                    courseTitle: { $first: '$courseInfo.title' },
+                    studentsCount: { $sum: 1 },
                     enrolledStudents: {
                         $push: {
                             enrollmentId: '$_id',
+                            studentId: '$studentDetails._id',
                             name: '$studentDetails.name',
                             email: '$studentDetails.email',
                             avatar: '$studentDetails.avatar',
@@ -55,115 +59,93 @@ class InstructorService {
                     }
                 }
             },
-            {
-                $lookup: {
-                    from: 'courses',
-                    localField: '_id',
-                    foreignField: '_id',
-                    as: 'courseInfo'
-                }
-            },
-            { $unwind: '$courseInfo' },
-            {
-                $project: {
-                    courseTitle: '$courseInfo.title',
-                    studentCount: 1,
-                    enrolledStudents: 1
-                }
-            },
             { $sort: { courseTitle: 1 } }
         ]);
-
-        return data;
     }
 
 
     /**
-     * Get instructor stats, including course stats, lifetime totals, and current month activity
+     * Get instructor stats (lifetime and current month)
      * @param {ObjectId} instructorId
-     * @returns {Promise<Object>} containing course stats, lifetime totals, and current month activity
+     * @returns {Promise<Object>}
      */
     async getInstructorStats(instructorId) {
         const id = new mongoose.Types.ObjectId(String(instructorId));
         const now = new Date();
+        const startCurrent = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startPrev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-        const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
+        // Get Course IDs for filtering
         const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
 
-        const [courseData, lifetimeStats, currentMonthStats] = await Promise.all([
-            // Course Stats (Average Rating)
+        const [instructor, currentMonthStats, prevMonthStats, ratingData] = await Promise.all([
+            // Lifetime Totals 
+            this.User.findById(id).select('instructorStats'),
+
+            // Current Month Activity
+            this.Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, enrolledAt: { $gte: startCurrent } } },
+                { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
+            ]),
+
+            //Previous Month Activity (For Trend)
+            this.Enrollment.aggregate([
+                { $match: { course: { $in: courseIds }, enrolledAt: { $gte: startPrev, $lt: startCurrent } } },
+                { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
+            ]),
+
+            // Rating 
             this.Course.aggregate([
                 { $match: { instructor: id } },
                 {
                     $group: {
                         _id: null,
-                        totalCourses: { $sum: 1 },
-                        avgRating: {
+                        avg: {
                             $avg: { $cond: [{ $gt: ["$ratingCount", 0] }, "$rating", "$$REMOVE"] }
                         }
                     }
                 }
-            ]),
-
-            // Lifetime Totals 
-            this.Enrollment.aggregate([
-                { $match: { course: { $in: courseIds } } },
-                { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
-            ]),
-
-            // Current Month Activity 
-            this.Enrollment.aggregate([
-                { $match: { course: { $in: courseIds }, enrolledAt: { $gte: startOfCurrentMonth } } },
-                { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
             ])
         ]);
 
-        // --- Data Extraction ---
-        const total = lifetimeStats[0] || { count: 0, amount: 0 };
-        const current = currentMonthStats[0] || { count: 0, amount: 0 };
+        // Data Preparation
+        const stats = instructor.instructorStats || {};
+        const cur = currentMonthStats[0] || { count: 0, amount: 0 };
+        const prev = prevMonthStats[0] || { count: 0, amount: 0 };
+        const avgRating = ratingData[0]?.avg || 0;
 
-        const startStudents = total.count - current.count;
-        const startRevenue = total.amount - current.amount;
-
-        //Cumulative Growth
-        const calculateGrowth = (currentTotal, startTotal) => {
-            if (startTotal === 0) return currentTotal > 0 ? "100.0" : "0.0";
-            return (((currentTotal - startTotal) / startTotal) * 100).toFixed(1);
+        // Trend Calculation
+        const calculateGrowth = (current, previous) => {
+            if (previous === 0) return current > 0 ? "100" : "0";
+            return (((current - previous) / previous) * 100).toFixed(1);
         };
 
         return {
-            courses: courseData[0]?.totalCourses || 0,
-            rating: courseData[0]?.avgRating?.toFixed(1) || "0.0",
+            courses: stats.totalCoursesCreated || 0,
+            students: stats.totalStudentsTaught || 0,
+            revenue: stats.totalEarnings || 0,
+            rating: avgRating.toFixed(1),
 
-            // Displaying Lifetime Totals
-            students: total.count,
-            revenue: total.amount,
+            revenueTrend: calculateGrowth(cur.amount, prev.amount),
+            revenueTrendDir: cur.amount >= prev.amount ? 'up' : 'down',
 
-            revenueTrend: `${calculateGrowth(total.amount, startRevenue)}%`,
-            revenueTrendDir: current.amount > 0 ? 'up' : 'down',
-
-            studentTrend: `${calculateGrowth(total.count, startStudents)}%`,
-            studentTrendDir: current.count > 0 ? 'up' : 'down'
+            studentTrend: calculateGrowth(cur.count, prev.count),
+            studentTrendDir: cur.count >= prev.count ? 'up' : 'down'
         };
     }
 
 
+
     /**
-     * Retrieves revenue analytics for an instructor.
-     * @param {ObjectId} instructorId
-     * @returns {Promise<Object[]>} with the following properties:
-     *   - _id {string}: Year and month of the analytics
-     *   - revenue {number}: Total revenue earned by the instructor in the given month
-     *   - students {number}: Total students enrolled in the instructor's courses in the given month
+     * Get revenue analytics for an instructor
+     * @param {ObjectId} instructorId - The ID of the instructor to get analytics for
+     * @returns {Promise<object[]>} - A promise that resolves with an array of objects containing revenue and student data for each month/year
      */
     async getRevenueAnalytics(instructorId) {
         const courseIds = await this.Course.find({ instructor: instructorId }).distinct('_id');
 
-        const analytics = await this.Enrollment.aggregate([
-            {
-                $match: { course: { $in: courseIds } }
-            },
+        return await this.Enrollment.aggregate([
+            { $match: { course: { $in: courseIds } } },
             {
                 $group: {
                     _id: {
@@ -178,7 +160,7 @@ class InstructorService {
             {
                 $project: {
                     _id: 0,
-                    month: {
+                    label: {
                         $concat: [
                             { $arrayElemAt: [["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "$_id.month"] },
                             " ",
@@ -190,88 +172,72 @@ class InstructorService {
                 }
             }
         ]);
-
-        return analytics;
     }
 
 
     /**
-     * Retrieves the performance of the courses created by the instructor with the given id.
-     * The performance metrics include the title, thumbnail, number of students, revenue, and last enrollment date.
-     * The results are sorted by the number of students in descending order.
-     * @param {string} instructorId - The id of the instructor
-     * @returns {Promise<Object[]>} - An array of objects containing the performance metrics of the courses
+     * Get course performance data for an instructor
+     * @param {ObjectId} instructorId - The ID of the instructor to get course performance data for
+     * @returns {Promise<object[]>} - A promise that resolves with an array of objects containing course performance data
      */
     async getCoursePerformance(instructorId) {
         const id = new mongoose.Types.ObjectId(String(instructorId));
 
-        return await this.Course.aggregate([
-            { $match: { instructor: id } },
+        // Get Revenue & Last Enrollment from Enrollments 
+        const stats = await this.Enrollment.aggregate([
             {
-                $lookup: {
-                    from: 'enrollments',
-                    localField: '_id',
-                    foreignField: 'course',
-                    as: 'enrollments'
-                }
+                $lookup: { from: 'courses', localField: 'course', foreignField: '_id', as: 'c' }
             },
             {
-                $project: {
-                    title: 1,
-                    thumbnail: 1,
-                    studentCount: { $size: "$enrollments" },
-                    revenue: { $sum: "$enrollments.amountPaid" },
-                    lastEnrollment: { $max: "$enrollments.enrolledAt" }
-                }
+                $match: { 'c.instructor': id }
             },
-            { $sort: { studentCount: -1 } } // Sort by most popular
+            {
+                $group: {
+                    _id: "$course",
+                    revenue: { $sum: "$amountPaid" },
+                    lastEnrollment: { $max: "$enrolledAt" }
+                }
+            }
         ]);
+
+        // Get Course Details
+        const courses = await this.Course.find({ instructor: id })
+            .select('title thumbnail studentsCount rating');
+
+        const statsMap = new Map(stats.map(s => [s._id.toString(), s]));
+
+        const result = courses.map(course => {
+            const stat = statsMap.get(course._id.toString());
+            return {
+                _id: course._id,
+                title: course.title,
+                thumbnail: course.thumbnail,
+                rating: course.rating,
+                studentsCount: course.studentsCount || 0,
+                revenue: stat ? stat.revenue : 0,
+                lastEnrollment: stat ? stat.lastEnrollment : null
+            };
+        });
+
+        // Sort by Student Count (Descending)
+        return result.sort((a, b) => b.studentsCount - a.studentsCount);
     }
 
 
     /**
-     * Retrieves the public profile of an instructor with the given id.
-     * The public profile includes the instructor's basic information, stats, and published courses.
-     * @param {string} instructorId - The id of the instructor
-     * @returns {Promise<Object>} - An object containing the instructor's public profile
+     * Returns the public profile data for an instructor
+     * @param {ObjectId} instructorId - The ID of the instructor to get the public profile for
+     * @returns {Promise<object>} - A promise that resolves with an object containing the instructor's public profile data and stats
      */
     async getPublicProfile(instructorId) {
         const id = new mongoose.Types.ObjectId(String(instructorId));
 
-        // all course _IDs 
-        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
+        const [instructor, courses] = await Promise.all([
 
-        const [instructor, stats, courses] = await Promise.all([
-            // Basic Public Info
-            this.User.findById(id).select('name avatar bio headline website linkedin github twitter'),
+            this.User.findById(id)
+                .select('name avatar bio headline website linkedin github twitter instructorStats'),
 
-            // stats 
-            (async () => {
-                const [courseStats, studentCount] = await Promise.all([
-                    this.Course.aggregate([
-                        { $match: { _id: { $in: courseIds }, status: 'published' } },
-                        {
-                            $group: {
-                                _id: null,
-                                totalReviews: { $sum: "$ratingCount" },
-                                avgRating: {
-                                    $avg: { $cond: [{ $gt: ["$ratingCount", 0] }, "$rating", "$$REMOVE"] }
-                                }
-                            }
-                        }
-                    ]),
-                    // Live count of students from the Enrollment
-                    this.Enrollment.countDocuments({ course: { $in: courseIds } })
-                ]);
-
-                return {
-                    totalStudents: studentCount || 0,
-                    totalReviews: courseStats[0]?.totalReviews || 0,
-                    avgRating: courseStats[0]?.avgRating?.toFixed(1) || 0
-                };
-            })(),
-
-            //instructor published courses
+            // Get Published Courses
             this.Course.find({ instructor: id, status: 'published' })
                 .select('title thumbnail price rating ratingCount level slug category instructor')
                 .populate('instructor', 'name')
@@ -281,15 +247,25 @@ class InstructorService {
 
         if (!instructor) throw new Error('Instructor not found');
 
+        // Calculate course stats (Reviews/Ratings)
+        const totalReviews = courses.reduce((acc, c) => acc + (c.ratingCount || 0), 0);
+        const avgRating = courses.length > 0
+            ? (courses.reduce((acc, c) => acc + (c.rating || 0), 0) / courses.length).toFixed(1)
+            : "0.0";
+
         return {
-            instructor,
-            stats: stats || { totalStudents: 0, totalReviews: 0, avgRating: 0 },
+            instructor: {
+                ...instructor.toObject(),
+                totalStudents: instructor.instructorStats?.totalStudentsTaught || 0
+            },
+            stats: {
+                totalStudents: instructor.instructorStats?.totalStudentsTaught || 0,
+                totalReviews,
+                avgRating
+            },
             courses
         };
     }
 }
 
-
 module.exports = InstructorService;
-
-
