@@ -2,13 +2,14 @@ const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const Section = require('../models/Section');
 const Lesson = require('../models/Lesson');
+const User = require('../models/User');
 const CourseService = require('../services/CourseService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
 
 class CourseController {
     constructor() {
-        this.courseService = new CourseService(Course, Enrollment, Section, Lesson);
+        this.courseService = new CourseService(Course, Enrollment, Section, Lesson,User);
     }
 
     // ---------------- Public ----------------
@@ -82,8 +83,9 @@ class CourseController {
         const filters = {
             status: req.query.status,
             level: req.query.level,
-            category: req.query.category,
-            instructor: req.query.instructor
+            // category: req.query.category,
+            instructor: req.query.instructor,
+            minStudents: req.query.minStudents
         };
         const courses = await this.courseService.getAllCourses(page, limit, filters);
         res.status(200).json({ data: courses });

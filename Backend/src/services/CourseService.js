@@ -3,11 +3,12 @@ const { deleteMediaFromCloudinary } = require('../utils/cloudinaryCelanUp');
 const { uploadToCloudinary } = require('../utils/cloudinaryHelpers');
 
 class CourseService {
-    constructor(CourseModel, EnrollmentModel, SectionModel, LessonModel) {
+    constructor(CourseModel, EnrollmentModel, SectionModel, LessonModel, UserModel) {
         this.Course = CourseModel;
         this.Enrollment = EnrollmentModel;
         this.Section = SectionModel;
         this.Lesson = LessonModel;
+        this.User = UserModel
     }
 
     // ==================== Public & User-Specific ====================
@@ -46,11 +47,11 @@ class CourseService {
                 duration: lesson.duration,
                 isPreview: lesson.isPreview,
                 accessible: isOwnerOrAdmin || isEnrolled || lesson.isPreview,
-                    video: lesson.video,
-                    videoUrl: lesson.video?.url,
-                    description: lesson.description,
-                    documents: lesson.documents,
-                    resources: lesson.resources
+                video: lesson.video,
+                videoUrl: lesson.video?.url,
+                description: lesson.description,
+                documents: lesson.documents,
+                resources: lesson.resources
             })),
         }));
 
@@ -150,7 +151,7 @@ class CourseService {
 
     // ==================== Listings ====================
 
-async getPublishedCourses(page = 1, limit = 10, filters = {}) {
+    async getPublishedCourses(page = 1, limit = 10, filters = {}) {
         const skip = (page - 1) * limit;
         const query = { status: 'published' };
 
@@ -173,11 +174,11 @@ async getPublishedCourses(page = 1, limit = 10, filters = {}) {
             if (filters.priceMax !== undefined) query.price.$lte = Number(filters.priceMax);
         }
         if (filters.isFree === 'true' || filters.isFree === true) query.price = 0;
-        if (filters.isFree === 'false' || filters.isFree === false) query.price = { $ne: 0};
+        if (filters.isFree === 'false' || filters.isFree === false) query.price = { $ne: 0 };
 
         // Rating Filter
         if (filters.rating) {
-            query.averageRating = { $gte: Number(filters.rating) }; 
+            query.averageRating = { $gte: Number(filters.rating) };
         }
 
         //Sorting
@@ -194,7 +195,7 @@ async getPublishedCourses(page = 1, limit = 10, filters = {}) {
                 .limit(limit)
                 .populate('instructor', 'name')
                 .populate('category', 'name')
-                .sort(sort), 
+                .sort(sort),
             this.Course.countDocuments(query)
         ]);
 
@@ -225,11 +226,25 @@ async getPublishedCourses(page = 1, limit = 10, filters = {}) {
         const query = {};
         if (filters.status) query.status = filters.status;
         if (filters.level) query.level = filters.level;
-        if (filters.category) query.category = filters.category;
-        if (filters.instructor) query.instructor = filters.instructor;
+        // if (filters.category) query.category = filters.category;
+        if (filters.minStudents) {
+            query.studentsCount = { $gte: parseInt(filters.minStudents) };
+        }
+        if (filters.instructor) {
+            // find insructor that contains part of the name
+            const matchingInstructors = await this.User.find({
+                name: { $regex: filters.instructor, $options: 'i' },
+                role: 'instructor'
+            }).select('_id');
+
+            const instructorIds = matchingInstructors.map(u => u._id);
+            query.instructor = { $in: instructorIds };
+        }
 
         const [courses, total] = await Promise.all([
-            this.Course.find(query).skip(skip).limit(limit),
+            this.Course.find(query)
+                .populate('instructor', 'name')
+                .skip(skip).limit(limit),
             this.Course.countDocuments(query)
         ]);
 
