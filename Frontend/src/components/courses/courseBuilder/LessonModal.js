@@ -137,7 +137,7 @@ export default function LessonModal({ isOpen, onClose, sectionId, courseId, edit
 
         try {
             if (isEditMode) {
-                await lessonAPI.update(editingLesson._id, submitData);
+                await lessonAPI.update(editingLesson.id, submitData);
             } else {
                 await lessonAPI.create(submitData);
             }

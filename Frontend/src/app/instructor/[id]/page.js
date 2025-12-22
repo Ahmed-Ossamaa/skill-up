@@ -33,7 +33,6 @@ export default function InstructorPublicProfile() {
     if (!data) return <div className="text-center py-20">Instructor not found.</div>;
 
     const { instructor, stats, courses } = data;
-    console.log("data:", data);
     return (
         <>
             <Header />

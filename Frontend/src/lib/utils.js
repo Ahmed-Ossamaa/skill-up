@@ -9,7 +9,7 @@ export function formatPrice(price, currency = 'USD') {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency,
-    }).format(price);
+    }).format(price) || '';
 }
 
 // Format duration (sec >> h:mm | min)
@@ -24,12 +24,12 @@ export function formatDuration(seconds) {
 }
 
 // Format date
-export function formatDate(date, format = 'short') {
+export function formatDate(date="2024-12-31T21:03:56.760Z", format = 'short') {
     const options = format === 'long'
         ? { year: 'numeric', month: 'long', day: 'numeric' }
         : { year: 'numeric', month: 'short', day: 'numeric' };
 
-    return new Intl.DateTimeFormat('en-US', options).format(new Date(date));
+    return new Intl.DateTimeFormat('en-US', options).format(new Date(date)) || '';
 }
 
 // Format number with commas
@@ -131,5 +131,23 @@ export function isOnSale(course) {
 
 // Get final price
 export function getFinalPrice(course) {
-    return isOnSale(course) ? course.price - (course.price * course.discount )/ 100 : course.price;
+    return isOnSale(course) ? course.price - (course.price * course.discount) / 100 : course.price;
 }
+
+export function timeAgo (dateString)  {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes ago";
+    return "Just now";
+};

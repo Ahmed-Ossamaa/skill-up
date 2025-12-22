@@ -4,7 +4,6 @@ import React from 'react';
 import { useInstructorStore } from '@/store/instructorStore';
 import Image from 'next/image';
 import { formatDate } from '@/lib/utils';
-import { FiBook } from 'react-icons/fi';
 
 
 export default function CoursePerformanceTable() {

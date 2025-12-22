@@ -12,6 +12,7 @@ import {
 } from "react-icons/hi";
 import { clsx } from "clsx";
 import toast from "react-hot-toast";
+import { formatDate } from "@/lib/utils";
 
 export default function InstructorStudents() {
     const [courses, setCourses] = useState([]);
@@ -140,7 +141,7 @@ export default function InstructorStudents() {
                                                                     </div>
                                                                 </td>
                                                                 <td className="py-4 px-2 text-slate-500 text-sm">
-                                                                    {new Date(student.enrolledAt).toLocaleDateString()}
+                                                                    {formatDate(student?.enrolledAt) || "N/A"}
                                                                 </td>
                                                                 <td className="py-4 px-2 text-right">
                                                                     <a href={`mailto:${student.email}`} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors inline-flex">

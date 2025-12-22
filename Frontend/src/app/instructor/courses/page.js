@@ -28,7 +28,6 @@ export default function MyCoursesPage() {
             setLoading(true);
             const res = await courseAPI.getInstructorCourses({ page: p, limit });
             const payload = res.data.data;
-            // console.log("payload", payload);
             setCourses(payload?.data || []);
             setPage(payload?.page || p);
             setPages(payload?.pages || 1);

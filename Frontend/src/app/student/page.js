@@ -6,8 +6,10 @@ import Link from 'next/link';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCard from '@/components/dashboard/StatsCard';
 import useAuthStore from '@/store/authStore';
-import { FiBook, FiAward, FiClock, FiTrendingUp, FiPlay } from 'react-icons/fi';
-import { AiFillStar } from 'react-icons/ai';
+import { enrollmentAPI } from '@/lib/api';
+import { timeAgo } from '@/lib/utils';
+import { FiBook, FiAward, FiTrendingUp, FiPlay, FiActivity, FiCheck } from 'react-icons/fi';
+import Image from 'next/image';
 
 export default function StudentDashboard() {
     const router = useRouter();
@@ -25,50 +27,47 @@ export default function StudentDashboard() {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            // TODO: Replace with actual API calls
-            // const statsRes = await studentAPI.getStats();
-            // const coursesRes = await studentAPI.getEnrolledCourses();
-
-            // Mock data
+            const { data: response } = await enrollmentAPI.getMyEnrollments();
+            const enrollments = response.data || [];
+            // Stats 
+            const completedCount = enrollments.filter(e => e.status === 'completed').length;
             setStats({
-                enrolledCourses: 8,
-                completedCourses: 3,
-                totalHours: 45.5,
-                certificates: 3,
+                enrolledCourses: enrollments.length,
+                completedCourses: completedCount,
+                certificates: completedCount,
             });
 
-            setEnrolledCourses([
-                {
-                    id: 1,
-                    title: 'React Complete Guide',
-                    instructor: 'John Doe',
-                    progress: 65,
-                    thumbnail: null,
-                    lastAccessed: '2 days ago',
-                },
-                {
-                    id: 2,
-                    title: 'Node.js Masterclass',
-                    instructor: 'Jane Smith',
-                    progress: 40,
-                    thumbnail: null,
-                    lastAccessed: '1 week ago',
-                },
-                {
-                    id: 3,
-                    title: 'JavaScript Advanced',
-                    instructor: 'Bob Wilson',
-                    progress: 90,
-                    thumbnail: null,
-                    lastAccessed: 'Yesterday',
-                },
-            ]);
+            // My Enrolled Courses List 
+            const processedCourses = enrollments
+                .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+                .map(enrollment => ({
+                    id: enrollment.course._id,
+                    title: enrollment.course.title,
+                    instructor: enrollment.course.instructor?.name || 'Instructor',
+                    progress: enrollment.progress?.percentage || 0,
+                    thumbnail: enrollment.course.thumbnail?.url,
+                    lastAccessed: timeAgo(enrollment.updatedAt),
+                    rawDate: enrollment.updatedAt
+                }));
 
-            setRecentActivity([
-                { id: 1, action: 'Completed', item: 'React Hooks Lesson', time: '2 hours ago' },
-                { id: 2, action: 'Started', item: 'Node.js Express Module', time: '1 day ago' },
-                { id: 3, action: 'Earned', item: 'JavaScript Certificate', time: '3 days ago' },
-            ]);
+            setEnrolledCourses(processedCourses);
+
+            // Recent Activity based on enrollment( mark as complete >> updates the doc) later i may develop sth else in backend
+            const activityLog = processedCourses.slice(0, 3).map((course, index) => {
+                let action = "Accessed";
+                if (course.progress === 100) action = "Completed";
+                else if (course.progress > 0) action = "Continued";
+                else action = "Started";
+
+                return {
+                    id: index,
+                    action: action,
+                    item: course.title,
+                    time: course.lastAccessed
+                };
+            });
+            setRecentActivity(activityLog);
+
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
         } finally {
@@ -77,10 +76,7 @@ export default function StudentDashboard() {
     };
 
     useEffect(() => {
-        // wait for auth hydration
         if (!isReady) return;
-
-        // Check if user is student
         if (!isAuthenticated) {
             router.push('/auth/login');
             return;
@@ -108,42 +104,28 @@ export default function StudentDashboard() {
         <DashboardLayout role="student">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">My Dashboard</h1>
-                <p className="text-gray-600 dark:text-gray-400">Welcome back, {user?.name}! Continue your learning journey.</p>
+                <p className="text-gray-800 font-semibold dark:text-gray-400">Welcome back, {user?.name}! Continue your learning journey.</p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <StatsCard
                     icon={FiBook}
                     label="Enrolled Courses"
                     value={stats.enrolledCourses}
-                    change="+2"
-                    trend="up"
                     color="primary"
                 />
                 <StatsCard
                     icon={FiAward}
                     label="Completed"
                     value={stats.completedCourses}
-                    change="+1"
-                    trend="up"
                     color="success"
                 />
-                <StatsCard
-                    icon={FiClock}
-                    label="Learning Hours"
-                    value={stats.totalHours}
-                    change="+5.5"
-                    trend="up"
-                    color="info"
-                />
+
                 <StatsCard
                     icon={FiTrendingUp}
                     label="Certificates"
                     value={stats.certificates}
-                    change="+1"
-                    trend="up"
                     color="warning"
                 />
             </div>
@@ -160,73 +142,86 @@ export default function StudentDashboard() {
                             </Link>
                         </div>
 
-                        <div className="space-y-4">
-                            {enrolledCourses.map((course) => (
-                                <div key={course.id} className="glass rounded-lg p-4 hover-lift">
-                                    <div className="flex items-start space-x-4">
-                                        {/* Thumbnail */}
-                                        <div className="w-32 h-20 bg-linear-to-br from-primary-500 to-secondary-500 rounded-lg shrink-0 flex items-center justify-center">
-                                            <FiBook className="w-8 h-8 text-white/50" />
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <h3 className="font-semibold mb-1 line-clamp-1">{course.title}</h3>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">by {course.instructor}</p>
-
-                                            {/* Progress Bar */}
-                                            <div className="mb-2">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-xs text-gray-500">Progress</span>
-                                                    <span className="text-xs font-semibold">{course.progress}%</span>
-                                                </div>
-                                                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-linear-to-r from-primary-500 to-secondary-500 transition-all duration-500"
-                                                        style={{ width: `${course.progress}%` }}
+                        {enrolledCourses.length > 0 ? (
+                            <div className="space-y-4">
+                                {enrolledCourses.slice(0, 3).map((course) => (
+                                    <div key={course.id} className="glass rounded-lg p-4 border-2! border-gray-100! hover:shadow-md! ">
+                                        <div className="flex items-start space-x-4">
+                                            {/* Thumbnail */}
+                                            <div className="w-32 h-20 rounded-lg shrink-0 overflow-hidden bg-gray-100 relative">
+                                                {course.thumbnail ? (
+                                                    <Image
+                                                        src={course.thumbnail}
+                                                        alt={course.title}
+                                                        width={50}
+                                                        height={50}
+                                                        className="w-full h-full object-cover"
                                                     />
+                                                ) : (
+                                                    <div className="w-full h-full bg-linear-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
+                                                        <FiBook className="w-8 h-8 text-white/50" />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Content */}
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold mb-1 line-clamp-1">{course.title}</h3>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">by {course.instructor}</p>
+
+                                                {/* Progress Bar */}
+                                                <div className="mb-2">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs text-gray-500">Progress</span>
+                                                        <span className="text-xs font-semibold">{course.progress}%</span>
+                                                    </div>
+                                                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-linear-to-r from-primary-500 to-secondary-500 transition-all duration-500"
+                                                            style={{ width: `${course.progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between mt-3">
+                                                    <span className="text-xs text-gray-500">Active {course.lastAccessed}</span>
+                                                    <Link
+                                                        href={`/courses/${course.id}`}
+                                                        className={`flex items-center space-x-1 px-4 py-2 ${course.progress === 100 ? 'bg-green-500' : 'bg-primary-500'} text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all`}
+                                                    >
+                                                        {course.progress === 100 &&
+                                                            <>
+                                                                <FiCheck className="w-4 h-4" />
+                                                                <span>Watch Again</span>
+                                                            </>
+                                                        }
+                                                        {course.progress !== 100 &&
+                                                            <>
+                                                                <FiPlay className="w-4 h-4" />
+
+                                                                <span>{course.progress > 0 ? 'Continue' : 'Start'}</span>
+                                                            </>
+                                                        }
+
+                                                    </Link>
                                                 </div>
                                             </div>
-
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs text-gray-500">Last accessed {course.lastAccessed}</span>
-                                                <Link
-                                                    href={`/courses/${course.id}/learn`}
-                                                    className="flex items-center space-x-1 px-4 py-2 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
-                                                >
-                                                    <FiPlay className="w-4 h-4" />
-                                                    <span>Continue</span>
-                                                </Link>
-                                            </div>
                                         </div>
                                     </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-10">
+                                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <FiBook className="w-8 h-8 text-gray-400" />
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Recommended Courses */}
-                    <div className="glass-card p-6">
-                        <h2 className="text-xl font-bold mb-4">Recommended For You</h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                            Based on your learning history
-                        </p>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {[1, 2].map((i) => (
-                                <div key={i} className="glass rounded-lg p-4">
-                                    <div className="aspect-video bg-linear-to-br from-secondary-500 to-primary-500 rounded-lg mb-3"></div>
-                                    <h3 className="font-semibold mb-1">Advanced React Patterns</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">by Expert Teacher</p>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-1">
-                                            <AiFillStar className="w-4 h-4 text-yellow-500" />
-                                            <span className="text-sm font-semibold">4.8</span>
-                                        </div>
-                                        <span className="text-sm font-bold text-primary-500">$49.99</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                <h3 className="text-lg font-semibold mb-2">No courses yet</h3>
+                                <p className="text-gray-500 mb-4">Start learning by enrolling in your first course.</p>
+                                <Link href="/courses" className="btn-primary inline-flex">
+                                    Browse Courses
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -235,42 +230,25 @@ export default function StudentDashboard() {
                     {/* Recent Activity */}
                     <div className="glass-card p-6">
                         <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
-                        <div className="space-y-4">
-                            {recentActivity.map((activity) => (
-                                <div key={activity.id} className="flex items-start space-x-3">
-                                    <div className="w-8 h-8 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center shrink-0">
-                                        <FiTrendingUp className="w-4 h-4 text-white" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-sm">
-                                            <span className="font-semibold">{activity.action}</span> {activity.item}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Learning Streak */}
-                    <div className="glass-card p-6">
-                        <h2 className="text-xl font-bold mb-4">Learning Streak 🔥</h2>
-                        <div className="text-center">
-                            <div className="text-4xl font-bold gradient-text mb-2">7 Days</div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                Keep it up! You are on fire!
-                            </p>
-                            <div className="flex justify-center space-x-2">
-                                {[...Array(7)].map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-xs font-bold"
-                                    >
-                                        {i + 1}
+                        {recentActivity.length > 0 ? (
+                            <div className="space-y-4">
+                                {recentActivity.map((activity) => (
+                                    <div key={activity.id} className="flex items-start space-x-3">
+                                        <div className="w-8 h-8 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center shrink-0">
+                                            <FiActivity className="w-4 h-4 text-white" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm">
+                                                <span className="font-semibold">{activity.action}</span> {activity.item}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        ) : (
+                            <p className="text-sm text-gray-500">No recent activity.</p>
+                        )}
                     </div>
 
                 </div>

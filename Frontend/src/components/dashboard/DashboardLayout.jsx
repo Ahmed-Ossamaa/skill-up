@@ -31,7 +31,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 { icon: FiUsers, label: 'Users', href: '/admin/users' },
                 { icon: FiBook, label: 'Courses', href: '/admin/courses' },
                 { icon: FiFolder, label: 'Categories', href: '/admin/categories' },
-                { icon: FiMessageSquare, label: 'Reviews', href: '/admin/reviews' },
+                { icon: FiMessageSquare, label: 'Testimonials', href: '/admin/testimonials' },
                 { icon: FiBarChart, label: 'Analytics', href: '/admin/analytics' },
                 { icon: FiDollarSign, label: 'Revenue', href: '/admin/revenue' },
                 { icon: FiSettings, label: 'Settings', href: '/admin/settings' },
@@ -43,7 +43,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 { icon: FiPlus, label: 'Create Course', href: '/instructor/courses/create' },
                 { icon: FiUsers, label: 'Students', href: '/instructor/students' },
                 { icon: FiBarChart, label: 'Analytics', href: '/instructor/analytics' },
-                { icon: FiDollarSign, label: 'Revenue', href: '/instructor/revenue' },
+                // { icon: FiDollarSign, label: 'Revenue', href: '/instructor/revenue' },//later (with payout)
                 { icon: FiMessageSquare, label: 'Reviews', href: '/instructor/reviews' },
                 { icon: FiSettings, label: 'Profile', href: '/profile' },
             ];

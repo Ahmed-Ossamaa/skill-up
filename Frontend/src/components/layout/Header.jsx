@@ -109,14 +109,14 @@ export default function Header() {
                         {/* User Menu */}
                         {isAuthenticated ? (
                             <div className="relative group">
-                                <button className="flex items-center space-x-2 glass-button">
+                                <button className="flex items-center space-x-2 cursor-pointer">
                                     <div className="w-8 h-8 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                                         {user?.avatar?.url ?
                                             <Image
                                                 src={user?.avatar?.url}
-                                                width={38}
-                                                height={38}
-                                                className="rounded-full"
+                                                width={50}
+                                                height={50}
+                                                className="rounded-full max-w-full max-h-full"
                                                 alt={user?.name}
                                             /> :
                                             (user?.name?.charAt(0) || 'U')

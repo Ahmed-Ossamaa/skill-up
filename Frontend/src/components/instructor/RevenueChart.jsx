@@ -25,7 +25,7 @@ export default function RevenueChart() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                     <XAxis 
-                        dataKey="month" 
+                        dataKey="label" 
                         axisLine={false} 
                         tickLine={false} 
                         tick={{ fill: '#94a3b8', fontSize: 12 }} 

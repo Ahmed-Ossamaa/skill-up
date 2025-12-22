@@ -21,18 +21,16 @@ export default function SettingsPage() {
         linkedin: '',
         github: '',
         twitter: '',
-        facebook: '',
         avatar: null
     });
 
-    // Fetch current user data on mount
+
     useEffect(() => {
         const fetchUser = async () => {
             try {
                 const { data } = await userAPI.getMyProfile();
-                const userData = data.data; // Adjust based on API structure
+                const userData = data.data;
 
-                // 1. Capture Role
                 setUserRole(userData.role || 'student');
 
                 setFormData({
@@ -43,7 +41,6 @@ export default function SettingsPage() {
                     linkedin: userData.linkedin || '',
                     github: userData.github || '',
                     twitter: userData.twitter || '',
-                    facebook: userData.facebook || '',
                     avatar: userData.avatar 
                 });
             } catch (error) {
@@ -66,10 +63,11 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             const { avatar, ...textData } = formData;
-            await userAPI.updateProfile(textData);
+            await userAPI.updateMyProfile(textData);
             toast.success('Profile updated successfully!');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to update profile');
+            console.error(err);
         } finally {
             setSaving(false);
         }
@@ -82,7 +80,6 @@ export default function SettingsPage() {
     return (
         <>
             <Header />
-            {/* RESTORED YOUR EXACT STYLING HERE */}
             <div className="mx-auto py-10 px-10 pt-25 min-h-screen bg-linear-to-bl from-slate-100 to-gray-600">
                 
                 <h1 className="text-3xl font-bold mb-2 text-gray-900">Account Settings</h1>
@@ -131,7 +128,7 @@ export default function SettingsPage() {
                                         />
                                     </div>
 
-                                    {/* CONDITIONAL: Headline (Only for Instructors) */}
+                                    {/*  Headline (Only for Instructors) */}
                                     {isInstructor && (
                                         <div>
                                             <label className="block text-sm font-medium mb-1">Headline</label>
@@ -149,7 +146,6 @@ export default function SettingsPage() {
                                     )}
 
                                     <div>
-                                        {/* DYNAMIC LABEL */}
                                         <label className="block text-sm font-medium mb-1">
                                             {isInstructor ? "Professional Biography" : "About Me"}
                                         </label>
@@ -170,7 +166,7 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            {/* Section: Social Links */}
+                            {/*Social Links */}
                             <div className="glass-card p-8">
                                 <h3 className="font-semibold text-xl mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
                                     Social Profiles
@@ -212,7 +208,7 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            {/* Save Button */}
+                            {/* Save Btn */}
                             <div className="flex justify-end">
                                 <button
                                     type="submit"

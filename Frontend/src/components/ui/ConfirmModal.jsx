@@ -49,6 +49,7 @@ export default function ConfirmModal({
 
     const handleConfirm = () => {
         onConfirm();
+        onClose();
     };
 
     return (

@@ -78,7 +78,7 @@ class InstructorService {
         // Get Course IDs for filtering
         const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
 
-        const [instructor, currentMonthStats, prevMonthStats, ratingData] = await Promise.all([
+        const [instructor, currentMonthStats, prevMonthStats, ratingData,totalCoursesCount, activeCoursesCount] = await Promise.all([
             // Lifetime Totals 
             this.User.findById(id).select('instructorStats'),
 
@@ -105,7 +105,9 @@ class InstructorService {
                         }
                     }
                 }
-            ])
+            ]),
+            this.Course.countDocuments({ instructor: id }),
+            this.Course.countDocuments({ instructor: id, status: 'published' }),
         ]);
 
         // Data Preparation
@@ -121,7 +123,8 @@ class InstructorService {
         };
 
         return {
-            courses: stats.totalCoursesCreated || 0,
+            courses:totalCoursesCount || 0,
+            activeCourses: activeCoursesCount,
             students: stats.totalStudentsTaught || 0,
             revenue: stats.totalEarnings || 0,
             rating: avgRating.toFixed(1),

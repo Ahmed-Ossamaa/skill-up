@@ -75,17 +75,23 @@ export const reviewAPI = {
 
 export const userAPI = {
     getMyProfile: () => api.get('/users/me'),
-    getById: (id) => api.get(`/users/${id}`),
-    update: (id, data) => api.patch(`/users/${id}`, data),
-    uploadAvatar: (formData) => api.post('/uploads/users/me/avatar', formData, {
+    updateUser: (id, data) => api.patch(`/users/${id}`, data),
+    updateMyProfile: (data) => api.patch(`/users/me`, data),
+    uploadAvatar: (formData) => api.post('/uploads/users/me/avatar',
+        formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
     }),
     deleteAvatar: () => api.delete('/uploads/users/me/avatar'),
+    //admin
+    getAll: (params) => api.get('/users', { params }),
+    getById: (id) => api.get(`/users/${id}`),
+    delete: (id) => api.delete(`/users/delete/${id}`),
 };
 
 export const enrollmentAPI = {
     enroll: (courseId) => api.post(`/enrollments/courses/${courseId}/enroll`),
     getMyEnrollments: () => api.get('/enrollments/my-enrollments'),
+    getCertificate: (courseId) => api.get(`/certificate/${courseId}`),
 };
 
 export const instructorAPI = {
@@ -94,5 +100,9 @@ export const instructorAPI = {
     getPublicProfile: (id) => api.get(`/instructors/profile/${id}`)
 }
 
+
+export const adminAPI = {
+    getStats: () => api.get('/users/admin/stats'),
+};
 
 

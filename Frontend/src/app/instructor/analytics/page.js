@@ -10,16 +10,17 @@ import { motion } from "framer-motion";
 import CoursePerformanceTable from "@/components/instructor/CoursePerformanceTable";
 
 export default function AnalyticsPage() {
-    const { stats, fetchDashboardData, loading } = useInstructorStore();
+    const { stats,fetchDashboardData, loading } = useInstructorStore();
 
     useEffect(() => {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
+    // console.log("Stats:", stats);
     const statCards = [
         {
             label: "Total Revenue",
-            value: loading ? "..." : `$${stats.revenue?.toLocaleString()}`,
+            value: loading ? "..." : `$${stats.revenue?.toLocaleString() || "0"}`,
             icon: HiOutlineCash,
             color: "success",
             change: stats.revenueTrend,
@@ -27,7 +28,7 @@ export default function AnalyticsPage() {
         },
         {
             label: "Total Students",
-            value: loading ? "..." : stats.students?.toLocaleString(),
+            value: loading ? "..." : stats.students?.toLocaleString() || "0",
             icon: HiOutlineUsers,
             color: "secondary",
             change: stats.studentTrend,
@@ -35,13 +36,13 @@ export default function AnalyticsPage() {
         },
         {
             label: "Avg. Rating",
-            value: loading ? "..." : stats.rating,
+            value: loading ? "..." : stats.rating || "0.0",
             icon: HiOutlineStar,
             color: "warning",
         },
         {
             label: "Active Courses",
-            value: loading ? "..." : stats.courses,
+            value: loading ? "..." : stats.activeCourses||"0",
             icon: HiOutlineBookOpen,
             color: "info"
         },
