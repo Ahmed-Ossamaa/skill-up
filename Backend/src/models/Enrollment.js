@@ -48,6 +48,12 @@ const enrollmentSchema = new mongoose.Schema(
             default: 0
         },
 
+        certificate: {
+        issued: { type: Boolean, default: false },
+        certificateId: { type: String }, 
+        issuedAt: { type: Date }
+        },
+
         completedAt: Date,
     },
     { timestamps: true }

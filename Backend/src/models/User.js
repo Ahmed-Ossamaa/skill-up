@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: [ true, 'Name is required' ],
+        required: [true, 'Name is required'],
         trim: true
     },
     email: {
         type: String,
         required: true,
         unique: true,
-        lowercase: true,    
+        lowercase: true,
         trim: true,
         match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email (DB Error)']
     },
@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         minLength: [8, 'Password must be at least 8 characters'],
-        select: false  
+        select: false
     },
     role: {
         type: String,
@@ -52,15 +52,15 @@ const userSchema = new mongoose.Schema({
 
     resetPasswordToken: {
         type: String,
-        select: false 
+        select: false
     },
     resetPasswordExpires: {
         type: Date,
-        select: false  
+        select: false
     },
     refreshToken: {
         type: String,
-        select: false  
+        select: false
     },
     avatar: {
         url: { type: String },
@@ -71,6 +71,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['active', 'banned'],
         default: 'active'
+    },
+
+    studentStats: {
+        totalEnrolledCourses: { type: Number, default: 0 },
+        totalAmountPaid: { type: Number, default: 0 }
+    },
+
+    instructorStats: {
+        totalCoursesCreated: { type: Number, default: 0 },
+        totalStudentsTaught: { type: Number, default: 0 },
+        totalEarnings: { type: Number, default: 0 }
     }
 }, { timestamps: true });
 

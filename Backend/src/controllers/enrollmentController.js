@@ -1,10 +1,13 @@
+const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
+const User = require("../models/User");
 const EnrollmentService = require("../services/EnrollmentService");
 const asyncHandler = require("express-async-handler");
 
 
 class EnrollmentController {
     constructor() {
-        this.enrollmentService = new EnrollmentService();
+        this.enrollmentService = new EnrollmentService(Enrollment,Course,User);
     }
 
 
@@ -30,6 +33,12 @@ class EnrollmentController {
             success: true,
             data: enrollments
         });
+    });
+
+    getCertificate = asyncHandler(async (req, res) => {
+        const { courseId } = req.params;
+        const certificate = await this.enrollmentService.getCertificate(req.user.id, courseId);
+        res.status(200).json({ data: certificate });
     });
 
 }

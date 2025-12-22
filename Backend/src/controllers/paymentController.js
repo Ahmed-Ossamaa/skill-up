@@ -15,40 +15,49 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
  * @param {Object} res - The response object.
  * @returns {Promise<Object>} - A promise that resolves with the response object.
  */
-exports.createPaymentIntent = asyncHandler( async (req, res) => {
+exports.createPaymentIntent = asyncHandler(async (req, res) => {
 
-        const userId = req.user._id;
-        const { courseId } = req.body;
-        
-        const course = await Course.findById(courseId);
-        if (!course) throw ApiError.notFound("Course not found");
+    const userId = req.user._id;
+    const { courseId } = req.body;
 
-        if (course.isFree) {
-            return res.status(400).json({ message: "This course is already free." });
-        }
+    const course = await Course.findById(courseId);
+    if (!course) throw ApiError.notFound("Course not found");
 
-        const amount = course.price * 100;
-            // course.salePrice > 0 ? course.salePrice * 100 : course.price * 100;
+    if (course.isFree) {
+        return res.status(400).json({ message: "This course is already free." });
+    }
 
-        // Create PaymentIntent
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount,
-            currency: "usd",
-            metadata: {
-                courseId: course._id.toString(),
-                userId: userId.toString(),
-                courseTitle: course.title
-            },
-            automatic_payment_methods: { enabled: true },
+    let amountToCharge = course.price;
+    if (course.discount && course.discount > 0) {
+        const discountAmount = (course.price * course.discount) / 100;
+        amountToCharge = course.price - discountAmount;
+    }
+    const stripeAmount = Math.round(amountToCharge * 100);
+
+
+
+    // Create PaymentIntent
+    const paymentIntent = await stripe.paymentIntents.create({
+        amount: stripeAmount,
+        currency: "usd",
+        metadata: {
+            courseId: course._id.toString(),
+            userId: userId.toString(),
+            courseTitle: course.title,
+            originalPrice: course.price,
+            discountApplied: course.discount ? `${course.discount.percentage}%` : '0%'
+        },
+        automatic_payment_methods: { enabled: true },
+    });
+    if (paymentIntent.error) {
+        console.log(paymentIntent.error.message);
+        return res.status(400).json({ message: paymentIntent.error.message });
+    } else {
+        console.log("success", paymentIntent.client_secret);
+        return res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+            amount: amountToCharge
         });
-        if(paymentIntent.error){
-            console.log(paymentIntent.error.message);
-            return res.status(400).json({ message: paymentIntent.error.message });
-        }else{
-            console.log("success",paymentIntent.client_secret);
-            return res.status(200).json({
-                clientSecret: paymentIntent.client_secret,
-            });
-        }
+    }
 
-} );
+});

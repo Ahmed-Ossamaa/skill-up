@@ -1,8 +1,11 @@
 const Stripe = require("stripe");
 const Enrollment = require("../models/Enrollment");
 const Course = require("../models/Course");
+const User = require("../models/User");
+const EnrollmentService = require("../services/EnrollmentService");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const enrollmentService = new EnrollmentService(Enrollment, Course, User);
 
 /**
  * Handles a webhook event from Stripe.
@@ -10,7 +13,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
  * This function is responsible for handling any webhook events sent from Stripe.
  * It will construct the event from the request body and signature, and then
  * process the event accordingly.
- * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  * @returns {Promise<Object>} - A promise that resolves with the response object.
@@ -44,26 +46,34 @@ exports.webhookHandler = async (req, res) => {
 
 
         try {
-            const existing = await Enrollment.findOne({ student: userId, course: courseId });
 
-            if (!existing) {
-                await Enrollment.create({
-                    student: userId,
-                    course: courseId,
-                    status: "enrolled",
-                    paymentId: paymentIntent.id,
-                    amountPaid: realAmountPaid,
-                });
+            await enrollmentService.enroll(
+                userId,
+                courseId,
+                realAmountPaid,
+                paymentIntent.id
+            );
 
-                await Course.findByIdAndUpdate(courseId, {
-                    $addToSet: { students: userId },
-                    $inc: { studentsCount: 1 }
-                });
+            // await Course.findByIdAndUpdate(courseId, {
+            //     $addToSet: { students: userId },
+            //     $inc: { studentsCount: 1 }
+            // });
+
+            // await User.findByIdAndUpdate(userId, {
+            //     $inc: {
+            //         'studentStats.totalEnrolledCourses': 1,
+            //         'studentStats.totalAmountPaid': realAmountPaid
+            //     }
+            // });
+
+            console.log("User enrolled successfully:", userId);
+        } catch (err) {
+            if (err.message && err.message.includes("already enrolled")) {
+                console.log("Enrollment already exists, skipping.");
+                return res.json({ received: true });
             }
 
-            console.log("User enrolled:", userId);
-        } catch (err) {
-            console.error("Enrollment error:", err);
+            console.error("Enrollment Service Error:", err);
             return res.status(500).json({ error: err.message });
         }
     }
