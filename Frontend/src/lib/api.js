@@ -7,6 +7,7 @@ export const authAPI = {
     refresh: () => api.post('/auth/refresh'),
     forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
     resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
+    changePassword: (data) => api.post('/auth/change-password', data),
 };
 
 export const categoryAPI = {
@@ -75,7 +76,6 @@ export const reviewAPI = {
 
 export const userAPI = {
     getMyProfile: () => api.get('/users/me'),
-    updateUser: (id, data) => api.patch(`/users/${id}`, data),
     updateMyProfile: (data) => api.patch(`/users/me`, data),
     uploadAvatar: (formData) => api.post('/uploads/users/me/avatar',
         formData, {
@@ -85,6 +85,7 @@ export const userAPI = {
     //admin
     getAll: (params) => api.get('/users', { params }),
     getById: (id) => api.get(`/users/${id}`),
+    updateUser: (id, data) => api.patch(`/users/${id}`, data),
     delete: (id) => api.delete(`/users/delete/${id}`),
 };
 

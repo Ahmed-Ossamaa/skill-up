@@ -109,41 +109,45 @@ export default function Header() {
                         {/* User Menu */}
                         {isAuthenticated ? (
                             <div className="relative group">
-                                <button className="flex items-center space-x-2 cursor-pointer">
-                                    <div className="w-8 h-8 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                        {user?.avatar?.url ?
+                                <button className="flex items-center gap-2 cursor-pointer outline-none bg-white/20 dark:bg-black/50 backdrop-blur-md py-1.5 pl-1.5 pr-4 rounded-full border border-white/20 shadow-sm transition-all hover:bg-white/30">
+                                    {/* Avatar */}
+                                    <div className="relative w-8 h-8 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden shadow-sm border border-white/10">
+                                        {user?.avatar?.url ? (
                                             <Image
-                                                src={user?.avatar?.url}
-                                                width={50}
-                                                height={50}
-                                                className="rounded-full max-w-full max-h-full"
-                                                alt={user?.name}
-                                            /> :
-                                            (user?.name?.charAt(0) || 'U')
-                                        }
+                                                src={user.avatar.url}
+                                                width={100}
+                                                height={100}
+                                                className="w-full h-full object-cover"
+                                                alt={user?.name || "User"}
+                                            />
+                                        ) : (
+                                            <span>
+                                                {(user?.name?.charAt(0) || 'U').toUpperCase()}
+                                            </span>
+                                        )}
                                     </div>
-                                    <div className="hidden sm:block">
-                                        <span className="font-semibold">{user?.name}</span>
-                                        <br />
+
+                                    {/* User Name */}
+                                    <div className="hidden sm:block text-left">
+                                        <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 block leading-tight">
+                                            {user?.name}
+                                        </span>
                                     </div>
                                 </button>
 
                                 {/* Dropdown */}
-                                <div className="absolute right-0 mt-2 w-48 glass-card opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                                    <div className="p-2">
-                                        <Link href={dashboardHref} className="block px-4 py-2 text-sm hover:bg-primary-500/30 rounded-lg transition-colors">
+                                <div className="absolute right-0 mt-2 w-48 glass-card opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform origin-top-right">
+                                    <div className="p-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700">
+                                        <Link href={dashboardHref} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 rounded-lg transition-colors">
                                             Dashboard
                                         </Link>
-                                        <Link href="/my-learning" className="block px-4 py-2 text-sm hover:bg-primary-500/30 rounded-lg transition-colors">
-                                            My Learning
-                                        </Link>
-                                        <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-primary-500/30 rounded-lg transition-colors">
+                                        <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 rounded-lg transition-colors">
                                             Profile
                                         </Link>
-                                        <hr className="my-2 border-gray-500/10" />
+                                        <hr className="my-2 border-gray-100 dark:border-gray-700" />
                                         <button
                                             onClick={handleLogout}
-                                            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors font-medium"
                                         >
                                             Logout
                                         </button>

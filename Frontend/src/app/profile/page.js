@@ -1,16 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { userAPI } from '@/lib/api'; 
+import { userAPI, authAPI } from '@/lib/api';
 import AvatarUploader from '@/components/users/AvatarUploader';
 import { toast } from 'react-hot-toast';
-import { AiOutlineSave, AiOutlineGlobal, AiFillLinkedin, AiFillGithub, AiOutlineTwitter, AiOutlineLoading3Quarters } from 'react-icons/ai';
+import {
+    AiOutlineSave,
+    AiOutlineGlobal,
+    AiFillLinkedin,
+    AiFillGithub,
+    AiOutlineTwitter,
+    AiOutlineLoading3Quarters,
+    AiOutlineLock,
+    AiOutlineUser,
+    AiOutlineSafety
+} from 'react-icons/ai';
 import Header from '@/components/layout/Header';
 
 export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [passwordLoading, setPasswordLoading] = useState(false);
     const [userRole, setUserRole] = useState('student');
+    const [activeTab, setActiveTab] = useState('profile');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -24,6 +36,11 @@ export default function SettingsPage() {
         avatar: null
     });
 
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmNewPassword: ''
+    });
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -41,7 +58,7 @@ export default function SettingsPage() {
                     linkedin: userData.linkedin || '',
                     github: userData.github || '',
                     twitter: userData.twitter || '',
-                    avatar: userData.avatar 
+                    avatar: userData.avatar
                 });
             } catch (error) {
                 console.error('Failed to load settings');
@@ -58,7 +75,12 @@ export default function SettingsPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+    const handlePasswordChange = (e) => {
+        const { name, value } = e.target;
+        setPasswordData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleProfileSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
         try {
@@ -67,9 +89,29 @@ export default function SettingsPage() {
             toast.success('Profile updated successfully!');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to update profile');
-            console.error(err);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handlePasswordSubmit = async (e) => {
+        e.preventDefault();
+        if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+            return toast.error("New passwords do not match");
+        }
+        if (passwordData.newPassword.length < 8) {
+            return toast.error("Password must be at least 8 characters");
+        }
+
+        setPasswordLoading(true);
+        try {
+            await authAPI.changePassword(passwordData);
+            toast.success('Password changed successfully!');
+            setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to change password');
+        } finally {
+            setPasswordLoading(false);
         }
     };
 
@@ -80,150 +122,206 @@ export default function SettingsPage() {
     return (
         <>
             <Header />
-            <div className="mx-auto py-10 px-10 pt-25 min-h-screen bg-linear-to-bl from-slate-100 to-gray-600">
-                
-                <h1 className="text-3xl font-bold mb-2 text-gray-900">Account Settings</h1>
-                <p className="text-gray-800 mb-8 font-medium">
-                    Manage your {isInstructor ? 'instructor profile' : 'personal account'} and preferences.
-                </p>
+            <div className="mx-auto py-6 px-6 lg:px-10 pt-25 min-h-screen bg-linear-to-bl from-slate-800 to-gray-200 dark:from-gray-900 dark:to-gray-800">
 
-                <div className="grid lg:grid-cols-12 gap-8">
+                <div className="max-w-7xl mx-auto">
+                    <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Account Settings</h1>
+                    <p className="text-gray-600 dark:text-gray-300 mb-8 font-medium">
+                        Manage your {isInstructor ? 'instructor profile' : 'personal account'} and preferences.
+                    </p>
 
-                    {/* --- Left Column: Avatar & Preview --- */}
-                    <div className="lg:col-span-4">
-                        <div className="glass-card p-6 text-center sticky top-24">
-                            <h3 className="font-semibold text-lg mb-6">Profile Picture</h3>
+                    <div className="grid lg:grid-cols-12 gap-8">
 
-                            <AvatarUploader
-                                currentAvatar={formData.avatar}
-                                onUpdate={(newAvatar) => setFormData(prev => ({ ...prev, avatar: newAvatar }))}
-                            />
+                        {/* --- Left Column: Avatar --- */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="glass-card p-6 text-center sticky top-24 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                <h3 className="font-semibold text-lg mb-6 dark:text-white">Profile Picture</h3>
 
-                            <div className="mt-6 text-sm text-gray-600">
-                                <p>Recommended: 500x500px</p>
-                                <p>JPG or PNG up to 2MB</p>
+                                <AvatarUploader
+                                    currentAvatar={formData.avatar}
+                                    onUpdate={(newAvatar) => setFormData(prev => ({ ...prev, avatar: newAvatar }))}
+                                />
+
+                                <div className="mt-6 text-sm text-gray-500">
+                                    <p>Recommended: 500x500px</p>
+                                    <p>JPG or PNG up to 2MB</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* --- Right Column: Edit Form --- */}
-                    <div className="lg:col-span-8">
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* --- Right Column: Tabs & Forms --- */}
+                        <div className="lg:col-span-8 space-y-6">
 
-                            {/* Section: Basic Info */}
-                            <div className="glass-card p-8">
-                                <h3 className="font-semibold text-xl mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-                                    Basic Information
-                                </h3>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Display Name</label>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-hidden"
-                                        />
-                                    </div>
-
-                                    {/*  Headline (Only for Instructors) */}
-                                    {isInstructor && (
-                                        <div>
-                                            <label className="block text-sm font-medium mb-1">Headline</label>
-                                            <input
-                                                type="text"
-                                                name="headline"
-                                                value={formData.headline}
-                                                onChange={handleChange}
-                                                placeholder="e.g. Senior Fullstack Developer"
-                                                maxLength={50}
-                                                className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-hidden"
-                                            />
-                                            <p className="text-xs text-gray-500 mt-1 text-right">{formData.headline.length}/50</p>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">
-                                            {isInstructor ? "Professional Biography" : "About Me"}
-                                        </label>
-                                        <textarea
-                                            name="bio"
-                                            value={formData.bio}
-                                            onChange={handleChange}
-                                            rows={5}
-                                            placeholder={isInstructor ? "Tell students about your professional background..." : "Tell us a bit about yourself..."}
-                                            className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-hidden resize-none"
-                                        />
-                                        <p className="text-sm mt-1 text-gray-600">
-                                            {isInstructor 
-                                                ? "Tip: Use clear paragraphs. This will be shown on your public profile."
-                                                : "This will be visible on your student profile."}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/*Social Links */}
-                            <div className="glass-card p-8">
-                                <h3 className="font-semibold text-xl mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-                                    Social Profiles
-                                </h3>
-
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-3 text-gray-400"><AiOutlineGlobal /></div>
-                                        <input
-                                            type="url" name="website" value={formData.website} onChange={handleChange}
-                                            placeholder="Website URL"
-                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-hidden"
-                                        />
-                                    </div>
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-3 text-blue-600"><AiFillLinkedin /></div>
-                                        <input
-                                            type="url" name="linkedin" value={formData.linkedin} onChange={handleChange}
-                                            placeholder="LinkedIn URL"
-                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-hidden"
-                                        />
-                                    </div>
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-3 text-gray-800 dark:text-gray-200"><AiFillGithub /></div>
-                                        <input
-                                            type="url" name="github" value={formData.github} onChange={handleChange}
-                                            placeholder="GitHub URL"
-                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-hidden"
-                                        />
-                                    </div>
-                                    <div className="relative">
-                                        <div className="absolute left-3 top-3 text-blue-400"><AiOutlineTwitter /></div>
-                                        <input
-                                            type="url" name="twitter" value={formData.twitter} onChange={handleChange}
-                                            placeholder="Twitter URL"
-                                            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-hidden"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Save Btn */}
-                            <div className="flex justify-end">
+                            {/* --- TABS HEADER --- */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-100 dark:border-gray-700 inline-flex w-full md:w-auto">
                                 <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg shadow-primary-500/30 flex items-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                                    onClick={() => setActiveTab('profile')}
+                                    className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all w-full md:w-auto ${activeTab === 'profile'
+                                        ? 'bg-slate-100 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400'
+                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                        }`}
                                 >
-                                    {saving ? (
-                                        <><AiOutlineLoading3Quarters className="animate-spin" /> Saving...</>
-                                    ) : (
-                                        <><AiOutlineSave className="text-lg" /> Save Changes</>
-                                    )}
+                                    <AiOutlineUser className="text-lg" /> Profile Info
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('security')}
+                                    className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all w-full md:w-auto ${activeTab === 'security'
+                                        ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400'
+                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                        }`}
+                                >
+                                    <AiOutlineSafety className="text-lg" /> Security
                                 </button>
                             </div>
 
-                        </form>
+                            {/* --- TAB CONTENT: PROFILE --- */}
+                            {activeTab === 'profile' && (
+                                <form onSubmit={handleProfileSubmit} className="space-y-6 animate-in fade-in duration-300">
+
+                                    {/* Basic Info Card */}
+                                    <div className="glass-card p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <h3 className="font-semibold text-xl mb-6 border-b border-gray-100 dark:border-gray-700 pb-4 dark:text-white">
+                                            Basic Information
+                                        </h3>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">Display Name</label>
+                                                <input
+                                                    type="text" name="name" value={formData.name} onChange={handleChange}
+                                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-slate-400 outline-none dark:text-white"
+                                                />
+                                            </div>
+
+                                            {isInstructor && (
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1 dark:text-gray-300">Headline</label>
+                                                    <input
+                                                        type="text" name="headline" value={formData.headline} onChange={handleChange}
+                                                        placeholder="e.g. Senior Fullstack Developer" maxLength={50}
+                                                        className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-slate-400 outline-none dark:text-white"
+                                                    />
+                                                    <p className="text-xs text-gray-500 mt-1 text-right">{formData.headline.length}/50</p>
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">
+                                                    {isInstructor ? "Professional Biography" : "About Me"}
+                                                </label>
+                                                <textarea
+                                                    name="bio" value={formData.bio} onChange={handleChange} rows={5}
+                                                    placeholder={isInstructor ? "Tell students about your professional background..." : "Tell us a bit about yourself..."}
+                                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-slate-400 outline-none resize-none dark:text-white"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Social Links Card */}
+                                    <div className="glass-card p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                        <h3 className="font-semibold text-xl mb-6 border-b border-gray-100 dark:border-gray-700 pb-4 dark:text-white">
+                                            Social Profiles
+                                        </h3>
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div className="relative">
+                                                <div className="absolute left-3 top-3 text-gray-400"><AiOutlineGlobal /></div>
+                                                <input type="url" name="website" value={formData.website} onChange={handleChange} placeholder="Website URL" className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-slate-400 outline-none dark:text-white" />
+                                            </div>
+                                            <div className="relative">
+                                                <div className="absolute left-3 top-3 text-blue-600"><AiFillLinkedin /></div>
+                                                <input type="url" name="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="LinkedIn URL" className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-slate-400 outline-none dark:text-white" />
+                                            </div>
+                                            <div className="relative">
+                                                <div className="absolute left-3 top-3 text-gray-800 dark:text-gray-200"><AiFillGithub /></div>
+                                                <input type="url" name="github" value={formData.github} onChange={handleChange} placeholder="GitHub URL" className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-slate-400 outline-none dark:text-white" />
+                                            </div>
+                                            <div className="relative">
+                                                <div className="absolute left-3 top-3 text-blue-400"><AiOutlineTwitter /></div>
+                                                <input type="url" name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Twitter URL" className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-slate-400 outline-none dark:text-white" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="submit"
+                                            disabled={saving}
+                                            className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg shadow-primary-500/30 flex items-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                                        >
+                                            {saving ? (
+                                                <><AiOutlineLoading3Quarters className="animate-spin" /> Saving...</>
+                                            ) : (
+                                                <><AiOutlineSave className="text-lg" /> Save Profile Info</>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+
+                            {/* --- Security  --- */}
+                            {activeTab === 'security' && (
+                                <div className="glass-card p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 animate-in fade-in duration-300">
+                                    <h3 className="font-semibold text-xl mb-6 border-b border-gray-100 dark:border-gray-700 pb-4 flex items-center gap-2 dark:text-white">
+                                        <AiOutlineLock className="text-primary-500" /> Change Password
+                                    </h3>
+
+                                    <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">Current Password</label>
+                                                <div className="relative">
+                                                    <div className="absolute left-3 top-3 text-gray-400"><AiOutlineLock /></div>
+                                                    <input
+                                                        type="password" name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange}
+                                                        placeholder="Enter your current password"
+                                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-none dark:text-white"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">New Password</label>
+                                                <div className="relative">
+                                                    <div className="absolute left-3 top-3 text-gray-400"><AiOutlineLock /></div>
+                                                    <input
+                                                        type="password" name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange}
+                                                        placeholder="New password"
+                                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-none dark:text-white"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1 dark:text-gray-300">Confirm Password</label>
+                                                <div className="relative">
+                                                    <div className="absolute left-3 top-3 text-gray-400"><AiOutlineLock /></div>
+                                                    <input
+                                                        type="password" name="confirmNewPassword" value={passwordData.confirmNewPassword} onChange={handlePasswordChange}
+                                                        placeholder="Confirm new password"
+                                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-none dark:text-white"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-end mt-4">
+                                            <button
+                                                type="submit"
+                                                disabled={passwordLoading}
+                                                className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg shadow-primary-500/30 flex items-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                                            >
+                                                {passwordLoading ? (
+                                                    <><AiOutlineLoading3Quarters className="animate-spin" /> Updating...</>
+                                                ) : (
+                                                    "Update Password"
+                                                )}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
+
+                        </div>
                     </div>
                 </div>
             </div>

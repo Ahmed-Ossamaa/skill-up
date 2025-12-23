@@ -34,7 +34,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 { icon: FiMessageSquare, label: 'Testimonials', href: '/admin/testimonials' },
                 { icon: FiBarChart, label: 'Analytics', href: '/admin/analytics' },
                 { icon: FiDollarSign, label: 'Revenue', href: '/admin/revenue' },
-                { icon: FiSettings, label: 'Settings', href: '/admin/settings' },
+                { icon: FiSettings, label: 'Profile', href: '/profile' },
             ];
         } else if (role === 'instructor') {
             return [

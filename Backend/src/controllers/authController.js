@@ -31,7 +31,7 @@ class AuthController {
 
         res.status(201).json({
             message: 'User registered successfully',
-            data: { user:sanitizeUser(user), accessToken },
+            data: { user: sanitizeUser(user), accessToken },
         });
     });
 
@@ -48,7 +48,7 @@ class AuthController {
 
         res.status(200).json({
             message: `${user.name} logged in successfully`,
-            data: { user:sanitizeUser(user), accessToken },
+            data: { user: sanitizeUser(user), accessToken },
         });
     });
 
@@ -94,6 +94,27 @@ class AuthController {
 
         await this.AuthService.resetPassword(token, password);
         res.status(200).json({ message: 'Password reset successful' });
+    });
+
+
+    // Change password if user is already logged in
+    changePassword = asyncHandler(async (req, res) => {
+        const { currentPassword, newPassword, confirmNewPassword } = req.body;
+        const userId = req.user.id; 
+
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            throw ApiError.badRequest('All fields are required');
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            throw ApiError.badRequest('New password and confirm password do not match');
+        }
+
+        await this.AuthService.changePassword(userId, currentPassword, newPassword);
+
+        res.status(200).json({
+            message: 'Password changed successfully'
+        });
     });
 
 }

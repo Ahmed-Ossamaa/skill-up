@@ -79,8 +79,8 @@ const userSchema = new mongoose.Schema({
     },
 
     instructorStats: {
-        totalCoursesCreated: { type: Number, default: 0 }, //6 -- ossama 2
-        totalStudentsTaught: { type: Number, default: 0 },//10
+        totalCoursesCreated: { type: Number, default: 0 }, 
+        totalStudentsTaught: { type: Number, default: 0 },
         totalEarnings: { type: Number, default: 0 }
     }
 }, { timestamps: true });

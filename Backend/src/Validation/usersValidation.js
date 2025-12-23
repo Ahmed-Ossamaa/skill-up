@@ -69,4 +69,23 @@ const resetSchema = joi.object({
     })
 });
 
-module.exports = { registerSchema, loginSchema, updateUserSchema, forgotSchema,resetSchema };
+const changePasswordSchema = joi.object({
+    currentPassword: joi.string().min(8).required().messages({
+        'string.empty': 'Current Password Cannot be empty',
+        'any.required': 'Current Password is required',
+        'string.min': 'Current Password must be at least 8 characters'
+    }),
+    newPassword: joi.string().min(8).required().messages({
+        'string.empty': 'New Password Cannot be empty',
+        'any.required': 'New Password is required',
+        'string.min': 'New Password must be at least 8 characters'
+    }),
+
+    confirmNewPassword: joi.string().min(8).required().messages({
+        'string.empty': 'Confirm New Password Cannot be empty',
+        'any.required': 'Confirm New Password is required',
+        'string.min': 'Confirm New Password must be at least 8 characters'
+    })
+});
+
+module.exports = { registerSchema, loginSchema, updateUserSchema, forgotSchema,resetSchema, changePasswordSchema };

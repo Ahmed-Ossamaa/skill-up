@@ -140,6 +140,31 @@ class AuthService {
         return true;
     }
 
+
+    /**
+     * Change password for logged in user
+     * @param {string} userId 
+     * @param {string} currentPassword 
+     * @param {string} newPassword 
+     */
+    async changePassword(userId, currentPassword, newPassword) {
+        const user = await this.User.findById(userId).select('+password');
+        if (!user) {
+            throw ApiError.notFound('User not found');
+        }
+        const matched = await bcrypt.compare(currentPassword, user.password);
+        if (!matched) {
+            throw ApiError.badRequest('Incorrect current password');
+        }
+
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+        user.password = hashedNewPassword;
+        await user.save();
+
+        return user;
+    }
+
 }
 
 module.exports = AuthService;

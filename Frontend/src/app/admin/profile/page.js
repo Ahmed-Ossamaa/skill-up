@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import useAuthStore from '@/store/authStore';
 import { FiUser, FiMail, FiLock, FiUpload, FiSave } from 'react-icons/fi';
 import Image from 'next/image';
-import {userAPI} from '@/lib/api';
+import {authAPI, userAPI} from '@/lib/api';
 
 
 export default function ProfileSettingsPage() {
@@ -94,10 +94,7 @@ export default function ProfileSettingsPage() {
         setMessage({ type: '', text: '' });
 
         try {
-            await userAPI.patch('/auth/change-password', {
-              currentPassword: passwordData.currentPassword,
-              newPassword: passwordData.newPassword,
-            });
+            await authAPI.changePassword( passwordData);
 
             // Mock success
             await new Promise(resolve => setTimeout(resolve, 1000));
