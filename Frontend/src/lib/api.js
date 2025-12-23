@@ -13,10 +13,20 @@ export const authAPI = {
 export const categoryAPI = {
     getAll: () => api.get('/categories'),
     getById: (id) => api.get(`/categories/${id}`),
+    create: (data) => api.post('/categories', data),
+    update: (id, data) => api.patch(`/categories/${id}`, data),
+    delete: (id) => api.delete(`/categories/${id}`),
 };
 
 export const courseAPI = {
-    getPublished: (params) => api.get('/courses', { params }),
+    getPublished: (filters = {}) => {
+        // Convert category array to str,str
+        if (Array.isArray(filters.category)) {
+            filters.category = filters.category.join(',');
+        }
+
+        return api.get('/courses', { params: filters });
+    },
     // getById: (id) => api.get(`/courses/${id}`),
     checkEnrollment: (id) => api.get(`/courses/${id}/enrollment`),
     getCourseContent: (id) => api.get(`/courses/${id}/content`),
