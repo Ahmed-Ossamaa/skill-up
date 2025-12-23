@@ -5,8 +5,17 @@ class CategoryService {
         this.Category = CategoryModel;
     }
 
+    /**
+     * Fetch all categories with their subcategories.
+     * @returns {Promise<[object]>} List of Main categories with their subcategories.
+     */
     async getAllCategories() {
-        return await this.Category.find();
+        const categories =await this.Category.find({ parent: null })
+            .populate({
+                path: 'subCategories',
+                select: 'name description'
+            });
+        return  categories;
     }
 
     async getCategoryById(id) {

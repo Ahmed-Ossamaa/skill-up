@@ -6,11 +6,14 @@ const categorySchema = new mongoose.Schema({
         required: [true, 'Category name is required'],
         unique: true,
         trim: true,
-        lowercase: true
+        minLenght: [3, 'Category name must be at least 3 characters'],
+        maxLength: [50, 'Category name must be at most 50 characters']
     },
     description: {
         type: String,
-        default: ''
+        default: '',
+        minLenght: [3, 'Description must be at least 3 characters'],
+        maxLength: [200, 'Description must be at most 200 characters']
     },
     parent: {
         type: mongoose.Schema.Types.ObjectId,
@@ -18,6 +21,13 @@ const categorySchema = new mongoose.Schema({
         default: null
     },
 
+}, { toJSON: { virtuals: true }, toObject: { virtuals: true } }
+);
+
+categorySchema.virtual('subCategories', {
+    ref: 'Category',      
+    localField: '_id',    
+    foreignField: 'parent'
 });
 
 module.exports = mongoose.model('Category', categorySchema);

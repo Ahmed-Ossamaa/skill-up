@@ -14,7 +14,7 @@ router.get('/:id', validate(objIdSchema, 'params'), categoryController.getCatego
 router.use(protect, isAdmin);
 
 router.post('/', validate(createCategorySchema), categoryController.createCategory);
-router.patch('/:id', validate(objIdSchema, 'params'), validate(updateCategorySchema), categoryController.updateCategory);
-router.delete('/:id', validate(objIdSchema, 'params'), categoryController.deleteCategory);
+router.patch('/:id', validate(updateCategorySchema), categoryController.updateCategory);
+router.delete('/:id', categoryController.deleteCategory);
 
 module.exports = router;

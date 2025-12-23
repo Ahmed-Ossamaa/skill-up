@@ -165,7 +165,10 @@ class CourseService {
 
         // Exact Filters
         if (filters.level) query.level = filters.level;
-        if (filters.category) query.category = filters.category;
+        if (filters.category) {
+            const categoryIds = filters.category.split(',')
+            query.category = { $in: categoryIds };
+        }
         if (filters.instructor) query.instructor = filters.instructor;
 
         // Price Filter 
