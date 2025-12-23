@@ -10,11 +10,10 @@ export default function Footer() {
         company: [
             { label: 'About Us', href: '/about' },
             { label: 'Careers', href: '/careers' },
-            { label: 'Press', href: '/press' },
-            { label: 'Blog', href: '/blog' },
+
         ],
         support: [
-            { label: 'Help Center', href: '/help' },
+
             { label: 'Contact Us', href: '/contact' },
             { label: 'Terms of Service', href: '/terms' },
             { label: 'Privacy Policy', href: '/privacy' },
@@ -22,7 +21,6 @@ export default function Footer() {
         teaching: [
             { label: 'Become Instructor', href: '/teach' },
             { label: 'Teaching Hub', href: '/teaching-hub' },
-            { label: 'Instructor Rules', href: '/instructor-rules' },
         ],
     };
 
@@ -50,18 +48,17 @@ export default function Footer() {
                             <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-2 rounded-xl">
                                 <HiOutlineAcademicCap className="w-7 h-7 text-white" />
                             </div>
-                            <span className="text-2xl font-bold">LearnHub</span>
+                            <span className="text-2xl font-bold">Skill-Up</span>
                         </Link>
                         <p className="text-gray-400 mb-6 max-w-md">
                             Empowering learners worldwide with high-quality, accessible education.
-                            Join millions of students learning new skills every day.
                         </p>
 
                         {/* Contact Info */}
                         <div className="space-y-3">
                             <div className="flex items-center space-x-3 text-gray-400">
                                 <FiMail className="w-5 h-5" />
-                                <span>support@learnhub.com</span>
+                                <span>support@skillUp.com</span>
                             </div>
                             <div className="flex items-center space-x-3 text-gray-400">
                                 <FiPhone className="w-5 h-5" />
@@ -130,7 +127,7 @@ export default function Footer() {
                 <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                     {/* Copyright */}
                     <p className="text-gray-400 text-sm">
-                        © {currentYear} LearnHub. All rights reserved.
+                        © {currentYear} Skill-Up. All rights reserved.
                     </p>
 
                     {/* Social Links */}
@@ -169,13 +166,7 @@ export default function Footer() {
                         </a>
                     </div>
 
-                    {/* Language Selector  */}
-                    <select className="glass rounded-lg px-4 py-2 text-sm focus-ring text-primary-500">
-                        <option>English</option>
-                        <option>Spanish</option>
-                        <option>French</option>
-                        <option>German</option>
-                    </select>
+
                 </div>
             </div>
         </footer>

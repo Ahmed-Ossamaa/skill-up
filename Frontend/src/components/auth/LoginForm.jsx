@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import useAuthStore from '@/store/authStore';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
-import { AiFillGoogleCircle, AiFillGithub } from 'react-icons/ai';
+import { AiFillGoogleCircle } from 'react-icons/ai';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -125,7 +125,7 @@ export default function LoginForm() {
               <span className="text-sm">Remember me</span>
             </label>
             <Link
-              href="/auth/forgot-password"
+              href="/forgot-password"
               className="text-sm text-primary-500 hover:text-primary-600 font-medium"
             >
               Forgot password?

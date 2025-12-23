@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export default function DashboardLayout({ children, role = 'student' }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
         } else if (role === 'instructor') {
             return [
                 { icon: FiHome, label: 'Dashboard', href: '/instructor', exact: true },
-                { icon: FiBook, label: 'My Courses', href: '/instructor/courses' , exact: true },
+                { icon: FiBook, label: 'My Courses', href: '/instructor/courses', exact: true },
                 { icon: FiPlus, label: 'Create Course', href: '/instructor/courses/create' },
                 { icon: FiUsers, label: 'Students', href: '/instructor/students' },
                 { icon: FiBarChart, label: 'Analytics', href: '/instructor/analytics' },
@@ -70,7 +71,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                         <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-2 rounded-xl">
                             <HiOutlineAcademicCap className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-xl font-bold gradient-text">LearnHub</span>
+                        <span className="text-xl font-bold gradient-text">Skill-Up</span>
                     </Link>
                     <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -94,22 +95,39 @@ export default function DashboardLayout({ children, role = 'student' }) {
                         <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-2 rounded-xl">
                             <HiOutlineAcademicCap className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-xl font-bold gradient-text">LearnHub</span>
+                        <span className="text-xl font-bold gradient-text">Skill-Up</span>
                     </Link>
                 </div>
 
                 {/* User Info */}
                 <div className="p-4 border-b border-white/10">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
-                            {user?.name?.charAt(0) || 'U'}
+                    {user?.avatar?.url ? (
+                        <div className="flex items-center space-x-3">
+                            <Image
+                                src={user.avatar.url}
+                                alt={user.name}
+                                width={48}
+                                height={48}
+                                className="rounded-full"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold truncate">{user?.name || 'User'}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{role}</p>
+                            </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="font-semibold truncate">{user?.name || 'User'}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{role}</p>
+                    ) :
+                        <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                                {user?.name?.charAt(0) || 'U'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold truncate">{user?.name || 'User'}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{role}</p>
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
+
 
                 {/* Navigation */}
                 <nav className="p-4 space-y-1 mb-8 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 220px)' }}>

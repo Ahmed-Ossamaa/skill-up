@@ -67,7 +67,7 @@ export default function Header() {
                             <HiOutlineAcademicCap className="w-7 h-7 text-white" />
                         </div>
                         <span className="text-2xl font-bold gradient-text hidden sm:block">
-                            LearnHub
+                            Skill-Up
                         </span>
                     </Link>
 
@@ -117,8 +117,9 @@ export default function Header() {
                                                 src={user.avatar.url}
                                                 width={100}
                                                 height={100}
+                                                loading='eager'
                                                 className="w-full h-full object-cover"
-                                                alt={user?.name || "User"}
+                                                alt={user?.name || "User Avatar"}
                                             />
                                         ) : (
                                             <span>
@@ -189,20 +190,6 @@ export default function Header() {
                 {isMobileMenuOpen && (
                     <div className="lg:hidden mt-4 glass-card animate-slide-down">
                         <div className="p-4 space-y-3">
-                            {/* Mobile Search */}
-                            <form onSubmit={handleSearch} className="md:hidden">
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        placeholder="Search courses..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="w-full glass rounded-full pl-12 pr-4 py-2.5 text-sm focus-ring"
-                                    />
-                                    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                                </div>
-                            </form>
-
                             {/* Mobile Nav Links */}
                             {navLinks.map((link) => (
                                 <Link
@@ -229,13 +216,6 @@ export default function Header() {
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
                                         Dashboard
-                                    </Link>
-                                    <Link
-                                        href="/my-learning"
-                                        className="block px-4 py-2 rounded-lg"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        My Learning
                                     </Link>
                                     <Link
                                         href="/profile"
