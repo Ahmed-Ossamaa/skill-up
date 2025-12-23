@@ -7,20 +7,21 @@ import { categoryAPI } from '@/lib/api';
 import {
     HiOutlineCode,
     HiOutlineChartBar,
-    HiOutlineCamera,
     HiOutlineMusicNote,
     HiOutlineNewspaper,
     HiOutlineCalculator,
     HiOutlineGlobeAlt
 } from 'react-icons/hi';
 import { HiOutlinePaintBrush } from 'react-icons/hi2';
+import { FaLaptop } from "react-icons/fa";
+import { AiOutlineArrowRight } from 'react-icons/ai';
 
 const MAIN_CATEGORIES = {
     Programming: HiOutlineCode,
     Design: HiOutlinePaintBrush,
     Business: HiOutlineChartBar,
-    Photography: HiOutlineCamera,
-    Music: HiOutlineMusicNote,
+    "IT & Software": FaLaptop,
+    Art: HiOutlineMusicNote,
     Marketing: HiOutlineNewspaper,
     Mathematics: HiOutlineCalculator,
     Languages: HiOutlineGlobeAlt,
@@ -45,12 +46,13 @@ export default function Categories() {
             try {
                 const response = await categoryAPI.getAll();
                 const data = response.data.data;
+                // console.log(data);
 
                 // Filter only parent categories
-                const parentCategories = data.filter(cat => cat.parent === null);
+                // const parentCategories = data.filter(cat => cat.parent === null);
 
                 // filter  main categories from the response
-                const filtered = parentCategories
+                const filtered = data
                     .filter(cat => MAIN_CATEGORIES[cat.name])
                     .map((cat, index) => ({
                         ...cat,
@@ -73,7 +75,7 @@ export default function Categories() {
     return (
         <section className="py-20 relative">
             <div className="container mx-auto px-4">
-                
+
                 <div className="text-center mb-16 animate-slide-up">
                     <h2 className="text-4xl md:text-5xl font-bold mb-4">
                         Explore Top <span className="gradient-text">Categories</span>
@@ -90,9 +92,9 @@ export default function Categories() {
                             <Link
                                 key={category.id}
                                 href={`/courses?category=${category.id}`}
-                                className="group"
+                                className="group "
                             >
-                                <div className="glass-card p-6 hover-lift cursor-pointer animate-fade-in">
+                                <div className="glass-card p-6 flex flex-col items-center hover-lift cursor-pointer animate-fade-in">
                                     <div className={`w-16 h-16 bg-linear-to-br ${category.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                                         <Icon className="w-8 h-8 text-white" />
                                     </div>
@@ -100,10 +102,6 @@ export default function Categories() {
                                     <h3 className="text-xl font-semibold mb-2 group-hover:text-primary-500">
                                         {category.name}
                                     </h3>
-
-                                    {/* <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        {category.count} courses
-                                    </p> */}
                                 </div>
                             </Link>
                         );
@@ -111,8 +109,10 @@ export default function Categories() {
                 </div>
 
                 <div className="text-center mt-12">
-                    <Link href="/courses" className="inline-block px-8 py-4 glass-button text-lg font-semibold hover:scale-105">
+                    <Link href="/courses" className="inline-flex items-center  px-8 py-4 glass-button text-lg font-semibold ">
                         View All Categories
+                        <AiOutlineArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+
                     </Link>
                 </div>
             </div>

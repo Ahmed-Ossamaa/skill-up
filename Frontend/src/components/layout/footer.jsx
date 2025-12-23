@@ -15,8 +15,8 @@ export default function Footer() {
         support: [
 
             { label: 'Contact Us', href: '/contact' },
-            { label: 'Terms of Service', href: '/terms' },
-            { label: 'Privacy Policy', href: '/privacy' },
+            { label: 'Terms of Service', href: '/support/terms-of-service' },
+            { label: 'Privacy Policy', href: '/support/privacy-policy' },
         ],
         teaching: [
             { label: 'Become Instructor', href: '/teach' },

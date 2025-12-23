@@ -11,7 +11,9 @@ export default function SignupPage() {
             <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
                 {/* Left Side - Signup Form */}
                 <div>
-                    <Link href="/" className="flex lg:hidden items-center justify-center space-x-3 mb-8">
+                    <Link href="/" 
+                    title='home'
+                    className="flex lg:hidden items-center justify-center space-x-3 mb-8 hover:scale-y-101">
                         <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-3 rounded-xl">
                             <HiOutlineAcademicCap className="w-8 h-8 " />
                         </div>
@@ -21,10 +23,12 @@ export default function SignupPage() {
                     <SignupForm />
                 </div>
 
-                {/* Right Side - Branding */}
+                {/* Right Side  */}
                 <div className="hidden lg:block animate-slide-up order-1 lg:order-2" style={{ animationDelay: '0.2s' }}>
-                    <Link href="/" className="flex items-center space-x-3 mb-8">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-3 rounded-xl">
+                    <Link href="/" 
+                    title='home'
+                    className="flex items-center space-x-3 mb-8 hover:scale-y-101">
+                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-3 rounded-xl hover:bg-linear-to-br hover:from-secondary-500 hover:to-primary-500">
                             <HiOutlineAcademicCap className="w-8 h-8 " />
                         </div>
                         <span className="text-3xl font-bold gradient-text">LearnHub</span>
@@ -51,11 +55,6 @@ export default function SignupPage() {
                                 icon: '💼',
                                 title: 'Learn at Your Pace',
                                 desc: 'Study whenever and wherever you want'
-                            },
-                            {
-                                icon: '🤝',
-                                title: 'Join Community',
-                                desc: 'Connect with fellow learners worldwide'
                             },
                             {
                                 icon: '✨',

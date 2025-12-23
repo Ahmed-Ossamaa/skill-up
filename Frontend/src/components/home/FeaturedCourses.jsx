@@ -21,7 +21,7 @@ export default function FeaturedCourses() {
                 const sortMapping = {
                     popular: '-studentsCount',
                     new: '-createdAt',
-                    trending: '-ratingCount'
+                    "Top Rated": '-rating'
                 };
 
                 const params = {
@@ -48,11 +48,11 @@ export default function FeaturedCourses() {
     const tabs = [
         { id: 'popular', label: 'Most Popular' },
         { id: 'new', label: 'New Courses' },
-        { id: 'trending', label: 'Trending' },
+        { id: 'top-rated', label: 'Top Rated' },
     ];
 
     return (
-        <section className="py-20 bg-linear-to-b from-transparent to-gray-50/50 dark:to-gray-900/50">
+        <section className="py-5 bg-linear-to-b from-transparent to-gray-50/50 dark:to-gray-900/50">
             <div className="container mx-auto px-4">
                 {/* Section Header */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-12">

@@ -1,30 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; 
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import useAuthStore from '@/store/authStore';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiAlertCircle } from 'react-icons/fi';
-import { AiFillGoogleCircle, AiFillGithub } from 'react-icons/ai';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiUser, FiAlertCircle, FiCheck } from 'react-icons/fi';
+import { AiFillGoogleCircle } from 'react-icons/ai';
 
-// Zod schema
 const signupSchema = z
     .object({
-        name: z.string().min(2, 'Name must be at least 2 characters'),
+        name: z.string().min(2, 'Name is too short').max(50, 'Name is too long'),
         email: z.string().email('Invalid email address'),
         password: z
             .string()
             .min(8, 'Password must be at least 8 characters')
-            .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-            .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-            .regex(/[0-9]/, 'Password must contain at least one number'),
+            .regex(/[A-Z]/, 'One uppercase required')
+            .regex(/[a-z]/, 'One lowercase required')
+            .regex(/[0-9]/, 'One number required'),
         confirmPassword: z.string(),
         role: z.enum(['student', 'instructor'], { required_error: 'Please select a role' }),
         agreeToTerms: z.boolean().refine((val) => val === true, {
-            message: 'You must agree to the terms and conditions',
+            message: 'You must agree to continue',
         }),
     })
     .refine((data) => data.password === data.confirmPassword, {
@@ -43,11 +42,8 @@ export default function SignupForm() {
         defaultValues: { role: 'student' },
     });
 
-    const password = useWatch({
-        control,
-        name: 'password',
-        defaultValue: '',
-    });
+    const password = useWatch({ control, name: 'password', defaultValue: '' });
+    const selectedRole = useWatch({ control, name: 'role', defaultValue: 'student' });
 
     const onSubmit = async (data) => {
         const { confirmPassword, agreeToTerms, ...userData } = data;
@@ -55,230 +51,183 @@ export default function SignupForm() {
         if (result.success) router.push('/');
     };
 
-    // Password strength function
-    const getPasswordStrength = (pwd) => {
-        if (!pwd) return { strength: 0, label: '', color: '' };
-        let strength = 0;
-        if (pwd.length >= 8) strength++;
-        if (/[A-Z]/.test(pwd)) strength++;
-        if (/[a-z]/.test(pwd)) strength++;
-        if (/[0-9]/.test(pwd)) strength++;
-        if (/[^A-Za-z0-9]/.test(pwd)) strength++;
+    const getStrengthColor = (pwd) => {
+        if (!pwd) return 'bg-gray-200 dark:bg-gray-700';
+        let score = 0;
+        if (pwd.length >= 8) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
 
-        const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-        const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
-
-        return {
-            strength: (strength / 5) * 100,
-            label: labels[strength - 1] || '',
-            color: colors[strength - 1] || 'bg-gray-300',
-        };
+        if (score <= 1) return 'bg-red-500 w-1/4';
+        if (score === 2) return 'bg-yellow-500 w-2/4';
+        if (score === 3) return 'bg-blue-500 w-3/4';
+        return 'bg-green-500 w-full';
     };
 
-    const passwordStrength = getPasswordStrength(password);
-
     return (
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-3xl mx-auto">
             <div className="glass-card p-8 animate-scale-in">
+
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold mb-2">Create Account</h2>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Join thousands of learners worldwide
+                <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-primary-600 to-purple-600">
+                        Create Account
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Start your learning journey today
                     </p>
                 </div>
 
-                {/* Auth Error */}
                 {authError && (
-                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start space-x-3 animate-slide-down">
-                        <FiAlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3 animate-slide-down">
+                        <FiAlertCircle className="w-5 h-5 text-red-500" />
                         <p className="text-sm text-red-500">{authError}</p>
                     </div>
                 )}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-                    {/* Name */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Full Name</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FiUser className="w-5 h-5 text-gray-500" />
-                            </div>
-                            <input
-                                type="text"
-                                {...register('name')}
-                                placeholder="John Doe"
-                                className="w-full pl-10 pr-4 py-3 glass rounded-lg focus-ring"
-                            />
-                        </div>
-                        {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
-                    </div>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-                    {/* Email */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Email</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FiMail className="w-5 h-5 text-gray-500" />
-                            </div>
-                            <input
-                                type="email"
-                                {...register('email')}
-                                placeholder="you@example.com"
-                                className="w-full pl-10 pr-4 py-3 glass rounded-lg focus-ring"
-                            />
-                        </div>
-                        {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
-                    </div>
-
-                    {/* Role Selection */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">I want to</label>
-                        <div className="grid grid-cols-2 gap-3">
-                            {['student', 'instructor'].map((role) => (
-                                <label key={role} className="relative cursor-pointer">
-                                    <input type="radio" {...register('role')} value={role} className="peer sr-only" />
-                                    <div className="glass rounded-lg p-4 border-2 border-transparent peer-checked:border-primary-500 peer-checked:bg-primary-500/10 transition-all">
-                                        <div className="text-center">
-                                            <div className="text-2xl mb-2">{role === 'student' ? '🎓' : '👨‍🏫'}</div>
-                                            <div className="font-semibold">{role === 'student' ? 'Learn' : 'Teach'}</div>
-                                            <div className="text-xs text-gray-500">
-                                                {role === 'student' ? 'As a Student' : 'As Instructor'}
-                                            </div>
+                    {/*Role Selection */}
+                    <div className="grid grid-cols-2 gap-4">
+                        {['student', 'instructor'].map((role) => (
+                            <label key={role} className="relative cursor-pointer group">
+                                <input type="radio" {...register('role')} value={role} className="peer sr-only" />
+                                <div className={`flex items-center justify-center gap-3 p-3 rounded-xl border transition-all duration-200 ${selectedRole === role
+                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500'
+                                        : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
+                                    }`}>
+                                    <span className="text-xl">{role === 'student' ? '🎓' : '👨‍🏫'}</span>
+                                    <div className="text-left">
+                                        <div className={`font-semibold capitalize text-sm ${selectedRole === role ? 'text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                            {role}
                                         </div>
                                     </div>
-                                </label>
-                            ))}
-                        </div>
-                        {errors.role && <p className="mt-1 text-sm text-red-500">{errors.role.message}</p>}
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Password</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FiLock className="w-5 h-5 text-gray-500" />
-                            </div>
-                            <input
-                                type={showPassword ? 'text' : 'password'}
-                                {...register('password')}
-                                placeholder="Create a strong password"
-                                className="w-full pl-10 pr-12 py-3 glass rounded-lg focus-ring"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                            >
-                                {showPassword ? <FiEyeOff className="w-5 h-5 text-gray-500" /> : <FiEye className="w-5 h-5 text-gray-500" />}
-                            </button>
-                        </div>
-
-                        {/* Password Strength */}
-                        {password && (
-                            <div className="mt-2">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-xs text-gray-500">Password strength</span>
-                                    <span className="text-xs font-medium">{passwordStrength.label}</span>
+                                    {selectedRole === role && <FiCheck className="absolute top-2 right-2 text-primary-500 w-4 h-4" />}
                                 </div>
-                                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full ${passwordStrength.color} transition-all duration-300`}
-                                        style={{ width: `${passwordStrength.strength}%` }}
-                                    />
+                            </label>
+                        ))}
+                    </div>
+
+                    {/* name and email */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                                    <FiUser />
                                 </div>
+                                <input
+                                    type="text"
+                                    {...register('name')}
+                                    placeholder="Full Name"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-sm"
+                                />
                             </div>
-                        )}
-                        {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Confirm Password</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FiLock className="w-5 h-5 text-gray-500" />
-                            </div>
-                            <input
-                                type={showConfirmPassword ? 'text' : 'password'}
-                                {...register('confirmPassword')}
-                                placeholder="Confirm your password"
-                                className="w-full pl-10 pr-12 py-3 glass rounded-lg focus-ring"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                            >
-                                {showConfirmPassword ? <FiEyeOff className="w-5 h-5 text-gray-500" /> : <FiEye className="w-5 h-5 text-gray-500" />}
-                            </button>
+                            {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
                         </div>
-                        {errors.confirmPassword && (
-                            <p className="mt-1 text-sm text-red-500">{errors.confirmPassword.message}</p>
-                        )}
+
+                        <div>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                                    <FiMail />
+                                </div>
+                                <input
+                                    type="email"
+                                    {...register('email')}
+                                    placeholder="Email Address"
+                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all text-sm"
+                                />
+                            </div>
+                            {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
+                        </div>
                     </div>
 
-                    {/* Terms */}
-                    <div>
+                    {/*  Passwords */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                                    <FiLock />
+                                </div>
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    {...register('password')}
+                                    placeholder="Password"
+                                    className="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm"
+                                />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                    {showPassword ? <FiEyeOff /> : <FiEye />}
+                                </button>
+                            </div>
+                            {/*Strength Bar */}
+                            <div className="h-1 mt-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                                <div className={`h-full transition-all duration-500 ${getStrengthColor(password)}`} />
+                            </div>
+                            {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+                        </div>
+
+                        <div>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
+                                    <FiLock />
+                                </div>
+                                <input
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    {...register('confirmPassword')}
+                                    placeholder="Confirm Password"
+                                    className="w-full pl-10 pr-10 py-2.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm"
+                                />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                                </button>
+                            </div>
+                            {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword.message}</p>}
+                        </div>
+                    </div>
+
+                    {/* Terms & Submit */}
+                    <div className="pt-2">
                         <label className="flex items-start space-x-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 {...register('agreeToTerms')}
-                                className="w-4 h-4 mt-1 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+                                className="w-4 h-4 mt-0.5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                             />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                                I agree to the{' '}
-                                <Link href="/terms" className="text-primary-500 hover:text-primary-600">
-                                    Terms of Service
-                                </Link>{' '}
-                                and{' '}
-                                <Link href="/privacy" className="text-primary-500 hover:text-primary-600">
-                                    Privacy Policy
-                                </Link>
+                            <span className="text-xs text-gray-600 dark:text-gray-400 leading-tight">
+                                I agree to the <Link href="/support/terms-of-service" className="text-primary-600 hover:underline">Terms</Link> & <Link href="/support/privacy-policy" className="text-primary-600 hover:underline">Privacy Policy</Link>
                             </span>
                         </label>
-                        {errors.agreeToTerms && (
-                            <p className="mt-1 text-sm text-red-500">{errors.agreeToTerms.message}</p>
-                        )}
+                        {errors.agreeToTerms && <p className="mt-1 text-xs text-red-500">{errors.agreeToTerms.message}</p>}
                     </div>
 
-                    {/* Submit */}
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-3 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                        className="w-full py-3 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-[1.01] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
-                        {isLoading ? 'Creating account...' : 'Create Account'}
+                        {isLoading ? 'Creating Account...' : 'Sign Up'}
                     </button>
                 </form>
 
-                {/* Divider */}
-                <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-gray-300/20"></div>
+                {/* Footer Section */}
+                <div className="mt-6">
+                    {/* <div className="relative flex justify-center text-xs text-gray-500">
+                        <span className="bg-white dark:bg-gray-900 px-2 z-10">Or continue with</span>
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200 dark:border-gray-700"></div></div>
                     </div>
-                    <div className="relative flex justify-center text-sm">
-                        <span className="px-4 bg-transparent text-gray-500">Or sign up with</span>
-                    </div>
-                </div>
 
-                {/* Social Signup */}
-                <div className="grid grid-cols-1">
-                    <button className="flex items-center justify-center space-x-2 py-3 glass-button">
+                    <button className="w-full mt-4 flex items-center justify-center gap-2 py-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium text-gray-700 dark:text-gray-200">
                         <AiFillGoogleCircle className="w-5 h-5 text-red-500" />
                         <span>Google</span>
-                    </button>
-                </div>
+                    </button> */}
 
-                {/* Login Link */}
-                <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-                    Already have an account?{' '}
-                    <Link href="/auth/login" className="text-primary-500 hover:text-primary-600 font-semibold">
-                        Sign in
-                    </Link>
-                </p>
+                    <p className="mt-4 text-center text-xs text-gray-600 dark:text-gray-400">
+                        Already have an account?{' '}
+                        <Link href="/auth/login" className="text-primary-600 font-semibold hover:underline">
+                            Log in
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

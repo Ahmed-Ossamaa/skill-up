@@ -12,8 +12,9 @@ export default function HomePage() {
 
       <main>
         <Hero />
-        <Categories />
         <FeaturedCourses />
+        <Categories />
+        {/* testimonials later */}
         <Stats />
       </main>
 

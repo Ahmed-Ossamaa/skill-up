@@ -15,11 +15,6 @@ export default function Hero() {
         }
     };
 
-    const stats = [
-        { icon: HiOutlineUsers, value: '50K+', label: 'Active Students' },
-        { icon: HiOutlineAcademicCap, value: '10K+', label: 'Online Courses' },
-        { icon: HiOutlineStar, value: '4.8/5', label: 'Average Rating' },
-    ];
 
     return (
         <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -102,32 +97,6 @@ export default function Hero() {
                         </div>
                     </div>
 
-                </div>
-                <div className='mt-5'>
-                    {/* CTA Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center  mb-12">
-                        <Link
-                            href="/courses"
-                            className="px-8 py-4 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-full font-semibold text-lg hover:shadow-xl hover:scale-105 transition-all duration-300 inline-flex items-center justify-center"
-                        >
-                            Explore Courses
-                        </Link>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-3 gap-4 max-w-4xl mx-auto">
-                        {stats.map((stat, index) => (
-                            <div key={index} className="text-center ">
-                                <div className="flex items-center justify-center mb-2">
-                                    <div className="w-10 h-10 bg-linear-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
-                                        <stat.icon className="w-5 h-5 text-white" />
-                                    </div>
-                                </div>
-                                <div className="text-2xl md:text-3xl font-bold mb-1">{stat.value}</div>
-                                <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
-                            </div>
-                        ))}
-                    </div>
                 </div>
             </div>
         </section>
