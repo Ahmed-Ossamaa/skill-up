@@ -32,16 +32,18 @@ app.use(cors(
     {
         origin: process.env.FRONTEND_URL || 'http://localhost:3000',
         credentials: true
-    }   
+    }
 ));
 app.use(express.json());
 app.use(cookieParser());
 
 //=============================== Routes ===================================
-
+app.get('/', (req, res) => {
+    res.send('Skill-Up API is running successfully');
+});
 //health check
 app.get('/health', (req, res) => {
-    res.status(200).send('OK'); 
+    res.status(200).send('OK');
 });
 
 app.use('/api/v1/auth', authRoutes);
@@ -56,10 +58,10 @@ app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/sections', sectionRoutes);
 app.use('/api/v1/feedback', feedbackRoutes);
 app.use("/api/v1/payments", paymentRoutes);
-app.use('/api/v1/uploads',uploadRoutes);
+app.use('/api/v1/uploads', uploadRoutes);
 
 app.all(/.*/, (req, res, next) => {
-    throw  ApiError.notFound(`Path ${req.originalUrl} not found`);
+    throw ApiError.notFound(`Path ${req.originalUrl} not found`);
 });
 
 //===============================Error Handler===================================
