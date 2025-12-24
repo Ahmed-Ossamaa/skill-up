@@ -129,12 +129,15 @@ export default function CourseCard({ course, disableLink = false }) {
 function ThumbnailImage({ course }) {
     if (course.thumbnail?.url) {
         return (
+            <div className="relative aspect-video overflow-hidden">
             <Image
                 src={course.thumbnail.url}
                 alt={course.title}
                 fill
-                className="object-cover group-hover:scale-110 transition-transform duration-500"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover group-hover:scale-104 transition-transform duration-500"
             />
+            </div>
         );
     }
     return (

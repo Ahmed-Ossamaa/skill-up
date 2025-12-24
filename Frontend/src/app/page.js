@@ -4,6 +4,7 @@ import Hero from '@/components/home/Hero';
 import Categories from '@/components/home/Categories';
 import FeaturedCourses from '@/components/home/FeaturedCourses';
 import Stats from '@/components/home/Stats';
+import InstructorBanner from '@/components/home/InstructorBanner';
 
 export default function HomePage() {
   return (
@@ -14,6 +15,7 @@ export default function HomePage() {
         <Hero />
         <FeaturedCourses />
         <Categories />
+        <InstructorBanner/>
         {/* testimonials later */}
         <Stats />
       </main>

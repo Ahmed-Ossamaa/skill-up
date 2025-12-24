@@ -3,7 +3,7 @@ const nextConfig = {
   /* config options here */
   reactCompiler: true,
   images: {
-    domains: ['res.cloudinary.com'],
+    domains: ['res.cloudinary.com','images.unsplash.com'],
   },
 
   allowedDevOrigins: ["res.cloudinary.com"]
