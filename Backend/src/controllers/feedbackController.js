@@ -1,4 +1,4 @@
-const Feedback = require('../models/Feedback');
+const Feedback = require('../models/FeedBack');
 const asyncHandler = require('express-async-handler');
 const FeedbackService = require('../services/FeedbackService');
 const ApiError = require('../utils/ApiError');
