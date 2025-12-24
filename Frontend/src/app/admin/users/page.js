@@ -200,7 +200,7 @@ export default function AdminUsersPage() {
                                 </thead>
                                 <tbody>
                                     {users.map((u) => (
-                                        <tr key={u._id} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+                                        <tr key={u._id} className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-900/50 transition-colors capitalize">
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center gap-3">
                                                     {u?.avatar?.url ? (

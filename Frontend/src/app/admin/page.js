@@ -80,28 +80,24 @@ export default function AdminDashboard() {
                     icon={FiUsers}
                     label="Total Users"
                     value={formatNumber(stats.totalUsers)}
-                    trend="neutral"
                     color="primary"
                 />
                 <StatsCard
                     icon={FiBook}
                     label="Total Courses"
                     value={formatNumber(stats.totalCourses)}
-                    trend="neutral"
                     color="secondary"
                 />
                 <StatsCard
                     icon={FiDollarSign}
                     label="Total Revenue"
                     value={formatPrice(stats.totalRevenue)}
-                    trend="up"
                     color="success"
                 />
                 <StatsCard
                     icon={FiTrendingUp}
                     label="Active Students"
                     value={formatNumber(stats.activeStudents)}
-                    trend="neutral"
                     color="info"
                 />
             </div>

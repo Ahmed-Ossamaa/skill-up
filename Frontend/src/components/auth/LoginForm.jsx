@@ -47,7 +47,7 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="glass-card p-8 animate-scale-in">
+      <div className="glass-card p-8">
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-2">Welcome Back!</h2>
@@ -58,7 +58,7 @@ export default function LoginForm() {
 
         {/* Auth Error */}
         {authError && (
-          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start space-x-3 animate-slide-down">
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start space-x-3 animate-slide-up">
             <FiAlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
             <p className="text-sm text-red-500">{authError}</p>
           </div>

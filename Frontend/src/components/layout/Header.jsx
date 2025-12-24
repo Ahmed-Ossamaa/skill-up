@@ -63,7 +63,7 @@ export default function Header() {
                 <div className="flex items-center justify-between">
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-2 group">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-2 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 s p-2 rounded-xl group-hover:scale-110 transition-transform duration-300">
                             <HiOutlineAcademicCap className="w-7 h-7 text-white" />
                         </div>
                         <span className="text-2xl font-bold gradient-text hidden sm:block">

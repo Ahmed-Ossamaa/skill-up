@@ -18,11 +18,11 @@ export default function Hero() {
 
     return (
         <section className="relative min-h-screen flex items-center overflow-hidden">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-primary-500/30 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute top-20 left-10 w-72 h-72 bg-primary-500/30 rounded-full blur-3xl"></div>
             <div className="container mx-auto px-4 relative z-10 pt-32 pb-10">
                 <div className="grid lg:grid-cols-2 gap-12 items-center">
                     {/* Left Content */}
-                    <div className="text-center lg:text-left animate-slide-up">
+                    <div className="text-center lg:text-left animate-slide-right">
                         <div className="inline-block mb-4">
                             <span className="glass-button text-sm">
                                 🎉 Join 50,000+ students learning online
@@ -63,7 +63,7 @@ export default function Hero() {
                     </div>
 
                     {/* Right Content - Illustration */}
-                    <div className="relative animate-fade-in hidden lg:block" style={{ animationDelay: '0.3s' }}>
+                    <div className="relative  hidden lg:block" >
                         <div className="relative">
                             {/* Main Card */}
                             <div className="glass-card p-8 hover-lift">
@@ -83,7 +83,7 @@ export default function Hero() {
                             </div>
 
                             {/* Floating Elements */}
-                            <div className="absolute -top-6 -right-6 glass-card p-4 animate-float">
+                            <div className="absolute -top-6 -right-6 glass-card p-4">
                                 <div className="flex items-center space-x-2">
                                     <div className="w-10 h-10 bg-linear-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
                                         ✓

@@ -103,7 +103,7 @@ export default function FeaturedCourses() {
                         {/* Courses Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {courses.map((course, index) => (
-                                <div key={course._id || course.id} style={{ animationDelay: `${index * 0.1}s` }}>
+                                <div key={course._id || course.id} >
                                     <CourseCard course={course} />
                                 </div>
                             ))}

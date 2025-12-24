@@ -21,7 +21,7 @@ const signupSchema = z
             .regex(/[a-z]/, 'One lowercase required')
             .regex(/[0-9]/, 'One number required'),
         confirmPassword: z.string(),
-        role: z.enum(['student', 'instructor'], { required_error: 'Please select a role' }),
+        // role: z.enum(['student', 'instructor'], { required_error: 'Please select a role' }),
         agreeToTerms: z.boolean().refine((val) => val === true, {
             message: 'You must agree to continue',
         }),
@@ -38,12 +38,10 @@ export default function SignupForm() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const { register, handleSubmit, control, formState: { errors } } = useForm({
-        resolver: zodResolver(signupSchema),
-        defaultValues: { role: 'student' },
+        resolver: zodResolver(signupSchema)
     });
 
     const password = useWatch({ control, name: 'password', defaultValue: '' });
-    const selectedRole = useWatch({ control, name: 'role', defaultValue: 'student' });
 
     const onSubmit = async (data) => {
         const { confirmPassword, agreeToTerms, ...userData } = data;
@@ -67,7 +65,7 @@ export default function SignupForm() {
 
     return (
         <div className="w-full max-w-3xl mx-auto">
-            <div className="glass-card p-8 animate-scale-in">
+            <div className="glass-card p-8">
 
                 {/* Header */}
                 <div className="text-center mb-6">
@@ -80,7 +78,7 @@ export default function SignupForm() {
                 </div>
 
                 {authError && (
-                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3 animate-slide-down">
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-3 ">
                         <FiAlertCircle className="w-5 h-5 text-red-500" />
                         <p className="text-sm text-red-500">{authError}</p>
                     </div>
@@ -88,29 +86,9 @@ export default function SignupForm() {
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
-                    {/*Role Selection */}
-                    <div className="grid grid-cols-2 gap-4">
-                        {['student', 'instructor'].map((role) => (
-                            <label key={role} className="relative cursor-pointer group">
-                                <input type="radio" {...register('role')} value={role} className="peer sr-only" />
-                                <div className={`flex items-center justify-center gap-3 p-3 rounded-xl border transition-all duration-200 ${selectedRole === role
-                                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 ring-1 ring-primary-500'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-primary-300'
-                                    }`}>
-                                    <span className="text-xl">{role === 'student' ? '🎓' : '👨‍🏫'}</span>
-                                    <div className="text-left">
-                                        <div className={`font-semibold capitalize text-sm ${selectedRole === role ? 'text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'}`}>
-                                            {role}
-                                        </div>
-                                    </div>
-                                    {selectedRole === role && <FiCheck className="absolute top-2 right-2 text-primary-500 w-4 h-4" />}
-                                </div>
-                            </label>
-                        ))}
-                    </div>
 
                     {/* name and email */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1  gap-4">
                         <div>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
@@ -143,7 +121,7 @@ export default function SignupForm() {
                     </div>
 
                     {/*  Passwords */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1  gap-4">
                         <div>
                             <div className="relative group">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-primary-500 transition-colors">
@@ -211,15 +189,6 @@ export default function SignupForm() {
 
                 {/* Footer Section */}
                 <div className="mt-6">
-                    {/* <div className="relative flex justify-center text-xs text-gray-500">
-                        <span className="bg-white dark:bg-gray-900 px-2 z-10">Or continue with</span>
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200 dark:border-gray-700"></div></div>
-                    </div>
-
-                    <button className="w-full mt-4 flex items-center justify-center gap-2 py-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium text-gray-700 dark:text-gray-200">
-                        <AiFillGoogleCircle className="w-5 h-5 text-red-500" />
-                        <span>Google</span>
-                    </button> */}
 
                     <p className="mt-4 text-center text-xs text-gray-600 dark:text-gray-400">
                         Already have an account?{' '}

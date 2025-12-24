@@ -20,7 +20,7 @@ export default function Footer() {
         ],
         teaching: [
             { label: 'Become Instructor', href: '/teach' },
-            { label: 'Teaching Hub', href: '/teaching-hub' },
+            { label: 'Intructors', href: '/instructors' },
         ],
     };
 

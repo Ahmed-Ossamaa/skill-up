@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiFolder, FiX, FiCornerDownRight } from 'react-icons/fi';
+import { FiPlus, FiEdit, FiTrash2, FiSearch, FiFolder, FiX, FiCornerDownRight } from 'react-icons/fi';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import useAuthStore from "@/store/authStore";
 import { categoryAPI } from "@/lib/api";
@@ -179,7 +179,7 @@ export default function CategoriesPage() {
                                 <tbody className="divide-y divide-gray-100">
                                     {sortedCategories.length > 0 ? (
                                         sortedCategories.map((cat) => (
-                                            <tr key={cat._id || cat.id} className="hover:bg-gray-100 transition-colors group">
+                                            <tr key={cat._id || cat.id} className="hover:bg-gray-100 transition-colors group capitalize">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3" style={{ paddingLeft: searchQuery ? 0 : `${(cat.level || 0) * 15}px` }}>
                                                         {cat.level > 0 && !searchQuery && (
@@ -206,7 +206,7 @@ export default function CategoriesPage() {
                                                             className="p-2 hover:bg-indigo-50 rounded-lg text-indigo-600 transition-colors cursor-pointer"
                                                             title="Edit"
                                                         >
-                                                            <FiEdit2 />
+                                                            <FiEdit />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteClick(cat._id || cat.id)}
@@ -264,14 +264,14 @@ export default function CategoriesPage() {
                                     <select
                                         value={formData.parent}
                                         onChange={(e) => setFormData({ ...formData, parent: e.target.value })}
-                                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white appearance-none cursor-pointer"
+                                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white appearance-none cursor-pointer capitalize"
                                     >
                                         <option value="">No Parent (Top Level)</option>
                                         {categories
                                             .filter(c => c._id !== editingCategory?._id)
                                             .map(cat => (
                                                 <option key={cat._id} value={cat._id}>
-                                                    {(cat?.name).charAt(0).toUpperCase() + (cat.name).slice(1) || ''}
+                                                    {(cat?.name)|| ''}
                                                 </option>
                                             ))
                                         }

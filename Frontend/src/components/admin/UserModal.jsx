@@ -27,7 +27,7 @@ export default function UserModal({ user, onClose, onUpdate }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm" onClick={onClose}>
-            <div className="glass-card p-8 max-w-2xl w-full animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <div className="glass-card p-8 max-w-2xl w-full " onClick={(e) => e.stopPropagation()}>
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">

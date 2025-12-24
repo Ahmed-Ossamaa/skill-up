@@ -94,7 +94,7 @@ export default function Categories() {
                                 href={`/courses?category=${category.id}`}
                                 className="group "
                             >
-                                <div className="glass-card p-6 flex flex-col items-center hover-lift cursor-pointer animate-fade-in">
+                                <div className="glass-card p-6 flex flex-col items-center hover-lift cursor-pointer ">
                                     <div className={`w-16 h-16 bg-linear-to-br ${category.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                                         <Icon className="w-8 h-8 text-white" />
                                     </div>

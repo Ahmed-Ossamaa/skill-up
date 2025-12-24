@@ -4,10 +4,10 @@
 	@theme {
 		/* Primary Colors - Blue */
 		--color-primary-50: rgb(240 249 255);
-		--color-primary-100:rgb(224 242 254);
-		--color-primary-200:rgb(186 230 253);
-		--color-primary-300:rgb(125 211 252);
-		--color-primary-400:rgb(56 189 248);
+		--color-primary-100: rgb(224 242 254);
+		--color-primary-200: rgb(186 230 253);
+		--color-primary-300: rgb(125 211 252);
+		--color-primary-400: rgb(56 189 248);
 		--color-primary-500: rgb(14 165 233);
 		--color-primary-600: rgb(2 132 199);
 		--color-primary-700: rgb(3 105 161);
@@ -17,16 +17,16 @@
 
 		/* Secondary Colors - Purple */
 		--color-secondary-50: rgb(250 245 255);
-		--color-secondary-100:rgb( 243 232 255);
-		--color-secondary-200:rgb( 233 213 255);
-		--color-secondary-300:rgb( 216 180 254);
-		--color-secondary-400:rgb( 192 132 252);
-		--color-secondary-500:rgb( 168 85 247);
-		--color-secondary-600:rgb( 147 51 234);
-		--color-secondary-700:rgb( 126 34 206);
-		--color-secondary-800:rgb( 107 33 168);
-		--color-secondary-900:rgb( 88 28 135);
-		--color-secondary-950:rgb( 59 7 100);
+		--color-secondary-100: rgb(243 232 255);
+		--color-secondary-200: rgb(233 213 255);
+		--color-secondary-300: rgb(216 180 254);
+		--color-secondary-400: rgb(192 132 252);
+		--color-secondary-500: rgb(168 85 247);
+		--color-secondary-600: rgb(147 51 234);
+		--color-secondary-700: rgb(126 34 206);
+		--color-secondary-800: rgb(107 33 168);
+		--color-secondary-900: rgb(88 28 135);
+		--color-secondary-950: rgb(59 7 100);
 
 		/* Other colors */
 		--background: 0 0% 100%;
@@ -118,9 +118,7 @@
 		background-clip: text;
 		-webkit-background-clip: text;
 		color: transparent;
-		background-image: linear-gradient(
-			to right,rgb(14 165 233),rgb( 168 85 247)
-		);
+		background-image: linear-gradient(to right, rgb(14 165 233), rgb(168 85 247));
 	}
 
 	.animated-gradient {
@@ -146,6 +144,39 @@ html {
 }
 
 /* Custom animations */
+
+@keyframes slide-up {
+	0% {
+		transform: translateY(100%);
+		opacity: 0;
+	}
+	100% {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+@keyframes slide-right {
+	0% {
+		transform: translatex(-100%);
+		opacity: 0;
+	}
+	100% {
+		transform: translatex(0);
+		opacity: 1;
+	}
+}
+@keyframes slide-left {
+	0% {
+		transform: translatex(100%);
+		opacity: 0;
+	}
+	100% {
+		transform: translatex(0);
+		opacity: 1;
+	}
+}
+
+
 @keyframes shimmer {
 	0% {
 		background-position: -1000px 0;
@@ -166,17 +197,30 @@ html {
 }
 
 .shimmer {
-	animation: shimmer 2s infinite;
+	animation: shimmer 5s infinite;
 	background: linear-gradient(
 		to right,
-		#f6f7f8 0%,
-		#edeef1 20%,
-		#f6f7f8 40%,
+		blue 0%,
+		pink 20%,
+		rgb(255, 192, 215) 40%,
+		rgb(190, 79, 145) 70%,
 		#f6f7f8 100%
 	);
 	background-size: 1000px 100%;
 }
+.animate-slide-up {
+	animation: slide-up 0.5s ease-out forwards;
+}
+.animate-slide-right {
+	animation: slide-right 0.5s ease-out forwards;
+}
+.animate-slide-left {
+	animation: slide-left 0.5s ease-out forwards;
+}
 
+.animate-fade-in {
+	animation: fade-in 0.9s ease-out forwards;
+}
 /* Hover lift effect */
 .hover-lift {
 	transition: transform 0.3s ease, box-shadow 0.3s ease;

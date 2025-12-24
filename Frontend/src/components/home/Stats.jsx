@@ -117,9 +117,9 @@ function StatCard({ stat, index }) {
     return (
         <div
             ref={cardRef}
-            className="glass-card p-8 text-center hover-lift animate-fade-in"
+            className="glass-card p-8 text-center hover-lift "
             style={{ animationDelay: `${index * 0.1}s` }}
-        >
+        >   
             {/* Icon */}
             <div className="flex justify-center mb-4">
                 <div className={`w-16 h-16 bg-linear-to-br ${stat.color} rounded-2xl flex items-center justify-center`}>

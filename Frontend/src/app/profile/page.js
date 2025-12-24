@@ -133,7 +133,7 @@ export default function SettingsPage() {
                     <div className="grid lg:grid-cols-12 gap-8">
 
                         {/* --- Left Column: Avatar --- */}
-                        <div className="lg:col-span-4 space-y-6">
+                        <div className="lg:col-span-4 space-y-6 ">
                             <div className="glass-card p-6 text-center sticky top-24 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                                 <h3 className="font-semibold text-lg mb-6 dark:text-white">Profile Picture</h3>
 
@@ -179,7 +179,7 @@ export default function SettingsPage() {
                                 <form onSubmit={handleProfileSubmit} className="space-y-6 animate-in fade-in duration-300">
 
                                     {/* Basic Info Card */}
-                                    <div className="glass-card p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                                    <div className="glass-card p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 ">
                                         <h3 className="font-semibold text-xl mb-6 border-b border-gray-100 dark:border-gray-700 pb-4 dark:text-white">
                                             Basic Information
                                         </h3>

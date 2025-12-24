@@ -108,12 +108,17 @@ export const enrollmentAPI = {
 export const instructorAPI = {
     getAllInstructorStudents: () => api.get('/instructors/students'),
     getInstructorDashboard: () => api.get('/instructors/stats'),
-    getPublicProfile: (id) => api.get(`/instructors/profile/${id}`)
+    getPublicProfile: (id) => api.get(`/instructors/profile/${id}`),
+    requestInstructor: (formData) => api.post('/users/instructor/request', formData,{
+        headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 }
 
 
 export const adminAPI = {
     getStats: () => api.get('/users/admin/stats'),
+    getAllRequests: () => api.get('/users/admin/requests'),
+    reviewRequest: (id, data) => api.patch(`/users/admin/review/${id}`, data),
 };
 
 

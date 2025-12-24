@@ -189,7 +189,7 @@ export default function AdminCourses() {
                                     <tbody className="divide-y divide-gray-100">
                                         {courses.length > 0 ? (
                                             courses.map((course) => (
-                                                <tr key={course._id || course.id} className="hover:bg-gray-50/80 transition-colors group">
+                                                <tr key={course._id || course.id} className="hover:bg-gray-100 transition-colors group capitalize">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
@@ -231,7 +231,7 @@ export default function AdminCourses() {
                                                             className="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
                                                             title="Delete Course"
                                                         >
-                                                            <FiTrash2 size={18} />
+                                                            <FiTrash2 size={18} className="cursor-pointer" />
                                                         </button>
                                                     </td>
                                                 </tr>

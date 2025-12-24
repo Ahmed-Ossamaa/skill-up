@@ -24,7 +24,7 @@ export default function SignupPage() {
                 </div>
 
                 {/* Right Side  */}
-                <div className="hidden lg:block animate-slide-up order-1 lg:order-2" style={{ animationDelay: '0.2s' }}>
+                <div className="hidden lg:block animate-slide-left order-1 lg:order-2">
                     <Link href="/" 
                     title='home'
                     className="flex items-center space-x-3 mb-8 hover:scale-y-101">
@@ -34,17 +34,17 @@ export default function SignupPage() {
                         <span className="text-3xl font-bold gradient-text">LearnHub</span>
                     </Link>
 
-                    <h1 className="text-5xl font-bold mb-6 leading-tight">
+                    <h1 className="text-4xl font-bold mb-6 leading-tight">
                         Start Your
                         <span className="block gradient-text">Learning Adventure</span>
                     </h1>
 
-                    <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+                    <p className=" text-gray-600 dark:text-gray-300 mb-4">
                         Join thousands of learners worldwide and unlock your potential with expert-led courses.
                     </p>
 
                     {/* Benefits */}
-                    <div className="space-y-4">
+                    <div className="space-y-2">
                         {[
                             {
                                 icon: '🚀',
@@ -64,8 +64,7 @@ export default function SignupPage() {
                         ].map((benefit, index) => (
                             <div
                                 key={index}
-                                className="flex items-center space-x-4 glass-card p-4 hover-lift"
-                                style={{ animationDelay: `${index * 0.1}s` }}
+                                className="flex items-center space-x-4 glass-card p-4 my-2"
                             >
                                 <div className="text-3xl">{benefit.icon}</div>
                                 <div>
