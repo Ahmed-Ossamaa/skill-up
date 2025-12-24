@@ -4,7 +4,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://skillup-backend.onrender.com/api/:path*',
+        destination: 'https://skill-up-jiu4.onrender.com/api/:path*',
       },
     ];
   },
