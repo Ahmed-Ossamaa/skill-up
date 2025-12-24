@@ -27,6 +27,7 @@ db.connect("Mongo");
 app.use("/api/v1/payments/webhook", stripeWebhookRoute);
 
 //=============================== Middlewares ===================================
+app.set('trust proxy', 1);
 app.use(cors(
     {
         origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -37,6 +38,12 @@ app.use(express.json());
 app.use(cookieParser());
 
 //=============================== Routes ===================================
+
+//health check
+app.get('/health', (req, res) => {
+    res.status(200).send('OK'); 
+});
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/courses', courseRoutes);
