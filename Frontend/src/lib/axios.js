@@ -19,12 +19,21 @@ api.interceptors.response.use(
     res => res,
     async (error) => {
         const originalRequest = error.config;
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        const authStore = useAuthStore.getState();
+
+        if (error.response?.status === 401 && !originalRequest._retry && authStore.user) {
             originalRequest._retry = true;
-            const newToken = await useAuthStore.getState().refreshAccessToken();
-            if (newToken) {
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                return api(originalRequest);
+
+            try {
+                const newToken = await authStore.refreshAccessToken();
+                if (newToken) {
+                    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                    return api(originalRequest);
+                }
+            } catch (err) {
+                authStore.logout();
+                return Promise.reject(err);
+
             }
         }
         return Promise.reject(error);

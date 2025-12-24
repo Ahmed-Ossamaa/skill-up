@@ -22,7 +22,7 @@ const useAuthStore = create(
                     isReady: true,
                 });
             },
-            
+
             // Register
             register: async (userData) => {
                 set({ isLoading: true, error: null });
@@ -53,7 +53,7 @@ const useAuthStore = create(
                     get().setAuth({ user, accessToken });
 
                     set({ isLoading: false });
-                    
+
                     return { success: true, user };
                 } catch (err) {
                     const message = err.response?.data?.message || "Login failed";
@@ -97,11 +97,17 @@ const useAuthStore = create(
 
             // Hydrate (call on app init)
             hydrate: async () => {
+                const user = get().user;
+                if (!user) {
+                    set({ isLoading: false, isReady: true });
+                    return;
+                }
                 set({ isLoading: true });
                 try {
                     await get().refreshAccessToken();
                 } catch (err) {
                     console.error('Hydration failed:', err);
+                    set({ user: null, accessToken: null, isAuthenticated: false });
                 } finally {
                     set({ isLoading: false, isReady: true });
                 }
@@ -117,7 +123,7 @@ const useAuthStore = create(
         }),
 
         {
-            name: "auth-storage", 
+            name: "auth-storage",
             partialize: (state) => ({
                 user: state.user,
             }),
