@@ -72,7 +72,10 @@ const userSchema = new mongoose.Schema({
         enum: ['active', 'banned'],
         default: 'active'
     },
-
+    isVerified: {//later implementation for email verification
+        type: Boolean,
+        default: false //old docs kept true (manually in db)
+    },
     studentStats: {
         totalEnrolledCourses: { type: Number, default: 0 },
         totalAmountPaid: { type: Number, default: 0 }

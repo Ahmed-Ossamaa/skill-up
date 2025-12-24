@@ -4,10 +4,13 @@ const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
+const InstructorRequest = require('../models/InstructorRequest');
+const sendEmail = require('../utils/sendEmail');
+
 
 class UserController {
     constructor() {
-        this.userService = new UserService(User, Course, Enrollment);
+        this.userService = new UserService(User, Course, Enrollment, InstructorRequest);
 
     }
 
@@ -43,11 +46,17 @@ class UserController {
     updateUser = asyncHandler(async (req, res) => {
         const id = req.params.id || req.user.id;
 
-        if (req.user.role !== 'admin' && req.user.id !== id) {
+        if (req.user.role !== 'admin' && req.user.id.toString() !== id.toString()) {
             throw ApiError.forbidden('Access denied');
         }
+        const updateData = { ...req.body };
 
-        const user = await this.userService.updateUser(id, req.body);
+        if (req.user.role !== 'admin') {
+            delete updateData.role;
+            delete updateData.isVerified;
+        }
+
+        const user = await this.userService.updateUser(id, updateData);
         if (!user) throw ApiError.notFound('User not found');
 
         res.status(200).json({ data: user });
@@ -73,6 +82,56 @@ class UserController {
         res.status(200).json({
             success: true,
             data: stats
+        });
+    });
+
+
+    requestInstructor = asyncHandler(async (req, res) => {
+        const { id } = req.user;
+        const files = req.files;
+
+        await this.userService.createRequest(id, req.body, files);
+
+        res.status(200).json({ message: "Request submitted! Waiting for admin approval." });
+    });
+
+    getAllRequests = asyncHandler(async (req, res) => {
+        const requests = await this.userService.getAllRequests();
+        res.status(200).json({ data: requests });
+    })
+
+
+    reviewRequest = asyncHandler(async (req, res) => {
+        const { id } = req.params;
+        const { status, feedback } = req.body;
+
+        if (!['approved', 'rejected'].includes(status)) {
+            throw ApiError.badRequest("Status must be 'approved' or 'rejected'");
+        }
+
+        const request = await this.userService.reviewRequest(id, status, feedback);
+
+        // ...........Send Email ..............
+        const userEmail = request.user.email;
+        const subject = status === 'approved'
+            ? 'Your Instructor Application is Approved!'
+            : 'Update on your Instructor Application';
+
+        const instructorName = request.user.name;
+        const message = status === 'approved'
+            ? `Hello ${instructorName},\n\nCongratulations! Your application to become an instructor on Skill-Up has been approved. You can now access your Instructor Dashboard and start creating courses.\n\nPlease log out and log back in to refresh your permissions.`
+            : `Hello ${instructorName},\n\nThank you for your interest in teaching on Skill-Up. Unfortunately, your application was not approved at this time.\n\nFeedback: ${feedback}\n\nYou may re-apply after addressing these points.`;
+
+
+            await sendEmail({
+                to: userEmail,
+                subject: subject,
+                html: message
+            });
+
+        res.status(200).json({
+            message: `Request ${status}`,
+            data: request
         });
     });
 }

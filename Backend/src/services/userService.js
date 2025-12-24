@@ -1,13 +1,15 @@
 const log = require('../utils/logger');
 const ApiError = require('../utils/ApiError');
 const { deleteMediaFromCloudinary } = require('../utils/cloudinaryCelanUp');
+const { uploadToCloudinary } = require('../utils/cloudinaryHelpers');
 
 
 class UserService {
-    constructor(UserModel, CourseModel, EnrollmentModel) {
+    constructor(UserModel, CourseModel, EnrollmentModel, InstructorRequestModel) {
         this.User = UserModel;
         this.Course = CourseModel;
         this.Enrollment = EnrollmentModel;
+        this.InstructorRequest = InstructorRequestModel
     }
 
     async getAllUsers(page = 1, limit = 10, filters = {}) {
@@ -159,6 +161,83 @@ class UserService {
             recentUsers,
             recentCourses
         };
+    }
+
+    //creat request to become an instructor
+    async createRequest(userId, data, files) {
+
+        const existing = await this.InstructorRequest.findOne({ user: userId });
+        if (existing && existing.status === 'pending') {
+            throw ApiError.conflict('You already have a pending instructor request.');
+        }
+        const nationalIdFile = files.nationalId ? files.nationalId[0] : null;
+        const certificateFile = files.certificate ? files.certificate[0] : null;
+        const resumeFile = files.resume ? files.resume[0] : null;
+        if (!nationalIdFile || !certificateFile || !resumeFile) {
+            throw ApiError.badRequest("All documents (National ID, Certificate, Resume) are required.");
+        }
+        const uploadPromises = [
+            uploadToCloudinary(nationalIdFile.buffer, 'instructorDocs/nationalId', 'auto'),
+            uploadToCloudinary(certificateFile.buffer, 'instructorDocs/certificates', 'auto'),
+            uploadToCloudinary(resumeFile.buffer, 'instructorDocs/resumes', 'auto')
+        ];
+
+        const [nationalIdResult, certificateResult, resumeResult] = await Promise.all(uploadPromises);
+        const requestData = {
+            user: userId,
+            experience: data.experience,
+            documents: {
+                nationalId: {
+                    url: nationalIdResult.secure_url,
+                    publicId: nationalIdResult.publicId
+                },
+                certificate: {
+                    url: certificateResult.secure_url,
+                    publicId: certificateResult.publicId
+                },
+                resume: {
+                    url: resumeResult.secure_url,
+                    publicId: resumeResult.publicId
+                }
+            }
+        };
+
+        const newRequest = await this.InstructorRequest.create(requestData);
+        return newRequest;
+    }
+
+    //get all  requests (admin)
+    async getAllRequests() {
+        return await this.InstructorRequest.find()
+            .populate('user', 'name email status role avatar')
+            .sort({ createdAt: -1 });
+    }
+
+    async reviewRequest(requestId, status, feedback) {
+        const request = await this.InstructorRequest.findById(requestId)
+        .populate('user', 'name email status role avatar');
+
+        if (!request) {
+            throw ApiError.notFound('Request not found');
+        }
+
+        if (request.status !== 'pending') {
+            throw ApiError.badRequest(`Request is already ${request.status}`);
+        }
+
+        // Update Request Status
+        request.status = status;
+        request.adminFeedback = feedback || '';
+        await request.save();
+
+        //when Approved >> Upgrade the User to Instructor
+        if (status === 'approved') {
+            await this.User.findByIdAndUpdate(request.user._id, {
+                role: 'instructor',
+            });
+        }
+
+        return request; 
     }
 }
 
