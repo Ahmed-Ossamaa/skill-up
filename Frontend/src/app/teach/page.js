@@ -61,8 +61,8 @@ export default function BecomeInstructor() {
                 </div>
             ) :
 
-                <div className="min-h-screen mt-30 pb-12 px-4 flex justify-center">
-                    <div className="glass-card shadow-md! shadow-secondary-200! w-full max-w-5xl p-8 animate-slide-right">
+                <div className="min-h-screen mt-30 pb-12 px-4 flex justify-center animate-fade-in">
+                    <div className="glass-card shadow-md! shadow-secondary-200! w-full max-w-5xl p-8">
                         <div className="text-center mb-8">
                             <h1 className="text-3xl font-bold mb-2">Become an Instructor</h1>
                             <p className="text-gray-500">Submit your documents to start teaching on Skill-Up.</p>

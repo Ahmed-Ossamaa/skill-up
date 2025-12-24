@@ -207,7 +207,7 @@ export default function AdminCourses() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                                                    <td className="px-6 py-4 text-sm text-gray-600 font-medium capitalize">
                                                         {course.instructor?.name || "Unknown"}
                                                     </td>
                                                     <td className="px-6 py-4 text-center">

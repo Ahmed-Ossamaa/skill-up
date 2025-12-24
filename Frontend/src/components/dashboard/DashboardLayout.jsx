@@ -64,7 +64,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
     const navItems = getNavItems();
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 custom-scrollbar ">
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
                 <div className="flex items-center justify-between p-4">
@@ -104,13 +104,16 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 <div className="p-4 border-b border-white/10">
                     {user?.avatar?.url ? (
                         <div className="flex items-center space-x-3">
-                            <Image
-                                src={user.avatar.url}
-                                alt={user.name}
-                                width={48}
-                                height={48}
-                                className="rounded-full"
-                            />
+                            <div className='rounded-full relative w-10 h-10 overflow-hidden'>
+                                <Image
+                                    src={user.avatar.url}
+                                    alt={user.name}
+                                    width={100}
+                                    height={100}
+                                    loading='eager'
+                                    className=" object-cover"
+                                />
+                            </div>
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold truncate">{user?.name || 'User'}</p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{role}</p>

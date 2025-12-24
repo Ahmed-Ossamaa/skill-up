@@ -47,18 +47,14 @@ export default function ConfirmModal({
     const style = typeStyles[type];
     const Icon = style.icon;
 
-    // const handleConfirm = () => {
-    //     onConfirm();
-    //     onClose();
-    // };
 
     return (
         <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-100 p-4"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-fade-in flex items-center justify-center z-100 p-4"
             onClick={onClose}
         >
             <div
-                className="glass-card p-6 max-w-md w-full animate-scale-in"
+                className="glass-card p-6 max-w-md w-full"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Icon */}

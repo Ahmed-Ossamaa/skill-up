@@ -86,7 +86,7 @@ export default function AdminRequests() {
                         {requests.map((req) => (
                             <tr key={req._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
                                 <td className="p-4">
-                                    <div className="font-bold text-gray-900 dark:text-white">{req.user?.name}</div>
+                                    <div className="font-bold text-gray-900 dark:text-white capitalize">{req.user?.name}</div>
                                     <div className="text-sm text-gray-500">{req.user?.email}</div>
                                     <div className="text-xs text-gray-400 mt-1">Exp: {req.experience?.substring(0, 30)}...</div>
                                 </td>
@@ -130,7 +130,7 @@ export default function AdminRequests() {
 
             {/* --- Review Modal --- */}
             {selectedRequest && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
                         <h3 className="text-xl font-bold mb-2 capitalize">
                             {actionType === 'approved' ? 'Approve Request' : 'Reject Request'}

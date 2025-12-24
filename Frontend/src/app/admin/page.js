@@ -120,10 +120,10 @@ export default function AdminDashboard() {
                             <div key={u._id} className="flex items-center justify-between p-4 glass rounded-lg hover:bg-white/5 transition-colors">
                                 <div className="flex items-center space-x-3">
                                     <div className="w-10 h-10 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold shrink-0">
-                                        {u.name?.charAt(0) || 'U'}
+                                        {u.name?.charAt(0).toUpperCase() || 'U'}
                                     </div>
                                     <div>
-                                        <p className="font-semibold line-clamp-1">{u.name}</p>
+                                        <p className="font-semibold line-clamp-1 capitalize">{u.name}</p>
                                         <p className="text-sm text-gray-500">{u.email}</p>
                                     </div>
                                 </div>
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
                         {recentCourses.length > 0 ? recentCourses.map((c) => (
                             <div key={c._id} className="p-4 glass rounded-lg hover:bg-white/5 transition-colors">
                                 <div className="flex items-start justify-between mb-2">
-                                    <h3 className="font-semibold line-clamp-1 pr-2">{c.title}</h3>
+                                    <h3 className="font-semibold line-clamp-1 pr-2 capitalize">{c.title}</h3>
                                     <span className="font-bold text-primary-500 whitespace-nowrap">
                                         {c.price === 0 ? 'Free' : formatPrice(c.price)}
                                     </span>

@@ -12,7 +12,7 @@ export default function InstructorBanner() {
     return (
         <section className="py-20 px-4 md:px-8">
             <div className="max-w-7xl mx-auto">
-                {/* Main Wrapper with Gradient & Shadow */}
+                {/* Main Wrapper*/}
                 <div className="bg-linear-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-700">
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 items-center">
@@ -46,11 +46,11 @@ export default function InstructorBanner() {
                     
                         <div className="relative h-64 lg:h-full min-h-[400px] lg:min-h-[600px] order-1 lg:order-2 w-full">
                             <Image
-                                src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070&auto=format&fit=crop"
+                                src="https://images.unsplash.com/photo-1580894732444-8ecded7900cd?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                                 alt="Instructor teaching online"
                                 fill
                                 sizes="(max-width: 1024px) 100vw, 50vw"
-                                className="object-cover object-center lg:rounded-r-3xl"
+                                className="object-left  lg:rounded-r-3xl"
                                 priority={false}
                             />
                         </div>

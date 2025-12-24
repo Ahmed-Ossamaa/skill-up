@@ -64,8 +64,8 @@ export default function SignupForm() {
     };
 
     return (
-        <div className="w-full max-w-3xl mx-auto">
-            <div className="glass-card p-8">
+        <div className="w-full max-w-3xl mx-auto ">
+            <div className="glass-card p-8 shadow-md! shadow-secondary-200">
 
                 {/* Header */}
                 <div className="text-center mb-6">
@@ -190,7 +190,7 @@ export default function SignupForm() {
                 {/* Footer Section */}
                 <div className="mt-6">
 
-                    <p className="mt-4 text-center text-xs text-gray-600 dark:text-gray-400">
+                    <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
                         Already have an account?{' '}
                         <Link href="/auth/login" className="text-primary-600 font-semibold hover:underline">
                             Log in

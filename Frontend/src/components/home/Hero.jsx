@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { FiSearch, FiPlay } from 'react-icons/fi';
-import { HiOutlineAcademicCap, HiOutlineUsers, HiOutlineStar } from 'react-icons/hi';
+import { GiPartyPopper  } from 'react-icons/gi';
 
 export default function Hero() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -25,7 +24,8 @@ export default function Hero() {
                     <div className="text-center lg:text-left animate-slide-right">
                         <div className="inline-block mb-4">
                             <span className="glass-button text-sm">
-                                🎉 Join 50,000+ students learning online
+                                <GiPartyPopper size={20} className="inline-block mr-2 text-secondary-800 " />
+                                Join 50,000+ students learning online
                             </span>
                         </div>
 

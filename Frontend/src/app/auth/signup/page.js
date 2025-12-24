@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import SignupForm from '@/components/auth/SignupForm';
 import { HiOutlineAcademicCap } from 'react-icons/hi';
+import { GiPartyPopper } from 'react-icons/gi';
+import { FaLaptopCode, FaUserPlus } from "react-icons/fa";
 
 export default function SignupPage() {
     return (
@@ -47,17 +49,17 @@ export default function SignupPage() {
                     <div className="space-y-2">
                         {[
                             {
-                                icon: '🚀',
+                                icon: <FaUserPlus className="w-8 h-8 text-primary-500" />,
                                 title: 'Get Started Free',
                                 desc: 'Access free courses and start learning today'
                             },
                             {
-                                icon: '💼',
+                                icon: <FaLaptopCode className="w-8 h-8 text-secondary-600" />,
                                 title: 'Learn at Your Pace',
                                 desc: 'Study whenever and wherever you want'
                             },
                             {
-                                icon: '✨',
+                                icon: <GiPartyPopper className="w-8 h-8 text-amber-600" />, 
                                 title: 'Build Your Future',
                                 desc: 'Gain skills that matter in your career'
                             },

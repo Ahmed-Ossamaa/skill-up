@@ -46,8 +46,8 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="glass-card p-8">
+    <div className="w-full max-w-lg ">
+      <div className="glass-card p-8 shadow-lg! shadow-secondary-200">
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-2">Welcome Back!</h2>

@@ -234,8 +234,8 @@ export default function CategoriesPage() {
             </div>
 
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in ">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden ">
                         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                             <h3 className="font-bold text-lg text-gray-800">
                                 {editingCategory ? 'Edit Category' : 'New Category'}

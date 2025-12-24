@@ -256,7 +256,7 @@ function FilterSection({ title, isExpanded, onToggle, children }) {
                     <FiChevronDown className="w-5 h-5 text-gray-400" />
                 )}
             </button>
-            {isExpanded && <div className="animate-in fade-in slide-in-from-top-1 duration-200">{children}</div>}
+            {isExpanded && <div className=" animate-slide-down ">{children}</div>}
         </div>
     );
 }

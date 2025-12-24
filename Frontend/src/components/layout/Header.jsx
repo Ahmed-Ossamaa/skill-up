@@ -109,16 +109,16 @@ export default function Header() {
                         {/* User Menu */}
                         {isAuthenticated ? (
                             <div className="relative group">
-                                <button className="flex items-center gap-2 cursor-pointer outline-none bg-white/20 dark:bg-black/50 backdrop-blur-md py-1.5 pl-1.5 pr-4 rounded-full border border-white/20 shadow-sm transition-all hover:bg-white/30">
+                                <button className="flex items-center gap-2 cursor-pointer outline-none bg-white/20 dark:bg-black/50 backdrop-blur-md py-1 pl-1.5 pr-4 rounded-full border border-white/20 shadow-sm transition-all hover:bg-white/30">
                                     {/* Avatar */}
-                                    <div className="relative w-8 h-8 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden shadow-sm border border-white/10">
+                                    <div className="relative w-10 h-10 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden shadow-sm border border-white/10">
                                         {user?.avatar?.url ? (
                                             <Image
                                                 src={user.avatar.url}
                                                 width={100}
                                                 height={100}
                                                 loading='eager'
-                                                className="w-full h-full object-cover"
+                                                className="object-cover"
                                                 alt={user?.name || "User Avatar"}
                                             />
                                         ) : (

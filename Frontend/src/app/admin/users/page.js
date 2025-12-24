@@ -218,7 +218,7 @@ export default function AdminUsersPage() {
                                                     )}
 
                                                     <div>
-                                                        <p className="font-semibold text-sm">{u.name}</p>
+                                                        <p className="font-semibold text-sm capitalize">{u.name}</p>
                                                         <p className="text-xs text-gray-500">{u.email}</p>
                                                     </div>
                                                 </div>

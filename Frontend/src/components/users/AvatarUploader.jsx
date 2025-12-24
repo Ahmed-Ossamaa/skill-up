@@ -53,7 +53,7 @@ export default function AvatarUploader({ currentAvatar, onUpdate }) {
     return (
         <div className="flex flex-col items-center gap-4">
             <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl relative bg-gray-100">
+                <div className="w-50 h-50 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl relative bg-gray-100">
                     {uploading ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
                             <AiOutlineLoading3Quarters className="animate-spin text-white text-2xl" />
@@ -63,6 +63,8 @@ export default function AvatarUploader({ currentAvatar, onUpdate }) {
                     <Image
                         src={currentAvatar?.url || '/default-avatar.jpg'}
                         alt="Profile"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={true}
                         fill
                         className="object-cover"
                     />

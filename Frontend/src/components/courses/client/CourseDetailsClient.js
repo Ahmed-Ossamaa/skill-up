@@ -137,7 +137,7 @@ export default function CourseDetailsClient({ course, initialReviews }) {
                 <div className="container mx-auto px-4">
                     <div className="grid lg:grid-cols-3 gap-8">
                         {/* Left Content */}
-                        <div className="lg:col-span-2">
+                        <div className="lg:col-span-2 ">
                             {/* Tabs */}
                             <div className="flex space-x-1 glass-card p-1 mb-8 overflow-x-auto no-scrollbar">
                                 {tabs.map((tab) => (
