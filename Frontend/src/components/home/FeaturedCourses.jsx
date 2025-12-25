@@ -1,19 +1,32 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { courseAPI } from '@/lib/api';
 import CourseCard from '@/components/courses/CourseCard';
 import { AiOutlineArrowRight } from 'react-icons/ai';
 
-export default function FeaturedCourses() {
-    const [courses, setCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
+export default function FeaturedCourses({ initialCourses = [] }) {
+    const [courses, setCourses] = useState(initialCourses);
+    const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('popular');
+    
+    const isFirstRun = useRef(true);
 
+    const tabs = [
+        { id: 'popular', label: 'Most Popular' },
+        { id: 'new', label: 'New Courses' },
+        { id: 'top-rated', label: 'Top Rated' },
+    ];
 
     useEffect(() => {
+        // we dont fetch on first render (cashed by ISR) >> fetch only on tab change
+        if (isFirstRun.current) {
+            isFirstRun.current = false;
+            return;
+        }
+
         const fetchCourses = async () => {
             try {
                 setLoading(true);
@@ -21,18 +34,19 @@ export default function FeaturedCourses() {
                 const sortMapping = {
                     popular: '-studentsCount',
                     new: '-createdAt',
-                    "Top Rated": '-rating'
+                    "top-rated": '-rating'
                 };
 
                 const params = {
                     limit: 8,
-                    sort: sortMapping[activeTab] || '-createdAt',
+                    sort: sortMapping[activeTab] || '-studentsCount',
                 };
 
                 const response = await courseAPI.getPublished(params);
-                const apiData = response.data?.data || {};
-                const coursesData = apiData.data || [];
-                setCourses(coursesData || []);
+                const apiData = response.data?.data || response.data || {};
+                const coursesData = Array.isArray(apiData) ? apiData : (apiData.data || []);
+                
+                setCourses(coursesData);
             } catch (error) {
                 console.error('Error fetching courses:', error);
                 setCourses([]);
@@ -44,15 +58,8 @@ export default function FeaturedCourses() {
         fetchCourses();
     }, [activeTab]);
 
-
-    const tabs = [
-        { id: 'popular', label: 'Most Popular' },
-        { id: 'new', label: 'New Courses' },
-        { id: 'top-rated', label: 'Top Rated' },
-    ];
-
     return (
-        <section className="py-5 bg-linear-to-b from-transparent to-gray-50/50 dark:to-gray-900/50 ">
+        <section className="py-20 bg-linear-to-b from-transparent to-gray-50/50 dark:to-gray-900/50">
             <div className="container mx-auto px-4">
                 {/* Section Header */}
                 <div className="flex flex-col md:flex-row justify-between items-center mb-12">
@@ -93,7 +100,6 @@ export default function FeaturedCourses() {
                                 <div className="p-5 space-y-3">
                                     <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
                                     <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
-                                    <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
                                 </div>
                             </div>
                         ))}
@@ -102,8 +108,8 @@ export default function FeaturedCourses() {
                     <>
                         {/* Courses Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {courses.map((course, index) => (
-                                <div key={course._id || course.id} >
+                            {courses.map((course) => (
+                                <div key={course._id || course.id}>
                                     <CourseCard course={course} />
                                 </div>
                             ))}
@@ -131,4 +137,3 @@ export default function FeaturedCourses() {
         </section>
     );
 }
-

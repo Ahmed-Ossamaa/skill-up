@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '../components/providers/AuthProvider';
 import { Toaster } from 'react-hot-toast';
+import { de } from 'zod/v4/locales';
 
 
 const geistSans = Geist({
@@ -11,13 +12,22 @@ const geistSans = Geist({
 
 
 export const metadata = {
-  title: 'Skill-Up - Online Learning Platform',
+  title: {
+    default: 'Skill-Up | Learn New Skills Online',
+    template: '%s | Skill-Up'
+  },
+
   description: 'Learn new skills with expert-taught courses',
+  metadataBase: new URL('https://skill-up-edu.vercel.app'),
+
+  openGraph: {
+    images: ['/home-banner-og.png'],
+  }
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>
         <AuthProvider>
           {children}
@@ -25,7 +35,7 @@ export default function RootLayout({ children }) {
             position="top-right"
             reverseOrder={false}
             toastOptions={{
-              style: { fontSize: '14px',marginTop: '55px' },
+              style: { fontSize: '14px', marginTop: '55px' },
             }}
           />
         </AuthProvider>

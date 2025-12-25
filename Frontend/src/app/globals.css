@@ -128,10 +128,6 @@
 	}
 }
 
-/* Smooth scrolling */
-html {
-	scroll-behavior: smooth;
-}
 
 /* Hide scrollbar */
 .no-scrollbar::-webkit-scrollbar {

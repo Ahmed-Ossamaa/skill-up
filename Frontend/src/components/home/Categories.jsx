@@ -1,76 +1,35 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { categoryAPI } from '@/lib/api';
-
 import {
-    HiOutlineCode,
-    HiOutlineChartBar,
-    HiOutlineMusicNote,
-    HiOutlineNewspaper,
-    HiOutlineCalculator,
-    HiOutlineGlobeAlt
+    HiOutlineCode, HiOutlineChartBar, HiOutlineMusicNote,
+    HiOutlineNewspaper, HiOutlineCalculator, HiOutlineGlobeAlt
 } from 'react-icons/hi';
 import { HiOutlinePaintBrush } from 'react-icons/hi2';
 import { FaLaptop } from "react-icons/fa";
 import { AiOutlineArrowRight } from 'react-icons/ai';
 
-const MAIN_CATEGORIES = {
-    Programming: HiOutlineCode,
-    Design: HiOutlinePaintBrush,
-    Business: HiOutlineChartBar,
-    "IT & Software": FaLaptop,
-    Art: HiOutlineMusicNote,
-    Marketing: HiOutlineNewspaper,
-    Mathematics: HiOutlineCalculator,
-    Languages: HiOutlineGlobeAlt,
+const MAIN_CATEGORIES_CONFIG = {
+    Programming: { icon: HiOutlineCode, color: 'from-blue-500 to-cyan-500' },
+    Design: { icon: HiOutlinePaintBrush, color: 'from-pink-500 to-rose-500' },
+    Business: { icon: HiOutlineChartBar, color: 'from-emerald-500 to-teal-500' },
+    "IT & Software": { icon: FaLaptop, color: 'from-purple-500 to-violet-500' },
+    Art: { icon: HiOutlineMusicNote, color: 'from-orange-500 to-amber-500' },
+    Marketing: { icon: HiOutlineNewspaper, color: 'from-red-500 to-pink-500' },
+    Mathematics: { icon: HiOutlineCalculator, color: 'from-indigo-500 to-blue-500' },
+    Languages: { icon: HiOutlineGlobeAlt, color: 'from-green-500 to-emerald-500' },
 };
 
-const COLORS = [
-    'from-blue-500 to-cyan-500',
-    'from-pink-500 to-rose-500',
-    'from-emerald-500 to-teal-500',
-    'from-purple-500 to-violet-500',
-    'from-orange-500 to-amber-500',
-    'from-red-500 to-pink-500',
-    'from-indigo-500 to-blue-500',
-    'from-green-500 to-emerald-500'
-];
 
-export default function Categories() {
-    const [categories, setCategories] = useState([]);
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await categoryAPI.getAll();
-                const data = response.data.data;
-                // console.log(data);
-
-                // Filter only parent categories
-                // const parentCategories = data.filter(cat => cat.parent === null);
-
-                // filter  main categories from the response
-                const filtered = data
-                    .filter(cat => MAIN_CATEGORIES[cat.name])
-                    .map((cat, index) => ({
-                        ...cat,
-                        id: cat._id,
-                        icon: MAIN_CATEGORIES[cat.name],
-                        color: COLORS[index % COLORS.length],
-                        count: cat.courseCount || 0
-                    }));
-
-                setCategories(filtered);
-
-            } catch (err) {
-                console.error("Error fetching categories:", err);
-            }
+export default function Categories({ categories = [] }) {
+    const processedCategories = categories.map((cat) => {
+        const config = MAIN_CATEGORIES_CONFIG[cat.name] || { icon: FaLaptop, color: 'from-gray-500 to-gray-600' };
+        return {
+            ...cat,
+            icon: config.icon,
+            color: config.color
         };
-
-        fetchCategories();
-    }, []);
+    });
 
     return (
         <section className="py-20 relative">
@@ -86,7 +45,7 @@ export default function Categories() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {categories.map((category, index) => {
+                    {processedCategories.map((category) => {
                         const Icon = category.icon;
                         return (
                             <Link

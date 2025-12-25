@@ -4,7 +4,6 @@ import Link from 'next/link';
 
 export default function CourseInstructor({ instructor }) {
     if (!instructor) return null;
-    console.log("instructor", instructor);
     return (
         <div className="glass-card p-6">
             <h2 className="text-2xl font-bold mb-6">Instructor</h2>

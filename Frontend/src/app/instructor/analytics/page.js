@@ -16,7 +16,6 @@ export default function AnalyticsPage() {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
-    // console.log("Stats:", stats);
     const statCards = [
         {
             label: "Total Revenue",

@@ -16,7 +16,7 @@ export default function StripeCheckout({ course }) {
             console.log("Access token not found");
             return;
         } else {
-            console.log("Access token found", accessToken);
+            console.log("Access token found");
         }
 
 
@@ -32,8 +32,6 @@ export default function StripeCheckout({ course }) {
                 });
 
                 const data = await res.json();
-                console.log('Payment Intent Response:', data); // Debug log
-
 
                 if (!res.ok) throw new Error(data.message || "Failed to create payment intent");
 

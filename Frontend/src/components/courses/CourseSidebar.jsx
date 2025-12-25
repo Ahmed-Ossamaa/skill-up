@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FiPlay, FiClock, FiFileText, FiDownload, FiInbox, FiAward, FiSmartphone } from 'react-icons/fi';
-import { HiOutlineUsers } from 'react-icons/hi';
+import { HiOutlineBookOpen, HiOutlineUsers } from 'react-icons/hi';
 import { AiFillStar } from 'react-icons/ai';
 import { formatPrice, formatDuration, isOnSale, getFinalPrice } from '@/lib/utils';
 import { courseAPI } from '@/lib/api';
@@ -70,19 +70,19 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
             <div className="glass-card overflow-hidden">
                 {/* Video Preview */}
                 <div className="relative aspect-video bg-gray-900">
-                    {course.thumbnail ? (
-                        <Image src={course.thumbnail.url} alt={course.title} fill className="object-cover" />
+                    {course.thumbnail?.url ? (
+                        <Image 
+                        src={course.thumbnail.url} 
+                        alt={course.title} 
+                        fill 
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={true}
+                        className="object-cover" />
                     ) : (
-                        <div className="w-full h-full bg-linear-to-br from-primary-500 to-secondary-500"></div>
+                        <div className="w-full h-full bg-linear-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
+                            <HiOutlineBookOpen className="w-16 h-16 text-white/50 " />
+                        </div>
                     )}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <button className="w-20 h-20 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 shadow-xl">
-                            <FiPlay className="w-10 h-10 text-primary-500 ml-1" />
-                        </button>
-                    </div>
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
-                        Preview this course
-                    </div>
                 </div>
 
                 {/* Content */}

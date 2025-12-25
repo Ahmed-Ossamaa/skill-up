@@ -1,39 +1,18 @@
 'use client';
 
-import { HiOutlineUsers, HiOutlineAcademicCap, HiOutlineStar, HiOutlineGlobeAlt } from 'react-icons/hi';
 import { useState, useEffect, useRef } from 'react';
+import { HiOutlineUsers, HiOutlineAcademicCap, HiOutlineStar, HiOutlineGlobeAlt } from 'react-icons/hi';
+import { useInView, animate, motion } from 'framer-motion';
 
-export default function Stats() {
-    const stats = [
-        {
-            icon: HiOutlineUsers,
-            value: 50000,
-            suffix: '+',
-            label: 'Active Students',
-            color: 'from-blue-500 to-cyan-500'
-        },
-        {
-            icon: HiOutlineAcademicCap,
-            value: 10000,
-            suffix: '+',
-            label: 'Online Courses',
-            color: 'from-purple-500 to-pink-500'
-        },
-        {
-            icon: HiOutlineStar,
-            value: 98,
-            suffix: '%',
-            label: 'Satisfaction Rate',
-            color: 'from-yellow-500 to-orange-500'
-        },
-        {
-            icon: HiOutlineGlobeAlt,
-            value: 150,
-            suffix: '+',
-            label: 'Countries Reached',
-            color: 'from-green-500 to-emerald-500'
-        },
-    ];
+const ICON_MAP = {
+    users: HiOutlineUsers,
+    courses: HiOutlineAcademicCap,
+    star: HiOutlineStar,
+    globe: HiOutlineGlobeAlt
+};
+
+export default function Stats({ stats = [] }) {
+    if (!stats.length) return null;
 
     return (
         <section className="py-20 relative overflow-hidden">
@@ -53,7 +32,6 @@ export default function Stats() {
                     </p>
                 </div>
 
-                {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {stats.map((stat, index) => (
                         <StatCard key={index} stat={stat} index={index} />
@@ -65,77 +43,49 @@ export default function Stats() {
 }
 
 function StatCard({ stat, index }) {
-    const [count, setCount] = useState(0);
-    const [isVisible, setIsVisible] = useState(false);
+    const Icon = ICON_MAP[stat.iconKey] || HiOutlineUsers;
     const cardRef = useRef(null);
-    const Icon = stat.icon;
+    const counterRef = useRef(null);
+    const isInView = useInView(cardRef, { once: true, margin: "-100px" });
 
     useEffect(() => {
-        const cardElement = cardRef.current; // Store the current value of cardRef.current
-
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
+        if (isInView) {
+            const controls = animate(0, stat.value, {
+                duration: 2,
+                ease: "easeOut",
+                onUpdate: (value) => {
+                    if (counterRef.current) {
+                        counterRef.current.textContent = Math.floor(value).toLocaleString();
+                    }
                 }
-            },
-            { threshold: 0.1 }
-        );
+            });
 
-        if (cardElement) {
-            observer.observe(cardElement);
+            return () => controls.stop();
         }
-
-        return () => {
-            if (cardElement) {
-                observer.unobserve(cardElement);
-            }
-        };
-    }, []);
-
-    useEffect(() => {
-        if (isVisible) {
-            let start = 0;
-            const end = stat.value;
-            const duration = 2000;
-            const increment = end / (duration / 16);
-
-            const timer = setInterval(() => {
-                start += increment;
-                if (start >= end) {
-                    setCount(end);
-                    clearInterval(timer);
-                } else {
-                    setCount(Math.floor(start));
-                }
-            }, 16);
-
-            return () => clearInterval(timer);
-        }
-    }, [isVisible, stat.value]);
+    }, [isInView, stat.value]);
 
     return (
-        <div
+        <motion.div
             ref={cardRef}
-            className="glass-card p-8 text-center hover-lift "
-            style={{ animationDelay: `${index * 0.1}s` }}
-        >   
-            {/* Icon */}
+            initial={{ opacity: 0, y: 20 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            transition={{ delay: index * 0.1, duration: 0.5 }}
+            className="glass-card p-8 text-center hover-lift"
+        >
             <div className="flex justify-center mb-4">
                 <div className={`w-16 h-16 bg-linear-to-br ${stat.color} rounded-2xl flex items-center justify-center`}>
                     <Icon className="w-8 h-8 text-white" />
                 </div>
             </div>
 
-            {/* Value */}
-            <div className="text-4xl md:text-5xl font-bold mb-2 gradient-text">
-                {count.toLocaleString()}{stat.suffix}
+            <div className="text-4xl md:text-5xl font-bold mb-2 gradient-text flex justify-center items-center">
+                <span ref={counterRef}>0</span>
+                <span>{stat.suffix}</span>
             </div>
 
-            {/* Label */}
             <div className="text-gray-600 dark:text-gray-400 font-medium">
                 {stat.label}
             </div>
-        </div>
+        </motion.div>
     );
 }
