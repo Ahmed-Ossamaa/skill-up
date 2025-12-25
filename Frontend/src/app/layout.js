@@ -11,7 +11,7 @@ const geistSans = Geist({
 
 
 export const metadata = {
-  title: 'LearnHub - Online Learning Platform',
+  title: 'Skill-Up - Online Learning Platform',
   description: 'Learn new skills with expert-taught courses',
 };
 
