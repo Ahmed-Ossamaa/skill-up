@@ -14,7 +14,7 @@ export default function RevenueChart() {
     );
 
     return (
-        <div className="w-full h-[350px] mt-4">
+        <div className="w-full h-[350px] mt-4 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                     <defs>

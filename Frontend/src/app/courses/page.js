@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'; // Ensure Suspense is imported
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -10,7 +10,7 @@ import { courseAPI } from '@/lib/api';
 import { FiSearch, FiFilter, FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function CoursesPage() {
+function CoursesContent() {
     const searchParams = useSearchParams();
 
     // --- State Management ---
@@ -110,10 +110,6 @@ export default function CoursesPage() {
     const handleClearFilters = () => {
         setFilters({ category: null, level: null, priceRange: null, rating: null });
         setSearchQuery('');
-    };
-
-    const openLesson = (courseId, lessonId) => {
-        setLessonModal({ isOpen: true, courseId, lessonId });
     };
 
     return (
@@ -233,5 +229,13 @@ export default function CoursesPage() {
                 )}
             </AnimatePresence>
         </div>
+    );
+}
+
+export default function CoursesPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading courses...</div>}>
+            <CoursesContent />
+        </Suspense>
     );
 }

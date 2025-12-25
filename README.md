@@ -59,7 +59,7 @@ To get a local copy up and running, follow these simple steps.
     ```env
     # Server Configuration
     PORT=5000
-    NODE_ENV=development
+    NODE_ENV=dev
     FRONTEND_URL=http://localhost:3000
 
     # Database
