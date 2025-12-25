@@ -12,19 +12,17 @@ router.get('/', courseController.getPublishedCourses);
 
 // Get course content (sections and lessons)
 // Optional auth: if logged in, access info like enrollment is available
-router.get('/:id/content', optionalAuth, courseController.getCourseContent);
+router.get('/:id/content', courseController.getCourseContent);
 
 // Get public course details (title, description, instructor, etc.)
 router.get('/:id', courseController.getCoursePublicDetails);
 
 // =============================== Protected Routes ===============================
-// All routes below require a valid token
 router.get('/:id/enrollment',optionalAuth, courseController.checkEnrollment);
-router.use(protect);
 
-// Check enrollment status for a course (student only)
 
 // =============================== Instructor / Admin Routes ===============================
+router.use(protect);
 // Get courses created by the logged-in instructor
 router.get(
     '/instructor/my-courses',
