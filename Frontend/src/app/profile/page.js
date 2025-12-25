@@ -105,30 +105,12 @@ export default function SettingsPage() {
         }
     };
 
-    //     e.preventDefault();
-    //     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-    //         return toast.error("New passwords do not match");
-    //     }
-    //     if (passwordData.newPassword.length < 8) {
-    //         return toast.error("Password must be at least 8 characters");
-    //     }
-
-    //     setPasswordLoading(true);
-    //     try {
-    //         await authAPI.changePassword(passwordData);
-    //         toast.success('Password changed successfully!');
-    //         setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
-    //     } catch (err) {
-    //         toast.error(err.response?.data?.message || 'Failed to change password');
-    //     } finally {
-    //         setPasswordLoading(false);
-    //     }
-    // };
     const onPasswordSubmit = async (data) => {
         try {
             await authAPI.changePassword({
                 currentPassword: data.currentPassword,
-                newPassword: data.newPassword
+                newPassword: data.newPassword,
+                confirmNewPassword: data.confirmNewPassword
             });
             toast.success('Password changed successfully!');
             reset();
