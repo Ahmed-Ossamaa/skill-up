@@ -1,8 +1,14 @@
 import axios from 'axios';
 import useAuthStore from '@/store/authStore';
 
+
+const SERVER_URL = process.env.NEXT_PUBLIC_RENDER_URL || process.env.NEXT_PUBLIC_API_URL;
+const baseURL = typeof window === 'undefined' 
+    ? SERVER_URL 
+    : '/api/v1';
+
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || '/api/v1',
+    baseURL: baseURL,
     headers: { 'Content-Type': 'application/json' },
     withCredentials: true, // sends HttpOnly refresh cookie automatically
 });
