@@ -1,7 +1,6 @@
 import Header from '@/components/layout/Header';
 import Link from 'next/link';
 import React from 'react';
-// --- Component 1: StatCard ---
 const StatCard = ({ value, label, color }) => (
     <div className="flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg transition hover:shadow-2xl">
         <p className={`text-4xl font-extrabold ${color}`}>{value}</p>
@@ -9,7 +8,6 @@ const StatCard = ({ value, label, color }) => (
     </div>
 );
 
-// --- Component 2: PillarCard ---
 const PillarCard = ({ title, description, icon }) => (
     <div className="p-6 border border-gray-100 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 shadow-sm transition hover:scale-[1.02]">
         <div className="flex items-center space-x-3 mb-4">
@@ -111,7 +109,7 @@ export default function AboutPage() {
                         <Link href="/courses" className="px-8 py-3 text-lg font-semibold rounded-full bg-white text-blue-600 hover:bg-gray-100 transition shadow-lg">
                             Browse All Courses
                         </Link>
-                        <Link href="#" className="px-8 py-3 text-lg font-semibold rounded-full border border-white text-white hover:bg-blue-700 transition shadow-lg">
+                        <Link href="/teach" className="px-8 py-3 text-lg font-semibold rounded-full border border-white text-white hover:bg-blue-700 transition shadow-lg">
                             Become an Instructor
                         </Link>
                     </div>
