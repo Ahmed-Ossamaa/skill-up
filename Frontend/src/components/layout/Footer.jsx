@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { HiOutlineAcademicCap } from 'react-icons/hi';
 import { FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 import { AiFillFacebook, AiFillTwitterCircle, AiFillInstagram, AiFillLinkedin } from 'react-icons/ai';
+import Image from 'next/image';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
@@ -25,7 +25,7 @@ export default function Footer() {
     };
 
     return (
-        <footer className="relative mt-20 bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+        <footer className="relative mt-20 bg-linear-to-br from-gray-900 to-gray-900 text-white">
             {/* Wave Decoration */}
             <div className="absolute top-0 left-0 right-0 overflow-hidden">
                 <svg
@@ -44,18 +44,23 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
                     {/* Brand Section */}
                     <div className="lg:col-span-2">
-                        <Link href="/" className="flex items-center space-x-2 mb-4">
-                            <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-2 rounded-xl">
-                                <HiOutlineAcademicCap className="w-7 h-7 text-white" />
-                            </div>
-                            <span className="text-2xl font-bold">Skill-Up</span>
-                        </Link>
-                        <p className="text-gray-400 mb-6 max-w-md">
-                            Empowering learners worldwide with high-quality, accessible education.
-                        </p>
+                        <div className="flex align-center mb-2 -ml-2.5">
+                            <Link href="/" className="flex items-center ">
+                                <Image
+                                    src="/logo.png"
+                                    alt="Logo"
+                                    width={70}
+                                    height={70}
+                                />
+                            </Link>
+                            <p className="text-gray-400 my-auto max-w-md">
+                                Empowering learners worldwide with high-quality, accessible education.
+                            </p>
+                        </div>
+
 
                         {/* Contact Info */}
-                        <div className="space-y-3">
+                        <div className="space-y-3 ">
                             <div className="flex items-center space-x-3 text-gray-400">
                                 <FiMail className="w-5 h-5" />
                                 <span>support@skillUp.com</span>

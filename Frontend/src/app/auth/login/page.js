@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import LoginForm from '@/components/auth/LoginForm';
 import { HiOutlineAcademicCap } from 'react-icons/hi';
+import Image from 'next/image';
 
 export default function LoginPage() {
     return (
@@ -13,10 +14,14 @@ export default function LoginPage() {
                 {/* Left Side - Branding */}
                 <div className="hidden lg:block animate-slide-right">
                     <Link href="/" className="flex items-center space-x-3 mb-8 hover:scale-y-101">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-3 rounded-xl hover:bg-linear-to-br hover:from-secondary-500 hover:to-primary-500">
-                            <HiOutlineAcademicCap className="w-8 h-8 text-white" />
-                        </div>
-                        <span className="text-3xl font-bold gradient-text">LearnHub</span>
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            width={70}
+                            height={70}
+                            priority={true}
+                        />
+                        <span className="text-3xl font-bold gradient-text">Skill-Up</span>
                     </Link>
 
                     <h1 className="text-5xl font-bold mb-6 leading-tight">
@@ -35,10 +40,14 @@ export default function LoginPage() {
                 <div>
                     {/* Mobile Logo */}
                     <Link href="/" className="flex lg:hidden items-center justify-center space-x-3 mb-8">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-3 rounded-xl">
-                            <HiOutlineAcademicCap className="w-8 h-8 text-white" />
-                        </div>
-                        <span className="text-3xl font-bold gradient-text">LearnHub</span>
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            width={70}
+                            height={70}
+                            priority={true}
+                        />
+                        <span className="text-3xl font-bold gradient-text">Skill-Up</span>
                     </Link>
 
                     <LoginForm />

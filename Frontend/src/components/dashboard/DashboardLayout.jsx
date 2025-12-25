@@ -9,7 +9,6 @@ import {
     FiBarChart, FiDollarSign, FiMessageSquare, FiFolder, FiPlus,
     FiPlay, FiAward, FiBookOpen, FiTrendingUp
 } from 'react-icons/fi';
-import { HiOutlineAcademicCap } from 'react-icons/hi';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -66,12 +65,16 @@ export default function DashboardLayout({ children, role = 'student' }) {
     return (
         <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 custom-scrollbar ">
             {/* Mobile Header */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass border-b border-white/10">
+            <div className="lg:hidden fixed top-0 left-0 right-0 z-10 glass border-b border-white/10">
                 <div className="flex items-center justify-between p-4">
                     <Link href="/" className="flex items-center space-x-2">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-2 rounded-xl">
-                            <HiOutlineAcademicCap className="w-6 h-6 text-white" />
-                        </div>
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            width={70}
+                            height={70}
+                            priority={true}
+                        />
                         <span className="text-xl font-bold gradient-text">Skill-Up</span>
                     </Link>
                     <button
@@ -91,17 +94,21 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 )}
             >
                 {/* Logo */}
-                <div className="hidden lg:flex items-center space-x-2 p-6 border-b border-white/10">
+                <div className="hidden lg:flex items-center space-x-2 px-6 py-4 border-b border-white/10">
                     <Link href="/" className="flex items-center space-x-2">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-2 rounded-xl">
-                            <HiOutlineAcademicCap className="w-6 h-6 text-white" />
-                        </div>
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            width={70}
+                            height={70}
+                            priority={true}
+                        />
                         <span className="text-xl font-bold gradient-text">Skill-Up</span>
                     </Link>
                 </div>
 
                 {/* User Info */}
-                <div className="p-4 border-b border-white/10">
+                <div className="px-4 py-2 border-b border-white/10">
                     {user?.avatar?.url ? (
                         <div className="flex items-center space-x-3">
                             <div className='rounded-full relative w-10 h-10 overflow-hidden'>

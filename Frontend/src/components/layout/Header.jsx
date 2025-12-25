@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { FiSearch, FiUser, FiMenu, FiX } from 'react-icons/fi';
-import { HiOutlineAcademicCap } from 'react-icons/hi';
 import useAuthStore from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
@@ -62,13 +61,14 @@ export default function Header() {
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center space-x-2 group">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 s p-2 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                            <HiOutlineAcademicCap className="w-7 h-7 text-white" />
-                        </div>
-                        <span className="text-2xl font-bold gradient-text hidden sm:block">
-                            Skill-Up
-                        </span>
+                    <Link href="/" className="flex items-center ">
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            width={70}
+                            height={70}
+                            priority={true}
+                            />
                     </Link>
 
                     {/* Desktop Navigation */}

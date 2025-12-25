@@ -1,25 +1,27 @@
 import Link from 'next/link';
 import SignupForm from '@/components/auth/SignupForm';
-import { HiOutlineAcademicCap } from 'react-icons/hi';
 import { GiPartyPopper } from 'react-icons/gi';
 import { FaLaptopCode, FaUserPlus } from "react-icons/fa";
+import Image from 'next/image';
 
 export default function SignupPage() {
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-4 py-12">
-
-
             {/* Content */}
             <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
                 {/* Left Side - Signup Form */}
                 <div>
-                    <Link href="/" 
-                    title='home'
-                    className="flex lg:hidden items-center justify-center space-x-3 mb-8 hover:scale-y-101">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-3 rounded-xl">
-                            <HiOutlineAcademicCap className="w-8 h-8 " />
-                        </div>
-                        <span className="text-3xl font-bold gradient-text">LearnHub</span>
+                    <Link href="/"
+                        title='home'
+                        className="flex lg:hidden items-center justify-center space-x-3 mb-8 hover:scale-y-101">
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            width={70}
+                            height={70}
+                            priority={true}
+                        />
+                        <span className="text-3xl font-bold gradient-text">Skill-Up</span>
                     </Link>
 
                     <SignupForm />
@@ -27,13 +29,17 @@ export default function SignupPage() {
 
                 {/* Right Side  */}
                 <div className="hidden lg:block animate-slide-left order-1 lg:order-2">
-                    <Link href="/" 
-                    title='home'
-                    className="flex items-center space-x-3 mb-8 hover:scale-y-101">
-                        <div className="bg-linear-to-br from-primary-500 to-secondary-500 p-3 rounded-xl hover:bg-linear-to-br hover:from-secondary-500 hover:to-primary-500">
-                            <HiOutlineAcademicCap className="w-8 h-8 " />
-                        </div>
-                        <span className="text-3xl font-bold gradient-text">LearnHub</span>
+                    <Link href="/"
+                        title='home'
+                        className="flex items-center space-x-3 mb-8 hover:scale-y-101">
+                        <Image
+                            src="/logo.png"
+                            alt="Logo"
+                            width={70}
+                            height={70}
+                            priority={true}
+                        />
+                        <span className="text-3xl font-bold gradient-text">Skill-Up</span>
                     </Link>
 
                     <h1 className="text-4xl font-bold mb-6 leading-tight">
@@ -59,7 +65,7 @@ export default function SignupPage() {
                                 desc: 'Study whenever and wherever you want'
                             },
                             {
-                                icon: <GiPartyPopper className="w-8 h-8 text-amber-600" />, 
+                                icon: <GiPartyPopper className="w-8 h-8 text-amber-600" />,
                                 title: 'Build Your Future',
                                 desc: 'Gain skills that matter in your career'
                             },
