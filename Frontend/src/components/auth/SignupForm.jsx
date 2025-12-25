@@ -38,7 +38,8 @@ export default function SignupForm() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const { register, handleSubmit, control, formState: { errors } } = useForm({
-        resolver: zodResolver(signupSchema)
+        resolver: zodResolver(signupSchema),
+        mode: 'onBlur',
     });
 
     const password = useWatch({ control, name: 'password', defaultValue: '' });

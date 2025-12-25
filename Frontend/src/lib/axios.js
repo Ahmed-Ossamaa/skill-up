@@ -8,7 +8,7 @@ const baseURL = typeof window === 'undefined'
     : '/api/v1';
 
 const api = axios.create({
-    baseURL: baseURL,
+    baseURL: baseURL,  //`http://localhost:5000/api/v1`
     headers: { 'Content-Type': 'application/json' },
     withCredentials: true, // sends HttpOnly refresh cookie automatically
 });
@@ -26,6 +26,11 @@ api.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
         const authStore = useAuthStore.getState();
+
+        if (originalRequest.url.includes('/auth/refresh')) {
+            authStore.logout(); // to clear the data in localstorage (avoiding infinite loop)
+            return Promise.reject(error);
+        }
 
         if (error.response?.status === 401 && !originalRequest._retry && authStore.user) {
             originalRequest._retry = true;

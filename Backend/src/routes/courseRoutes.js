@@ -11,7 +11,7 @@ const { uploadThumbnail } = require('../middlewares/upload');
 router.get('/', courseController.getPublishedCourses);
 
 // Get course content (sections and lessons)
-router.get('/:id/content', courseController.getCourseContent);
+router.get('/:id/content',optionalAuth, courseController.getCourseContent);
 
 // Get public course details (title, description, instructor, etc.)
 router.get('/:id', courseController.getCoursePublicDetails);

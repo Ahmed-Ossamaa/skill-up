@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { FiPlay, FiClock, FiFileText, FiDownload, FiInbox, FiAward, FiSmartphone } from 'react-icons/fi';
@@ -16,6 +16,10 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
     const [loading, setLoading] = useState(false);
     const router = useRouter();
     const { accessToken } = useAuthStore();
+
+    useEffect(() => {
+        setEnrolled(isEnrolled);
+    }, [isEnrolled]);
 
     const finalPrice = getFinalPrice(course);
     const onSale = isOnSale(course);
@@ -71,13 +75,13 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
                 {/* Video Preview */}
                 <div className="relative aspect-video bg-gray-900">
                     {course.thumbnail?.url ? (
-                        <Image 
-                        src={course.thumbnail.url} 
-                        alt={course.title} 
-                        fill 
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        priority={true}
-                        className="object-cover" />
+                        <Image
+                            src={course.thumbnail.url}
+                            alt={course.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            priority={true}
+                            className="object-cover" />
                     ) : (
                         <div className="w-full h-full bg-linear-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
                             <HiOutlineBookOpen className="w-16 h-16 text-white/50 " />

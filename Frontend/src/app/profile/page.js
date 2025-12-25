@@ -2,27 +2,48 @@
 
 import { useState, useEffect } from 'react';
 import { userAPI, authAPI } from '@/lib/api';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import AvatarUploader from '@/components/users/AvatarUploader';
 import { toast } from 'react-hot-toast';
 import {
-    AiOutlineSave,
-    AiOutlineGlobal,
-    AiFillLinkedin,
-    AiFillGithub,
-    AiOutlineTwitter,
-    AiOutlineLoading3Quarters,
-    AiOutlineLock,
-    AiOutlineUser,
-    AiOutlineSafety
+    AiOutlineSave, AiOutlineGlobal, AiFillLinkedin, AiFillGithub,
+    AiOutlineTwitter, AiOutlineLoading3Quarters, AiOutlineLock,
+    AiOutlineUser, AiOutlineSafety
 } from 'react-icons/ai';
 import Header from '@/components/layout/Header';
+
+const passwordSchema = z.object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z
+        .string()
+        .min(8, 'Password must be at least 8 characters')
+        .regex(/[A-Z]/, 'One uppercase required')
+        .regex(/[a-z]/, 'One lowercase required')
+        .regex(/[0-9]/, 'One number required'),
+    confirmNewPassword: z.string()
+}).refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "New passwords do not match",
+    path: ["confirmNewPassword"],
+});
 
 export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [passwordLoading, setPasswordLoading] = useState(false);
+    // const [passwordLoading, setPasswordLoading] = useState(false);
     const [userRole, setUserRole] = useState('student');
     const [activeTab, setActiveTab] = useState('profile');
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors, isSubmitting: passwordLoading }
+    } = useForm({
+        resolver: zodResolver(passwordSchema),
+        mode: "onBlur"
+    });
 
     // Form State
     const [formData, setFormData] = useState({
@@ -36,17 +57,12 @@ export default function SettingsPage() {
         avatar: null
     });
 
-    const [passwordData, setPasswordData] = useState({
-        currentPassword: '',
-        newPassword: '',
-        confirmNewPassword: ''
-    });
 
     useEffect(() => {
         const fetchUser = async () => {
             try {
                 const { data } = await userAPI.getMyProfile();
-                const userData = data.data;
+                const userData = data?.data;
 
                 setUserRole(userData.role || 'student');
 
@@ -75,11 +91,6 @@ export default function SettingsPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handlePasswordChange = (e) => {
-        const { name, value } = e.target;
-        setPasswordData(prev => ({ ...prev, [name]: value }));
-    };
-
     const handleProfileSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -94,28 +105,39 @@ export default function SettingsPage() {
         }
     };
 
-    const handlePasswordSubmit = async (e) => {
-        e.preventDefault();
-        if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-            return toast.error("New passwords do not match");
-        }
-        if (passwordData.newPassword.length < 8) {
-            return toast.error("Password must be at least 8 characters");
-        }
+    //     e.preventDefault();
+    //     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+    //         return toast.error("New passwords do not match");
+    //     }
+    //     if (passwordData.newPassword.length < 8) {
+    //         return toast.error("Password must be at least 8 characters");
+    //     }
 
-        setPasswordLoading(true);
+    //     setPasswordLoading(true);
+    //     try {
+    //         await authAPI.changePassword(passwordData);
+    //         toast.success('Password changed successfully!');
+    //         setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+    //     } catch (err) {
+    //         toast.error(err.response?.data?.message || 'Failed to change password');
+    //     } finally {
+    //         setPasswordLoading(false);
+    //     }
+    // };
+    const onPasswordSubmit = async (data) => {
         try {
-            await authAPI.changePassword(passwordData);
+            await authAPI.changePassword({
+                currentPassword: data.currentPassword,
+                newPassword: data.newPassword
+            });
             toast.success('Password changed successfully!');
-            setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+            reset();
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to change password');
-        } finally {
-            setPasswordLoading(false);
         }
     };
 
-    if (loading) return <div className="p-10 text-center pt-32">Loading settings...</div>;
+    if (loading) return <div className="p-10 text-center pt-32">Loading ...</div>;
 
     const isInstructor = userRole === 'instructor';
 
@@ -265,42 +287,51 @@ export default function SettingsPage() {
                                         <AiOutlineLock className="text-primary-500" /> Change Password
                                     </h3>
 
-                                    <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                                    <form onSubmit={handleSubmit(onPasswordSubmit)} className="space-y-4">
                                         <div className="grid md:grid-cols-2 gap-4">
+                                            {/* Current Password */}
                                             <div className="md:col-span-2">
                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">Current Password</label>
                                                 <div className="relative">
                                                     <div className="absolute left-3 top-3 text-gray-400"><AiOutlineLock /></div>
                                                     <input
-                                                        type="password" name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange}
+                                                        type="password"
+                                                        {...register("currentPassword")}
                                                         placeholder="Enter your current password"
-                                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-none dark:text-white"
+                                                        className={`w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent focus:ring-2 outline-none dark:text-white ${errors.currentPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-gray-700 focus:ring-primary-500'}`}
                                                     />
                                                 </div>
+                                                {errors.currentPassword && <p className="text-red-500 text-xs mt-1">{errors.currentPassword.message}</p>}
                                             </div>
 
+                                            {/* New Password */}
                                             <div>
                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">New Password</label>
                                                 <div className="relative">
                                                     <div className="absolute left-3 top-3 text-gray-400"><AiOutlineLock /></div>
                                                     <input
-                                                        type="password" name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange}
+                                                        type="password"
+                                                        {...register("newPassword")}
                                                         placeholder="New password"
-                                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-none dark:text-white"
+                                                        className={`w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent focus:ring-2 outline-none dark:text-white ${errors.newPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-gray-700 focus:ring-primary-500'}`}
                                                     />
                                                 </div>
+                                                {errors.newPassword && <p className="text-red-500 text-xs mt-1">{errors.newPassword.message}</p>}
                                             </div>
 
+                                            {/* Confirm Password */}
                                             <div>
                                                 <label className="block text-sm font-medium mb-1 dark:text-gray-300">Confirm Password</label>
                                                 <div className="relative">
                                                     <div className="absolute left-3 top-3 text-gray-400"><AiOutlineLock /></div>
                                                     <input
-                                                        type="password" name="confirmNewPassword" value={passwordData.confirmNewPassword} onChange={handlePasswordChange}
+                                                        type="password"
+                                                        {...register("confirmNewPassword")}
                                                         placeholder="Confirm new password"
-                                                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent focus:ring-2 focus:ring-primary-500 outline-none dark:text-white"
+                                                        className={`w-full pl-10 pr-4 py-2 rounded-lg border bg-transparent focus:ring-2 outline-none dark:text-white ${errors.confirmNewPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-gray-700 focus:ring-primary-500'}`}
                                                     />
                                                 </div>
+                                                {errors.confirmNewPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmNewPassword.message}</p>}
                                             </div>
                                         </div>
 
