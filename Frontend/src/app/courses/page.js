@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react'; // Ensure Suspense is imported
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -96,7 +96,6 @@ function CoursesContent() {
         }
     }, [filters, sortBy, searchQuery, pagination.limit]);
 
-    // Trigger fetch on parameter change
     useEffect(() => {
         fetchCourses(1);
     }, [fetchCourses]);
@@ -117,7 +116,6 @@ function CoursesContent() {
             <Header />
 
             <main className="pt-32 pb-20 container mx-auto px-4">
-                {/* 1. Page Title Section */}
                 <div className="mb-10 text-center">
                     <h1 className="text-4xl md:text-6xl font-black tracking-tighter  dark:text-white italic">
                         EXPLORE <span className="text-primary-500">COURSES</span>
@@ -127,7 +125,7 @@ function CoursesContent() {
                     </p>
                 </div>
 
-                {/* 2. Control Bar */}
+                {/* Control Bar */}
                 <div className="flex flex-col lg:flex-row gap-4 mb-10">
                     <div className="relative flex-1 group">
                         <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
@@ -144,9 +142,9 @@ function CoursesContent() {
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="h-14 px-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold text-slate-700 dark:text-slate-200 outline-none shadow-sm cursor-pointer"
+                            className="h-14 px-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold text-slate-700 dark:text-slate-200 outline-none shadow-sm cursor-pointer appearance-none "
                         >
-                            {sortOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                            {sortOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)} j
                         </select>
 
                         <button
@@ -158,7 +156,7 @@ function CoursesContent() {
                     </div>
                 </div>
 
-                {/* 3. Main Content Layout */}
+                {/* Main Content Layout */}
                 <div className="grid lg:grid-cols-4 gap-10">
                     {/* Filters Sidebar */}
                     <aside className="hidden lg:block">
@@ -175,7 +173,6 @@ function CoursesContent() {
                     <div className="lg:col-span-3">
                         <CourseGrid courses={courses} loading={loading} />
 
-                        {/* Custom Pagination Design */}
                         {!loading && courses.length > 0 && (
                             <div className="mt-16 flex items-center justify-center gap-4">
                                 <button
