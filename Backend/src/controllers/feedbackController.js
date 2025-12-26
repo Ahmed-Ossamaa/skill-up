@@ -9,9 +9,20 @@ class FeedbackController {
         this.feedbackService = new FeedbackService(Feedback);
     }
     createFeedback = asyncHandler(async (req, res) => {
-        const feedback = await this.feedbackService.createFeedback(req.body);
+        const feedbackData = {
+            subject: req.body.subject,
+            message: req.body.message,
+            email: req.body.email,
+            name: req.body.name
+        };
+        if (req.user) {
+            feedbackData.user = req.user.id;
+            feedbackData.name = req.user.name;
+            feedbackData.email = req.user.email;
+        }
+        const feedback = await this.feedbackService.createFeedback(feedbackData);
         res.status(201).json({
-            message: 'Feedback created & saved',
+            message: 'Message sent successfully',
             data: feedback
         });
     });
@@ -29,11 +40,30 @@ class FeedbackController {
         const userId = req.user.id;
         const feedback = await this.feedbackService.getFeedbackById(id);
 
-        if (feedback.user.toString() !== userId && req.user.role !== 'admin') {
+        const feedbackUserId = feedback.user ? feedback.user.toString() : null;
+
+        if (feedbackUserId !== userId && req.user.role !== 'admin') {
             throw ApiError.forbidden('Not authorized to view this feedback');
         }
 
         res.status(200).json({ data: feedback });
+    });
+
+    updateFeedback = asyncHandler(async (req, res) => {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        //Validate status (no JOI)
+        if (!['new', 'read', 'replied'].includes(status)) {
+            throw ApiError.badRequest('Invalid status');
+        }
+
+        const feedback = await this.feedbackService.updateFeedback(id, { status });
+
+        res.status(200).json({
+            message: 'Status updated successfully',
+            data: feedback
+        });
     });
 
 
@@ -42,9 +72,12 @@ class FeedbackController {
         const userId = req.user.id;
         const feedback = await this.feedbackService.getFeedbackById(id);
 
-        if (feedback.user.toString() !== userId && req.user.role !== 'admin') {
+        const feedbackUserId = feedback.user ? feedback.user.toString() : null;
+
+        if (feedbackUserId !== userId && req.user.role !== 'admin') {
             throw ApiError.forbidden('You are not authorized to delete this feedback');
         }
+
         await this.feedbackService.deleteFeedback(id);
         res.status(200).json({ message: 'Feedback deleted successfully' });
     });

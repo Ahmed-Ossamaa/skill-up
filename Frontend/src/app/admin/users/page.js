@@ -139,7 +139,7 @@ export default function AdminUsersPage() {
     return (
         <DashboardLayout role="admin">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">User Management</h1>
+                <h1 className="text-2xl font-bold mb-2">User Management</h1>
                 <p className="text-gray-600 dark:text-gray-400">Manage all users, roles, and permissions.</p>
             </div>
 

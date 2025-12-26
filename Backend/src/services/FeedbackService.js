@@ -36,6 +36,14 @@ class FeedbackService {
         return feedback;
     }
 
+    async updateFeedback(id, data) {
+        const feedback = await this.Feedback.findByIdAndUpdate(id, data, { new: true });
+        if (!feedback) {
+            throw ApiError.notFound('Feedback not found');
+        }
+        return feedback;
+    }
+
 
     async deleteFeedback(feedbackId) {
         const feedback = await this.Feedback.findByIdAndDelete(feedbackId);
@@ -44,9 +52,6 @@ class FeedbackService {
         }
         return feedback;
     }
-
-
-
 
 
 }

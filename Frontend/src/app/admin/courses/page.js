@@ -98,7 +98,7 @@ export default function AdminCourses() {
 
     return (
         <DashboardLayout role="admin">
-            <div className="py-8 max-w-7xl mx-auto space-y-6">
+            <div className="pb-4 pt-1 max-w-7xl mx-auto space-y-6">
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

@@ -69,7 +69,7 @@ export default function AdminRequests() {
 
     return (
         <DashboardLayout role="admin">
-        <div className="py-6">
+        <div className="pb-6 pt-1">
             <h2 className="text-2xl font-bold mb-6">Instructor Applications</h2>
             
             <div className="glass-card overflow-hidden">

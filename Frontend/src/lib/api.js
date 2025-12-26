@@ -84,6 +84,13 @@ export const reviewAPI = {
     delete: (id) => api.delete(`/reviews/${id}`),
 };
 
+export const feedbackAPI = {
+    getAll: (params) => api.get('/feedback', { params }),
+    create: (data) => api.post(`/feedback/`, data),
+    updateStatus: (id, data) => api.patch(`/feedback/${id}`, data),
+    delete: (id) => api.delete(`/feedback/${id}`),
+};
+
 export const userAPI = {
     getMyProfile: () => api.get('/users/me'),
     updateMyProfile: (data) => api.patch(`/users/me`, data),

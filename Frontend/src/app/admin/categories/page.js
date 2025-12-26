@@ -137,7 +137,7 @@ export default function CategoriesPage() {
 
     return (
         <DashboardLayout role="admin">
-            <div className="py-8 max-w-5xl mx-auto space-y-6">
+            <div className="pb-4 pt-1 max-w-5xl mx-auto space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Categories</h1>

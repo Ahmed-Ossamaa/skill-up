@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import {
     FiHome, FiBook, FiUsers, FiSettings, FiMenu, FiX, FiLogOut,
-    FiBarChart, FiDollarSign, FiMessageSquare, FiFolder, FiPlus,
+    FiMail , FiDollarSign, FiMessageSquare, FiFolder, FiPlus,
     FiPlay, FiAward, FiBookOpen, FiTrendingUp
 } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 { icon: FiBook, label: 'Courses', href: '/admin/courses' },
                 { icon: FiFolder, label: 'Categories', href: '/admin/categories' },
                 { icon: FiPlus, label: 'Requests', href: '/admin/requests' },
+                { icon: FiMail , label: 'Messages', href: '/admin/feedback' },
                 { icon: FiMessageSquare, label: 'Testimonials', href: '/admin/testimonials' },
                 { icon: FiTrendingUp, label: 'Analytics', href: '/admin/analytics' },
                 { icon: FiDollarSign, label: 'Revenue', href: '/admin/revenue' },
