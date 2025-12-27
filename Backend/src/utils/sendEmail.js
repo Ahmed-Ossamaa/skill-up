@@ -12,7 +12,8 @@ const transporter = nodemailer.createTransport({
   tls: {
     ciphers: 'SSLv3',
     rejectUnauthorized: false
-  }
+  },
+  family: 4
 });
 
 async function sendEmail({ to, subject, html, text }) {
@@ -30,7 +31,7 @@ async function sendEmail({ to, subject, html, text }) {
     return info;
   } catch (error) {
     console.error(' Email error:', error);
-    throw new ApiError.internal('Email could not be sent');
+    throw  ApiError.internal('Email could not be sent');
   }
 }
 
