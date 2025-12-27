@@ -32,7 +32,7 @@ export default function Categories({ categories = [] }) {
     });
 
     return (
-        <section className="py-20 relative">
+        <section className="pb-20 relative">
             <div className="container mx-auto px-4">
 
                 <div className="text-center mb-16 animate-slide-up">

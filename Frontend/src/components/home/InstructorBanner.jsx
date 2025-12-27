@@ -10,7 +10,7 @@ export default function InstructorBanner() {
     ];
 
     return (
-        <section className="py-20 px-4 md:px-8">
+        <section className="pb-20 px-4 md:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Main Wrapper*/}
                 <div className="bg-linear-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-800 dark:via-gray-800/50 dark:to-gray-900 rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-700">

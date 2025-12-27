@@ -4,8 +4,7 @@ const lessonController = require('../controllers/lessonController');
 const { protect, authorize } = require('../middlewares/AuthMW');
 const validate = require('../middlewares/reqValidation');
 const { createLessonSchema, updateLessonSchema } = require('../Validation/lessonValidation');
-// const { objIdSchema } = require('../Validation/objectIdValidation');
-const { uploadVideo, upload } = require('../middlewares/upload');
+const { upload } = require('../middlewares/upload');
 const isEnrolled = require('../middlewares/isEnrolled.middleware');
 const parseFormDataArrays = require('../middlewares/FormDataParser');
 router.use(protect);
@@ -32,20 +31,12 @@ router.patch(
     validate(updateLessonSchema),
     lessonController.updateLesson);
 
-router.delete(
-    '/:id',
-    authorize('instructor', 'admin')
-    , lessonController.deleteLesson);
+router.delete('/:id',authorize('instructor', 'admin'), lessonController.deleteLesson);
 
 // Students / Enrolled -> (handled in service)
-router.get(
-    '/section/:sectionId',
-    lessonController.getSectionLessons);
+router.get('/section/:sectionId',lessonController.getSectionLessons);
 
-router.get(
-    '/:id',
-    isEnrolled,
-    lessonController.getLessonById);
+router.get( '/:id',isEnrolled, lessonController.getLessonById);
 
 // Mark lesson completed
 router.post("/courses/:courseId/lessons/:lessonId/complete", authorize("student"), isEnrolled, lessonController.markLessonComplete);

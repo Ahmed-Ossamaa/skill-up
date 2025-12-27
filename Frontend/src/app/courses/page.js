@@ -115,9 +115,9 @@ function CoursesContent() {
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
             <Header />
 
-            <main className="pt-32 pb-20 container mx-auto px-4">
+            <main className="pt-25 pb-20 container mx-auto px-6">
                 <div className="mb-10 text-center">
-                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter  dark:text-white italic">
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tighter  dark:text-white italic">
                         EXPLORE <span className="text-primary-500">COURSES</span>
                     </h1>
                     <p className="text-slate-500 mt-2 font-medium">
@@ -127,7 +127,7 @@ function CoursesContent() {
 
                 {/* Control Bar */}
                 <div className="flex flex-col lg:flex-row gap-4 mb-10">
-                    <div className="relative flex-1 group">
+                    <div className="relative flex-1 group ">
                         <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
                         <input
                             type="text"
@@ -215,7 +215,6 @@ function CoursesContent() {
                             onClick={e => e.stopPropagation()}
                         >
                             <div className="flex justify-between items-center mb-8">
-                                <h3 className="text-2xl font-black italic">FILTERS</h3>
                                 <button onClick={() => setShowMobileFilters(false)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
                                     <FiX size={20} />
                                 </button>

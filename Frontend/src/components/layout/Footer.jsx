@@ -40,8 +40,8 @@ export default function Footer() {
                 </svg>
             </div>
 
-            <div className="container mx-auto px-4 pt-24 pb-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+            <div className="container mx-auto px-4 pt-24 pb-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-5">
                     {/* Brand Section */}
                     <div className="lg:col-span-2">
                         <div className="flex align-center mb-2 -ml-2.5">
@@ -129,14 +129,14 @@ export default function Footer() {
                 </div>
 
                 {/* Bottom Section */}
-                <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div className="border-t border-gray-700 pt-2 flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0">
                     {/* Copyright */}
                     <p className="text-gray-400 text-sm">
                         © {currentYear} Skill-Up. All rights reserved.
                     </p>
 
                     {/* Social Links */}
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 md:ml-5">
                         <a
                             href="https://facebook.com"
                             target="_blank"
@@ -170,8 +170,6 @@ export default function Footer() {
                             <AiFillLinkedin className="w-6 h-6" />
                         </a>
                     </div>
-
-
                 </div>
             </div>
         </footer>
