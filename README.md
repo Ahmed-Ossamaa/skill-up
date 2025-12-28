@@ -1,147 +1,165 @@
-# Skill-up E-Learning Platform
+# Skill-up E-Learning Platform 🎓
 
-Skill-up is a full-stack e-learning platform designed to allow instructors to create and publish courses, and for students to enroll and consume educational content. It features a modern, role-based architecture with separate interfaces for students, instructors, and administrators.
+Skill-up is a comprehensive, full-stack e-learning platform designed to bridge the gap between instructors and students. It features a modern, role-based architecture with three distinct dashboards, secure payment processing, and interactive course consumption.
 
-## Features
+[![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Stripe](https://img.shields.io/badge/Stripe-5433FF?style=for-the-badge&logo=stripe&logoColor=white)](https://stripe.com/)
+[![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)](https://cloudinary.com/)
 
-- **User Roles:** Separate registration and dashboards for Students, Instructors, and Administrators.
-- **Course Management:** Instructors can create, edit, and publish courses with detailed descriptions, sections, and lessons.
-- **Student Enrollment:** Students can browse the course catalog, enroll in courses, and track their learning progress.
--**Admin:** Admin can oversee and manage all users and content 
-- **Payments:** Secure payment processing integrated with Stripe for course purchases.
-- **Content Hosting:** Supports video and document uploads for lessons, hosted on Cloudinary.
-- **Reviews & Ratings:** Students can leave reviews and ratings for courses they are enrolled in.
-- **Authentication:** Secure authentication using JSON Web Tokens (JWT) with refresh token mechanism.
-(accesstoken > memory , refresh token HttpOnly Cookies)
+---
 
-## Tech Stack
+## ✨ Key Features
 
-### Backend
+### 👥 Role-Based Dashboards
+The platform provides unique experiences and features for three distinct user types:
 
-- **Framework:** Node.js with Express.js
-- **Database:** MongoDB with Mongoose
-- **Authentication:** JSON Web Tokens (JWT)
-- **Payments:** Stripe
-- **File Storage:** Cloudinary
-- **Logger:** Winston
-- **API:** RESTful API with a service-oriented architecture.
+* **👨‍🎓 Student Dashboard:**
+    * Browse and search the full course catalog.
+    * **Enrolled vs. Guest View:** Guests see previews; enrolled students get full access to lessons and resources.
+    * Track learning progress and completion status.
+    * Leave reviews and ratings for courses (Enrolled).
+* **👨‍🏫 Instructor Dashboard:**
+    * **Course Management:** Create, edit, and publish courses with rich media (video/documents).
+    * **Curriculum Builder:** Organize content into sections and lessons.
+    * View Enrollment, Course, and Revenue stats (Aggregations)
+* **🛠️ Admin Dashboard:**
+    * Complete oversight of All users (Students, Instructors, Admins).
+    * Content moderation and platform-wide statistics.
+    * Manage All users and courses.
+    * Receive and reply to users' requests (Become an Instructor), Inquiries, and feedback.
+
+### 🔐 Security & Payments
+* **Advanced Authentication:** Secure JWT implementation using **Access Tokens** (in memory) and **Refresh Tokens** (HttpOnly Cookies) for maximum security.
+* **Automated Email service:** to respond to the user's request to become an instructor (in case of acceptance or rejection) & Reset password requests
+  (using Brevo Api since SMTP is blocked on Render free tier).
+* **Payments:** Integrated **Stripe** checkout for seamless and secure course purchases.
+* **Protected Routes:** Middleware ensures users only access pages authorized for their specific role (Admin/Instructor/Student), and their Enrollment status.
+
+---
+
+## 🛠️ Tech Stack
 
 ### Frontend
+* **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
+* **Rendering Strategies:**
+  * **SSR (Server-Side Rendering):** For secure, dynamic pages.
+  * **ISR (Incremental Static Regeneration):** For high-performance Landing page & Course Detail pages that update periodically.
+  * **SSG (Static Site Generation):** For static Pages.
+  * **CSR (Client-Side Rendering):** For interactive components.
+* **Styling:** [Tailwind CSS v4](https://tailwindcss.com/)
+* **State Management:** [Zustand](https://zustand-demo.pmnd.rs/)
+* **Animations:** [Framer Motion](https://www.framer.com/motion/)
 
-- **Framework:** React with Next.js 16 
-- **Styling:** Tailwind CSS
-- **State Management:** Zustand
-- **API Communication:** Axios
-- **Forms:** React Hook Form
+### Backend
+* **Runtime:** [Node.js](https://nodejs.org/)
+* **Framework:** [Express.js](https://expressjs.com/)
+* **Database:** [MongoDB](https://www.mongodb.com/) + [Mongoose](https://mongoosejs.com/)
+* **Media Storage:** [Cloudinary](https://cloudinary.com/) (Video & Document & Image hosting)
+* **Logging:** [Winston](https://github.com/winstonjs/winston)
+* **Payments:** [Stripe SDK](https://stripe.com/docs/api)
+* **E-Mail:** [Brevo API](https://www.brevo.com/)
 
-## Getting Started
+---
 
-To get a local copy up and running, follow these simple steps.
+## 🚀 Getting Started
+
+Follow these steps to set up the project locally.
 
 ### Prerequisites
+* Node.js & npm
+* MongoDB instance (Local or Atlas)
+* Cloudinary Account (for media)
+* Stripe Account (for payments)
 
-- Node.js and npm
-- MongoDB instance (local or cloud-based)
-- Git
+### 1. Backend Setup
 
-### Backend Setup
-
-1.  **Navigate to the backend directory:**
-    ```sh
-    cd Backend
-    ```
-2.  **Install NPM packages:**
-    ```sh
-    npm install
-    ```
-3.  **Create a `.env` file** in the `Backend` directory and add the following environment variables. Replace the placeholder values with your actual credentials.
-
-    ```env
-    # Server Configuration
-    PORT=5000
-    NODE_ENV=dev
-    FRONTEND_URL=http://localhost:3000
-
-    # Database
-    MONGO_URL=mongodb://localhost:27017/skillup-db
-
-    # Authentication
-    JWT_SECRET=your_jwt_secret
-    JWT_EXPIRES_IN=1d
-    JWT_REFRESH_SECRET=your_jwt_refresh_secret
-    JWT_REFRESH_EXPIRES_IN=7d
-
-    # Stripe
-    STRIPE_SECRET_KEY=your_stripe_secret_key
-    STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
-
-    # Cloudinary
-    CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
-
-    # Email (Optional, for email features)
-    EMAIL_HOST=your_email_host
-    EMAIL_PORT=your_email_port
-    EMAIL_USER=your_email_user
-    EMAIL_PASS=your_email_password
-    ```
-
-4.  **(Optional) Seed the database:** To populate the database with initial data for development, run:
-    ```sh
-    node seed.js
-    ```
-
-5.  **Start the development server:**
-    ```sh
-    npm run dev
-    ```
-    The backend server will be running on `http://localhost:5000`.
-
-### Frontend Setup
-
-1.  **Navigate to the frontend directory:**
-    ```sh
-    cd Frontend
-    ```
-2.  **Install NPM packages:**
-    ```sh
-    npm install
-    ```
-3.  **Create a `.env.local` file** in the `Frontend` directory and add the backend API URL:
-    ```env
-    NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
-    ```
-
-4.  **Start the development server:**
-    ```sh
-    npm run dev
-    ```
-    The frontend application will be available at `http://localhost:3000`.
-
-## Folder Structure
-
-The project is organized into two main folders: `Backend` and `Frontend`.
-
+Navigate to the backend folder and install dependencies:
+```sh
+cd Backend
+npm install
 ```
+Create a .env file in the /Backend directory:
+```sh
+# Server Config
+PORT=5000
+NODE_ENV=dev
+FRONTEND_URL=http://localhost:3000
+
+# Database
+MONGO_URL=mongodb://localhost:27017/skillup-db
+
+# Auth (JWT)
+JWT_SECRET=your_super_secret_key
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_SECRET=your_refresh_secret_key
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Third Party Services
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_Publishable_KEY=xxx..xxx..xxx.xxx.xxx
+STRIPE_WEBHOOK_SECRET=whxxx_...
+
+CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+
+# Email --> API (SMTP is blocked on Render.com free tier)
+#BREVO_API_KEY=xxxxxx.....xxxxxx......xxxxxx
+EMAIL_FROM=your-email@example.com
+
+#OR
+
+# Email --> SMTP (if you are going to use SMTP) --> working locally 
+EMAIL_HOST=smtp-relay.brevo.com || smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_user
+EMAIL_PASS=your_pass (app password)
+```
+
+#Start the Server :
+
+    npm run dev
+### 2. Frontend Setup :
+    cd Frontend
+    npm install
+
+Create a .env file in the /Frontend directory:
+```sh
+NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+NEXT_PUBLIC_RENDER_URL=https://your-backend-URL-after deployment
+NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Start the Client:
+
+    npm run dev
+
+📂 Folder Structure
+```ssh
 Skill-up/
 ├── Backend/
 │   ├── src/
-│   │   ├── controllers/ # Request handlers
-│   │   ├── models/      # Mongoose schemas
-│   │   ├── routes/      # API route definitions
-│   │   ├── services/    # Business logic
-│   │   └── config/      # DB, Cloudinary config
-|   |   |__ middleWares  # Auth, erroHanfling, multer, validation Mw
-│   ├── .env.example     # Environment variable template
+│   │   ├── controllers/   # Request handlers
+│   │   ├── models/        # Mongoose schemas
+│   │   ├── routes/        # API route definitions
+│   │   ├── services/      # Business logic
+│   │   ├── config/        # DB, Cloudinary config
+│   │   └── middleWares/   # Auth, ErrorHandling, Multer, Validation
+│   ├── .env.example
 │   └── package.json
 │
 └── Frontend/
     ├── src/
-    │   ├── app/         # Next.js app router
-    │   ├── components/  # Reusable React components
-    │   ├── lib/         # API clients, utilities
-    │   ├── store/       # Zustand state management
-    │   └── hooks/       # Custom React hooks
-    ├── .env.local.example # Environment variable template
+    │   ├── app/           # Next.js App Router pages
+    │   ├── components/    # Reusable UI components & CS components
+    │   ├── lib/           # Axios client 
+    │   ├── store/         # Zustand global store
+    │   └── hooks/         # Custom React hooks
+    ├── .env.example
     └── package.json
 ```
 
