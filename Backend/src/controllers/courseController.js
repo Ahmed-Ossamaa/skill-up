@@ -1,18 +1,14 @@
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
-const Section = require('../models/Section');
-const Lesson = require('../models/Lesson');
-const User = require('../models/User');
 const CourseService = require('../services/CourseService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
 
 class CourseController {
     constructor() {
-        this.courseService = new CourseService(Course, Enrollment, Section, Lesson,User);
+        this.courseService = new CourseService();
     }
 
     // ---------------- Public ----------------
+    
     getPublishedCourses = asyncHandler(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -48,6 +44,14 @@ class CourseController {
     });
 
     // ---------------- Instructor/Admin ----------------
+
+        createCourse = asyncHandler(async (req, res) => {
+        const file = req.file ? req.file : undefined;
+        const course = await this.courseService.createCourse(req.user.id, { ...req.body, file });
+        res.status(201).json({ message: 'Course created', data: course });
+    });
+
+
     getInstructorCourses = asyncHandler(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -55,27 +59,25 @@ class CourseController {
         res.status(200).json({ data: courses });
     });
 
-    createCourse = asyncHandler(async (req, res) => {
-        const file = req.file ? req.file : undefined;
-        const course = await this.courseService.createCourse(req.user.id, { ...req.body, file });
-        res.status(201).json({ message: 'Course created', data: course });
-    });
 
     updateCourse = asyncHandler(async (req, res) => {
         const course = await this.courseService.updateCourse(req.params.id, req.body, req.user.id, req.user.role);
         res.status(200).json({ message: 'Course updated', data: course });
     });
 
+
     deleteCourse = asyncHandler(async (req, res) => {
         await this.courseService.deleteCourse(req.params.id, req.user.id, req.user.role);
         res.status(200).json({ message: 'Course deleted' });
     });
+
 
     publishCourse = asyncHandler(async (req, res) => {
         const status = req.body.status;
         const course = await this.courseService.publishCourse(req.params.id, req.user.id, req.user.role, status);
         res.status(200).json({ message: `Course ${status}`, data: course });
     });
+
 
     getAllCourses = asyncHandler(async (req, res) => {
         const page = parseInt(req.query.page) || 1;
@@ -90,6 +92,7 @@ class CourseController {
         const courses = await this.courseService.getAllCourses(page, limit, filters);
         res.status(200).json({ data: courses });
     });
+
 
     //checkEnrollment 
     checkEnrollment = asyncHandler(async (req, res) => {
