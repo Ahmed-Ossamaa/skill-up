@@ -97,19 +97,11 @@ export default function InstructorDashboard() {
     return (
         <DashboardLayout role="instructor">
             {/* Header */}
-            <div className="mb-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="mb-8 mt-2">
                     <div>
                         <p className="text-slate-500">Welcome back, {user?.name}. Here is your current performance.</p>
                     </div>
-                    <Link
-                        href="/instructor/courses/create"
-                        className="flex items-center justify-center space-x-2 px-6 py-3 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-xl font-bold hover:shadow-lg transition-all active:scale-95"
-                    >
-                        <FiPlus size={20} />
-                        <span>Create New Course</span>
-                    </Link>
-                </div>
+
             </div>
 
             {/* Stats Grid */}

@@ -66,7 +66,7 @@ export default function Header() {
                             src="/logo.png"
                             alt="Logo"
                             width={70}
-                            height={70}
+                            height={70} 
                             priority={true}
                             />
                     </Link>

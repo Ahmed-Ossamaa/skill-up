@@ -67,7 +67,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
         <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 custom-scrollbar ">
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 z-10 glass border-b border-white/10">
-                <div className="flex items-center justify-between p-4">
+                <div className="flex items-center justify-between px-4 py-1">
                     <Link href="/" className="flex items-center space-x-2">
                         <Image
                             src="/logo.png"
@@ -169,12 +169,12 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 </nav>
 
                 {/* Logout Button */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+                <div className="absolute bottom-0 left-0 right-0 p-1  ">
                     <button
                         onClick={handleLogout}
-                        className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all duration-200 w-full"
+                        className="flex items-center space-x-3 px-6 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all duration-200 w-full"
                     >
-                        <FiLogOut className="w-5 h-5" />
+                        <FiLogOut className="w-3 h-3" />
                         <span className="font-medium">Logout</span>
                     </button>
                 </div>
