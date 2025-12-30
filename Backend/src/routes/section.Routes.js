@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const sectionController = require('../controllers/sectionController');
+const sectionController = require('../controllers/section.Controller');
 const validate = require('../middlewares/reqValidation');
 const { protect, authorize } = require('../middlewares/AuthMW');
 const { createSectionSchema, updateSectionSchema } = require('../Validation/sectionValidation');

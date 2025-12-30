@@ -1,4 +1,3 @@
-const Feedback = require('../models/FeedBack');
 const asyncHandler = require('express-async-handler');
 const FeedbackService = require('../services/FeedbackService');
 const ApiError = require('../utils/ApiError');
@@ -6,7 +5,7 @@ const ApiError = require('../utils/ApiError');
 
 class FeedbackController {
     constructor() {
-        this.feedbackService = new FeedbackService(Feedback);
+        this.feedbackService = new FeedbackService();
     }
     createFeedback = asyncHandler(async (req, res) => {
         const feedbackData = {

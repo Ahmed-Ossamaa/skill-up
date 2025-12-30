@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { createPaymentIntent } = require("../controllers/paymentController");
+const { createPaymentIntent } = require("../controllers/payment.Controller");
 const {protect} = require("../middlewares/AuthMW");
 
 // Stripe PaymentIntent route

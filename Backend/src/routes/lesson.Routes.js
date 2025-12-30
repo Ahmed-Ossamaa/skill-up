@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const lessonController = require('../controllers/lessonController');
+const lessonController = require('../controllers/lesson.Controller');
 const { protect, authorize } = require('../middlewares/AuthMW');
 const validate = require('../middlewares/reqValidation');
 const { createLessonSchema, updateLessonSchema } = require('../Validation/lessonValidation');

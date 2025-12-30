@@ -1,59 +1,51 @@
 const ApiError = require('../utils/ApiError');
+const feedbackRepository = require('../repositories/feedbackRepository');
+
 class FeedbackService {
-    constructor(FeedbackModel) {
-        this.Feedback = FeedbackModel;
+    constructor() {
+        this.feedbackRepository = feedbackRepository;
     }
 
     async createFeedback(data) {
-        const feedback = await this.Feedback.create(data);
-        return feedback;
+        return this.feedbackRepository.create(data);
     }
 
-    async getAllFeedbacks(page = 1, limit = 10) { // get all feedbacks with pagination
+    async getAllFeedbacks(page = 1, limit = 10) {
         const skip = (page - 1) * limit;
-
-
-        const [feedbacks, total] = await Promise.all([
-            this.Feedback.find().skip(skip).limit(limit),//  feedbacks docs
-            this.Feedback.countDocuments() // total number of feedbacks in DB
-        ]);
+        const { feedbacks, total } = await this.feedbackRepository.findAndCountAll(skip, limit);
 
         return {
-            total,  // total number of feedbacks in DB
-            page,   // current page number
-            pages: Math.ceil(total / limit),    // total pages
-            count: feedbacks.length,           // number of feedbacks in this page
-            data: feedbacks                   // actual feedback docs
+            total,
+            page,
+            pages: Math.ceil(total / limit),
+            count: feedbacks.length,
+            data: feedbacks
         };
     }
 
-
     async getFeedbackById(feedbackId) {
-        const feedback = await this.Feedback.findById(feedbackId);
+        const feedback = await this.feedbackRepository.findById(feedbackId);
         if (!feedback) {
-            throw ApiError.notFound('Feedback not found');
+            throw  ApiError('Feedback not found');
         }
         return feedback;
     }
 
     async updateFeedback(id, data) {
-        const feedback = await this.Feedback.findByIdAndUpdate(id, data, { new: true });
+        const feedback = await this.feedbackRepository.findByIdAndUpdate(id, data, { new: true });
         if (!feedback) {
-            throw ApiError.notFound('Feedback not found');
+            throw  ApiError('Feedback not found');
         }
         return feedback;
     }
-
 
     async deleteFeedback(feedbackId) {
-        const feedback = await this.Feedback.findByIdAndDelete(feedbackId);
+        const feedback = await this.feedbackRepository.findByIdAndDelete(feedbackId);
         if (!feedback) {
-            throw ApiError.notFound('Feedback not found');
+            throw  ApiError('Feedback not found');
         }
         return feedback;
     }
-
-
 }
 
 module.exports = FeedbackService;

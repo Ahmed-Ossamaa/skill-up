@@ -1,4 +1,3 @@
-const User = require('../models/User');
 const AuthService = require('../services/AuthService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
@@ -6,7 +5,7 @@ const sanitizeUser = require('../utils/sanitizeUser');
 
 class AuthController {
     constructor() {
-        this.AuthService = new AuthService(User);
+        this.AuthService = new AuthService();
     }
 
     setRefreshCookie(res, refreshToken) {

@@ -1,29 +1,41 @@
 const ApiError = require("../utils/ApiError");
 const Crypto = require("crypto");
+const enrollmentRepository = require('../repositories/enrollmentRepository');
+const courseRepository = require('../repositories/courseRepository');
+const userRepository = require('../repositories/userRepository');
 
 class EnrollmentService {
-    constructor(EnrollmentModel, CourseModel, UserModel) {
-        this.Enrollment = EnrollmentModel;
-        this.Course = CourseModel;
-        this.User = UserModel;
+    constructor() {
+        this.enrollmentRepository = enrollmentRepository;
+        this.courseRepository = courseRepository;
+        this.userRepository = userRepository;
     }
 
+    /**
+     * Enroll a student in a course
+     * @param {string} studentId - The ID of the student to enroll
+     * @param {string} courseId - The ID of the course to enroll in
+     * @param {number} amountPaid - (Optional) The amount paid for the course
+     * @param {string} paymentId - (Optional) The ID of the payment made for the course
+     * @returns {Promise<Enrollment>} - The created enrollment object
+     * @throws {badRequest} - If the student is already enrolled
+     */
     async enroll(studentId, courseId, amountPaid = 0, paymentId = null) {
 
         // Validate course exists
-        const course = await this.Course.findById(courseId).select('instructor title price');
+        const course = await this.courseRepository.findCourseById(courseId);
         if (!course) throw ApiError.notFound("Course not found");
 
         // Prevent duplicate enrollment
-        const existing = await this.Enrollment.findOne({ student: studentId, course: courseId });
+        const existing = await this.enrollmentRepository.findOne({ student: studentId, course: courseId });
         if (existing) {
             if (paymentId && existing.paymentId === paymentId) {
                 return existing;
             }
             throw ApiError.badRequest("You are already enrolled in this course");
         }
-        // Create enrollment 
-        const enrollment = await this.Enrollment.create({
+        // Create enrollment
+        const enrollment = await this.enrollmentRepository.create({
             student: studentId,
             course: courseId,
             amountPaid: amountPaid,
@@ -37,13 +49,10 @@ class EnrollmentService {
         });
 
         //Update course stats (stunteds[], studentsCount)
-        await this.Course.findByIdAndUpdate(courseId, {
-            $addToSet: { students: studentId },
-            $inc: { studentsCount: 1 }
-        });
+        await this.courseRepository.addStudent(courseId, studentId);
 
         //Update student Stats (Courses + Spent) in the user schema
-        await this.User.findByIdAndUpdate(studentId, {
+        await this.userRepository.findByIdAndUpdate(studentId, {
             $inc: {
                 'studentStats.totalEnrolledCourses': 1,
                 'studentStats.totalAmountPaid': amountPaid
@@ -51,7 +60,7 @@ class EnrollmentService {
         });
 
         if (course.instructor) {
-            await this.User.findByIdAndUpdate(course.instructor, {
+            await this.userRepository.findByIdAndUpdate(course.instructor, {
                 $inc: {
                     'instructorStats.totalStudentsTaught': 1,
                     'instructorStats.totalEarnings': amountPaid
@@ -62,40 +71,39 @@ class EnrollmentService {
         return enrollment;
     }
 
+    /**
+     * Get all enrollments of a student with course details
+     * @param {string} studentId - The id of the student to get the enrollments for
+     * @returns {Promise<Enrollment[]>} - The array of enrollments of the student
+     */
     async getMyEnrollments(studentId) {
-        return this.Enrollment.find({ student: studentId })
-            .populate({
-                path: "course",
-                select: "title thumbnail instructor slug rating price",
-                populate: {
-                    path: "instructor",
-                    select: "name email"
-                }
-            })
+        return this.enrollmentRepository.findStudentEnrollmentsWithDetails(studentId);
     }
 
+    /**
+     * Checks if a user is enrolled in a course
+     * @param {string} studentId - The id of the student to check
+     * @param {string} courseId - The id of the course to check
+     * @returns {Promise<Enrollment | null>} The enrollment object if the user is enrolled, null otherwise
+     */
     async isUserEnrolled(studentId, courseId) {
-        return this.Enrollment.findOne({
+        return this.enrollmentRepository.findOne({
             student: studentId,
             course: courseId,
             status: { $in: ["enrolled", "completed"] }
         });
     }
 
+    /**
+     * Get the certificate of a student for a course
+     * @param {string} userId - The id of the student to get the certificate for
+     * @param {string} courseId - The id of the course to get the certificate for
+     * @returns {Promise<{studentName: string, courseName: string, instructorName: string, certificateId: string, issuedAt: Date, verificationUrl: string}>} - The object containing the certificate details
+     * @throws {badRequest} - if the course is not completed
+     */
     async getCertificate(userId, courseId) {
 
-        const enrollment = await this.Enrollment.findOne({
-            student: userId,
-            course: courseId
-        }).populate({
-            path: 'course',
-            select: 'title instructor thumbnail',
-            populate: {
-                path: 'instructor',
-                select: 'name'
-            }
-        })
-            .populate('student', 'name');
+        const enrollment = await this.enrollmentRepository.findEnrollmentForCertificate(userId, courseId);
 
         if (!enrollment) throw ApiError.notFound('Enrollment not found');
 
@@ -115,7 +123,7 @@ class EnrollmentService {
 
             enrollment.status = 'completed';
 
-            await enrollment.save();
+            await this.enrollmentRepository.save(enrollment);
         }
 
         return {

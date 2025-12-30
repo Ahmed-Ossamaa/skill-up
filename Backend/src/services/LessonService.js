@@ -1,223 +1,73 @@
 const ApiError = require('../utils/ApiError');
 const { deleteMediaFromCloudinary } = require('../utils/cloudinaryCelanUp');
 const { uploadToCloudinary } = require('../utils/cloudinaryHelpers');
+const lessonRepository = require('../repositories/lessonRepository');
 
 class LessonService {
-    constructor(LessonModel, SectionModel, CourseModel, EnrollmentModel) {
-        this.Lesson = LessonModel;
-        this.Section = SectionModel;
-        this.Course = CourseModel;
-        this.Enrollment = EnrollmentModel;
-    }
 
-    async createLesson(data, userId, userRole) {
-        const section = await this.Section.findById(data.section).populate('course');
+    /**
+     * Creates a new lesson with the given data
+     * @param {object} data - the lesson data to be created
+     * @param {string} userId - the id of the user creating the lesson
+     * @returns {Promise<object>} the created lesson
+     * @throws {forbidden} if the user is not authorized to add a lesson to the course
+     */
+    async createLesson(data, userId) {
+        const section = await lessonRepository.findSectionById(data.section);
         if (!section) throw ApiError.notFound('Section not found');
 
-        const course = section.course;
-
-        // Only the course instructor or admin can create lessons
-        if (course.instructor.toString() !== userId && userRole !== 'admin') {
+        // Authorization
+        if (section.course.instructor.toString() !== userId) {
             throw ApiError.forbidden('Not authorized to add lesson to this course');
         }
 
-        // ..................Handle Video Upload...............
-        let finalDuration = 0;
-        let videoData = undefined;
-        if (data.videoFile) {
-            const videoUpload = await uploadToCloudinary(data.videoFile.buffer, 'lessons', 'video');
-            videoData = {
-                url: videoUpload.secure_url,
-                publicId: videoUpload.publicId,
-                duration: videoUpload.duration || 0,
-            };
-            finalDuration = videoUpload.duration || 0;
-        }
-        // ..................Handle Document Uploads...............
-        let documentData = undefined;
-        if (data.doc) {
-            const originalName = data.doc.originalname.replace(/\s+/g, '_');
-            const documentUpload = await uploadToCloudinary(
-                data.doc.buffer,
-                'lessons',
-                'auto',
-                {
-                    use_filename: true,
-                    unique_filename: true,
-                    filename_override: originalName,
-                    format: originalName.split('.').pop()
-                }
-            );
-            documentData = {
-                name: data.doc.originalname,
-                url: documentUpload.secure_url,
-                publicId: documentUpload.publicId,
-                type: 'document'
-            };
-            finalDuration = 300;
-        }
+        // File Upload
+        const { videoData, documentData, resourceList, finalDuration } = await this._handleFileUploads(data);
 
-        // .............Handle Resource Uploads [].......................
-        let resourceList = [];
-        if (data.resourceFiles && data.resourceFiles.length > 0) {
-            const uploadPromises = data.resourceFiles.map(file => {
+        const finalResources = [...(data.resources || []), ...resourceList];
 
-                const sanitizedName = file.originalname.replace(/\s+/g, '_');
-
-                return uploadToCloudinary(
-                    file.buffer,
-                    'resources',
-                    'auto',
-                    {
-                        use_filename: true,
-                        unique_filename: true,
-                        filename_override: sanitizedName,
-                        format: sanitizedName.split('.').pop()
-                    }
-                )
-            });
-
-
-            const results = await Promise.all(uploadPromises);
-
-            resourceList = results.map((res, index) => ({
-                name: data.resourceFiles[index].originalname,
-                url: res.secure_url,
-                publicId: res.publicId,
-                type: 'file'
-            }));
-        }
-
-        const finalResources = [
-            ...(data.resources || []),
-            ...resourceList
-        ];
-
-        // Create the lesson
-        const lesson = await this.Lesson.create({
+        const lessonData = {
             title: data.title,
             description: data.description,
             type: data.type,
             section: data.section,
-            course: data.course,
+            course: section.course._id,
             createdBy: userId,
             video: videoData,
             documents: documentData,
             resources: finalResources,
             content: data.content,
             duration: finalDuration
-        });
+        };
 
-        // Add lesson to section's lessons array
-        await this.Section.findByIdAndUpdate(
-            data.section,
-            { $push: { lessons: lesson._id } }
-        );
-        //to fix progress of students after adding a new lesson
-        await this.recalculateCourseProgress(data.course);
+        const lesson = await lessonRepository.create(lessonData);
+        await lessonRepository.addLessonToSection(data.section, lesson._id);
+        await this.recalculateCourseProgress(section.course._id);
 
         return lesson;
     }
 
 
-    async updateLesson(lessonId, data, userId, userRole) {
-        const lesson = await this.Lesson.findById(lessonId).populate({
-            path: 'section',
-            populate: { path: 'course' }
-        });
+    /**
+     * Updates a lesson with the given data
+     * @param {string} lessonId - the id of the lesson to update
+     * @param {object} data - the lesson data to be updated
+     * @param {string} userId - the id of the user updating the lesson
+     * @returns {Promise<object>} the updated lesson
+     * @throws {forbidden} if the user is not authorized to update the lesson
+     */
+    async updateLesson(lessonId, data, userId) {
+        const lesson = await lessonRepository.findLessonById(lessonId);
         if (!lesson) throw ApiError.notFound('Lesson not found');
-
-        const course = lesson.section?.course || await this.Course.findById(lesson.course);
-        // Only the course instructor or admin can update
-        if (course.instructor.toString() !== userId && userRole !== 'admin') {
+        
+        // Authorization
+        const course = lesson.section?.course;
+        if (course.instructor.toString() !== userId) {
             throw ApiError.forbidden('Not authorized to update this lesson');
         }
 
-        // Handle Video Update
-        if (data.videoFile) {
-            // Delete old video if exists
-            if (lesson.video && lesson.video.publicId) {
-                await deleteMediaFromCloudinary(lesson.video.publicId, 'video');
-            }
-
-            // Upload new video
-            const videoUpload = await uploadToCloudinary(data.videoFile.buffer, 'lessons', 'video');
-
-            lesson.video = {
-                url: videoUpload.secure_url,
-                publicId: videoUpload.publicId,
-                duration: videoUpload.duration,
-                type: "video"
-            };
-
-            // Update main duration field automatically
-            lesson.duration = videoUpload.duration || 0;
-        }
-
-        // Handle Document Update
-        if (data.doc) {
-            // Delete old document if exists
-            if (lesson.documents && lesson.documents.publicId) {
-                await deleteMediaFromCloudinary(lesson.documents.publicId, 'image');
-            }
-
-            // Upload new doc
-            const originalName = data.doc.originalname.replace(/\s+/g, '_');
-            const docUpload = await uploadToCloudinary(
-                data.doc.buffer,
-                'lessons',
-                'auto',
-                {
-                    use_filename: true,
-                    unique_filename: true,
-                    filename_override: originalName,
-                    format: originalName.split('.').pop()
-                }
-            );
-
-            lesson.documents = {
-                name: data.doc.originalname,
-                url: docUpload.secure_url,
-                publicId: docUpload.publicId,
-                type: 'document'
-            };
-
-            // default duration for text/documents if no video exists
-            if (!lesson.video) {
-                lesson.duration = 300;
-            }
-        }
-
-        // .......................Handle Resource Files........................
-        //  Upload new files if provided
-        let newResources = [];
-        if (data.resourceFiles && data.resourceFiles.length > 0) {
-            const uploadPromises = data.resourceFiles.map(file => {
-                const sanitizedName = file.originalname.replace(/\s+/g, '_');
-                return uploadToCloudinary(
-                    file.buffer,
-                    'resources',
-                    'auto',
-                    {
-                        use_filename: true,
-                        unique_filename: true,
-                        filename_override: sanitizedName,
-                        format: sanitizedName.split('.').pop()
-                    }
-                );
-            });
-
-            const results = await Promise.all(uploadPromises);
-            newResources = results.map((res, index) => ({
-                name: data.resourceFiles[index].originalname,
-                url: res.secure_url,
-                publicId: res.publicId,
-                type: 'file'
-            }));
-        }
-
-        const keptResources = data.resources ? data.resources : lesson.resources;
-        lesson.resources = [...keptResources, ...newResources];
+        // File Update
+        await this._handleFileUpdates(lesson, data);
 
         // Update Text Fields
         if (data.title) lesson.title = data.title;
@@ -227,167 +77,190 @@ class LessonService {
         if (data.type) lesson.type = data.type;
 
         if (!lesson.video && !lesson.duration) {
-            lesson.duration = 300;
+            lesson.duration = 300; // default duration
         }
 
-        // Handle Section Move
+        // Handle Section Move (not implemented yet)
         if (data.section && data.section !== lesson.section._id.toString()) {
-            await this.Section.findByIdAndUpdate(lesson.section._id, { $pull: { lessons: lesson._id } });
-            await this.Section.findByIdAndUpdate(data.section, { $push: { lessons: lesson._id } });
+            await lessonRepository.removeLessonFromSection(lesson.section._id, lesson._id);
+            await lessonRepository.addLessonToSection(data.section, lesson._id);
             lesson.section = data.section;
         }
 
-        await lesson.save();
+        await lessonRepository.save(lesson);
         return lesson;
     }
 
-    // Delete the lesson and its media from cloudinary
-    async deleteLesson(lessonId, userId, userRole) {
-        const lesson = await this.Lesson.findById(lessonId).populate({
-            path: 'section',
-            populate: { path: 'course' }
-        });
 
+    /**
+     * Deletes a lesson by its ID
+     * @param {string} lessonId - the ID of the lesson to be deleted
+     * @param {string} userId - the ID of the user deleting the lesson
+     * @returns {Promise<void>} resolves if the lesson is deleted successfully
+     * @throws {forbidden} if the user is not authorized to delete the lesson
+     */
+    async deleteLesson(lessonId, userId) {
+        const lesson = await lessonRepository.findLessonById(lessonId);
         if (!lesson) throw ApiError.notFound('Lesson not found');
-
-        const course = lesson.section?.course || await this.Course.findById(lesson.course);
-
-        if (course.instructor.toString() !== userId && userRole !== 'admin') {
+        
+        // Authorization
+        const course = lesson.section?.course;
+        if (course.instructor.toString() !== userId) {
             throw ApiError.forbidden('Not authorized to delete this lesson');
         }
 
-        // Delete lesson media from Cloudinary
+        // Delete Media from Cloudinary
         await deleteMediaFromCloudinary({ lessons: [lesson] });
-
-        // Remove lesson from sections
+        
         if (lesson.section) {
-            await this.Section.findByIdAndUpdate(
-                lesson.section,
-                { $pull: { lessons: lesson._id } }
-            );
+            await lessonRepository.removeLessonFromSection(lesson.section._id, lesson._id);
         }
-        // Recalculate course progress for students after deleteing a lesson
-        await this.recalculateCourseProgress(data.course);
+        await this.recalculateCourseProgress(course._id);
 
-        await lesson.deleteOne();
+        await lessonRepository.delete(lesson);
     }
 
-    // Get all lessons for a specific section
+
+    /**
+     * Retrieves all lessons associated with a given section ID
+     * @param {string} sectionId - The ID of the section to retrieve lessons from
+     * @returns {Promise<Lesson[]>} A promise that resolves with an array of lessons
+     */
     async getSectionLessons(sectionId) {
-        const section = await this.Section.findById(sectionId);
+        const section = await lessonRepository.findSectionById(sectionId);
         if (!section) throw ApiError.notFound('Section not found');
 
-        const lessons = await this.Lesson.find({ section: sectionId }).sort({ order: 1 });
-        return lessons;
+        return lessonRepository.findLessonsBySection(sectionId);
     }
 
-    // Get lesson by ID ( enrollment check for students)
-    async getLessonById(lessonId, userId, userRole) {
-        const lesson = await this.Lesson.findById(lessonId)
-            .populate('section')
-            .populate('course');
 
+    /**
+     * Retrieves a lesson by its ID
+     * @param {string} lessonId - the ID of the lesson to retrieve
+     * @param {string} userId - the ID of the user retrieving the lesson
+     * @param {string} userRole - the role of the user retrieving the lesson
+     * @returns {Promise<Lesson>} a promise that resolves with the lesson
+     * @throws {forbidden} if the user is not authorized to access the lesson
+     */
+    async getLessonById(lessonId, userId, userRole) {
+        const lesson = await lessonRepository.findLessonWithCourse(lessonId);
         if (!lesson) throw ApiError.notFound('Lesson not found');
-        // Only the course instructor or admin or enrolled std can access
+        
+        // Authorization
         const isOwner = lesson.course.instructor.toString() === userId.toString();
-        if (isOwner) return lesson;
-        if (userRole === 'admin') return lesson;
-        // If the lesson is a preview, allow access
-        if (lesson.isPreview) return lesson;
-        const enrollment = await this.Enrollment.findOne({
-            student: userId,
-            course: lesson.course._id
-        });
+        if (isOwner || userRole === 'admin' || lesson.isPreview) {
+            return lesson;
+        }
+
+        const enrollment = await lessonRepository.findEnrollment(userId, lesson.course._id);
         if (!enrollment) {
             throw ApiError.forbidden('Please enroll to access this course');
         }
 
         return lesson;
     }
-    //working on it -----------------------------------------------------------------
+    
+    
+    /**
+     * Marks a lesson as completed by a student
+     * @param {string} studentId - the ID of the student completing the lesson
+     * @param {string} courseId - the ID of the course the lesson belongs to
+     * @param {string} lessonId - the ID of the lesson to be marked as completed
+     * @returns {Promise<Enrollment>} - the updated enrollment object
+     * @throws {forbidden} if the student is not enrolled in the course
+     */
     async markLessonCompleted(studentId, courseId, lessonId) {
-        const enrollment = await this.Enrollment.findOne({
-            student: studentId,
-            course: courseId
-        });
-
-        if (!enrollment)
+        const enrollment = await lessonRepository.findEnrollment(studentId, courseId);
+        if (!enrollment) {
             throw ApiError.forbidden("Not enrolled");
+        }
 
-        // If lesson already completed>> skip
-        const alreadyCompleted = enrollment.progress.completedLessons.some(
-            (id) => id.toString() === lessonId.toString()
-        );
+        const alreadyCompleted = enrollment.progress.completedLessons.some(id => id.toString() === lessonId.toString());
         if (alreadyCompleted) return enrollment;
 
-        // Add completed lesson ID
         enrollment.progress.completedLessons.push(lessonId);
 
-        // Count total lessons in course
-        const totalLessons = await this.Lesson.countDocuments({ course: courseId });
+        const totalLessons = await lessonRepository.countLessonsInCourse(courseId);
         const completedCount = enrollment.progress.completedLessons.length;
 
-        // Calculate progress percentage
-        const percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+        enrollment.progress.percentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
 
-        enrollment.progress.percentage = percentage;
-
-        // If progress reaches 100% -> mark as completed
-        if (percentage >= 100) {
+        if (enrollment.progress.percentage >= 100) {
             enrollment.status = "completed";
             enrollment.completedAt = new Date();
         }
 
-        await enrollment.save();
-        return enrollment;
+        return lessonRepository.save(enrollment);
     }
 
-
-    /**
-     * Recalculates course progress for all enrolled students in the given course
-     * @param {ObjectId} courseId - the ID of the course to recalculate progress for
-     */
+//.........................Helper Methods...............................
     async recalculateCourseProgress(courseId) {
-        const totalLessons = await this.Lesson.countDocuments({ course: courseId });
+        return lessonRepository.updateEnrollmentProgress(courseId);
+    }
 
-        if (totalLessons === 0) return;
+    // methods for file handling
+    async _handleFileUploads(data) {
+        let finalDuration = 0;
+        let videoData, documentData;
+        let resourceList = [];
 
-        await this.Enrollment.updateMany(
-            { course: courseId },
-            [
-                {
-                    $set: {
-                        "progress.percentage": {
-                            $multiply: [
-                                { $divide: [{ $size: "$progress.completedLessons" }, totalLessons] },
-                                100
-                            ]
-                        }
-                    }
-                },
-                //  If progress drops below 100%, staus:enrolled instead of :completed
-                {
-                    $set: {
-                        status: {
-                            $cond: {
-                                if: { $lt: ["$progress.percentage", 100] },
-                                then: "enrolled",
-                                else: "completed" //
-                            }
-                        },
-                        // reset CompletedAt if not 100%
-                        completedAt: {
-                            $cond: {
-                                if: { $lt: ["$progress.percentage", 100] },
-                                then: null,
-                                else: "$completedAt"
-                            }
-                        }
-                    }
-                }
-            ]
-        );
+        if (data.videoFile) {
+            const videoUpload = await uploadToCloudinary(data.videoFile.buffer, 'lessons', 'video');
+            videoData = { url: videoUpload.secure_url, publicId: videoUpload.publicId, duration: videoUpload.duration || 0 };
+            finalDuration = videoUpload.duration || 0;
+        }
+
+        if (data.doc) {
+            const originalName = data.doc.originalname.replace(/\s+/g, '_');
+            const documentUpload = await uploadToCloudinary(data.doc.buffer, 'lessons', 'auto', { use_filename: true, unique_filename: true, filename_override: originalName, format: originalName.split('.').pop() });
+            documentData = { name: data.doc.originalname, url: documentUpload.secure_url, publicId: documentUpload.publicId, type: 'document' };
+            finalDuration = 300;
+        }
+
+        if (data.resourceFiles && data.resourceFiles.length > 0) {
+            const uploadPromises = data.resourceFiles.map(file => {
+                const sanitizedName = file.originalname.replace(/\s+/g, '_');
+                return uploadToCloudinary(file.buffer, 'resources', 'auto', { use_filename: true, unique_filename: true, filename_override: sanitizedName, format: sanitizedName.split('.').pop() });
+            });
+            const results = await Promise.all(uploadPromises);
+            resourceList = results.map((res, index) => ({ name: data.resourceFiles[index].originalname, url: res.secure_url, publicId: res.publicId, type: 'file' }));
+        }
+
+        return { videoData, documentData, resourceList, finalDuration };
+    }
+
+    async _handleFileUpdates(lesson, data) {
+        if (data.videoFile) {
+            if (lesson.video && lesson.video.publicId) {
+                await deleteMediaFromCloudinary(lesson.video.publicId, 'video');
+            }
+            const videoUpload = await uploadToCloudinary(data.videoFile.buffer, 'lessons', 'video');
+            lesson.video = { url: videoUpload.secure_url, publicId: videoUpload.publicId, duration: videoUpload.duration, type: "video" };
+            lesson.duration = videoUpload.duration || 0;
+        }
+
+        if (data.doc) {
+            if (lesson.documents && lesson.documents.publicId) {
+                await deleteMediaFromCloudinary(lesson.documents.publicId, 'image');
+            }
+            const originalName = data.doc.originalname.replace(/\s+/g, '_');
+            const docUpload = await uploadToCloudinary(data.doc.buffer, 'lessons', 'auto', { use_filename: true, unique_filename: true, filename_override: originalName, format: originalName.split('.').pop() });
+            lesson.documents = { name: data.doc.originalname, url: docUpload.secure_url, publicId: docUpload.publicId, type: 'document' };
+            if (!lesson.video) lesson.duration = 300;
+        }
+
+        if (data.resourceFiles && data.resourceFiles.length > 0) {
+            let newResources = [];
+            const uploadPromises = data.resourceFiles.map(file => {
+                const sanitizedName = file.originalname.replace(/\s+/g, '_');
+                return uploadToCloudinary(file.buffer, 'resources', 'auto', { use_filename: true, unique_filename: true, filename_override: sanitizedName, format: sanitizedName.split('.').pop() });
+            });
+            const results = await Promise.all(uploadPromises);
+            newResources = results.map((res, index) => ({ name: data.resourceFiles[index].originalname, url: res.secure_url, publicId: res.publicId, type: 'file' }));
+            const keptResources = data.resources ? data.resources : lesson.resources;
+            lesson.resources = [...keptResources, ...newResources];
+        }
     }
 }
 
-module.exports = LessonService;
+module.exports =  LessonService;

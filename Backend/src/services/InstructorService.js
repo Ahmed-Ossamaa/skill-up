@@ -1,212 +1,156 @@
-const mongoose = require('mongoose');
 const ApiError = require('../utils/ApiError');
+const { uploadToCloudinary } = require('../utils/cloudinaryHelpers');
+const instructorRequestRepository = require('../repositories/instructorRequestRepository');
+const userRepository = require('../repositories/userRepository');
+const courseRepository = require('../repositories/courseRepository');
+const enrollmentRepository = require('../repositories/enrollmentRepository');
+
 
 class InstructorService {
-    constructor(CourseModel, EnrollmentModel, UserModel) {
-        this.Course = CourseModel;
-        this.Enrollment = EnrollmentModel;
-        this.User = UserModel;
+    constructor() {
+        this.instructorRequestRepository = instructorRequestRepository;
+        this.userRepository = userRepository;
+        this.courseRepository = courseRepository;
+        this.enrollmentRepository = enrollmentRepository;
     }
 
+
     /**
-     * Returns all students enrolled in instructor's courses
-     * @param {string} instructorId - The instructor's MongoDB ObjectId
-     * @returns {Promise<object[]>} - A promise that resolves with an array of objects containing course information and student details
+     * Creates a new instructor request
+     * @param {string} userId - The id of the user making the request
+     * @param {object} data - The request data (instructor experience)
+     * @param {object} files - The documents (National ID, Certificate, Resume) to upload
+     * @returns {Promise<{_id: string, user, experience, documents: {nationalId, certificate, resume>}>} - The created instructor request
+     * @throws {conflict} - If the user already has a pending instructor request
+     * @throws {badRequest} - If all documents are not provided
+     */
+    async createRequest(userId, data, files) {
+        const existing = await this.instructorRequestRepository.findOne({ user: userId, status: 'pending' });
+        if (existing) {
+            throw ApiError.conflict('You already have a pending instructor request.');
+        }
+
+        const nationalIdFile = files.nationalId ? files.nationalId[0] : null;
+        const certificateFile = files.certificate ? files.certificate[0] : null;
+        const resumeFile = files.resume ? files.resume[0] : null;
+
+        if (!nationalIdFile || !certificateFile || !resumeFile) {
+            throw ApiError.badRequest("All documents (National ID, Certificate, Resume) are required.");
+        }
+
+        const uploadPromises = [
+            uploadToCloudinary(nationalIdFile.buffer, 'instructorDocs/nationalId', 'auto'),
+            uploadToCloudinary(certificateFile.buffer, 'instructorDocs/certificates', 'auto'),
+            uploadToCloudinary(resumeFile.buffer, 'instructorDocs/resumes', 'auto')
+        ];
+
+        const [nationalIdResult, certificateResult, resumeResult] = await Promise.all(uploadPromises);
+
+        const requestData = {
+            user: userId,
+            experience: data.experience,
+            documents: {
+                nationalId: { url: nationalIdResult.secure_url, publicId: nationalIdResult.publicId },
+                certificate: { url: certificateResult.secure_url, publicId: certificateResult.publicId },
+                resume: { url: resumeResult.secure_url, publicId: resumeResult.publicId }
+            }
+        };
+
+        return this.instructorRequestRepository.create(requestData);
+    }
+
+
+    /**
+     * Retrieves all instructor requests from the database
+     * @returns {Promise<Array<InstructorRequest>>} - The instructor requests
+     */
+    async getAllRequests() {
+        return this.instructorRequestRepository.find({});
+    }
+
+
+    /**
+     * Reviews an instructor request
+     * @param {string} requestId - The id of the instructor request to review
+     * @param {string} status - The status to set the request to ('approved' or 'rejected')
+     * @param {string} [feedback] - The feedback to leave for the user
+     * @returns {Promise<InstructorRequest>} - The reviewed instructor request
+     * @throws {badRequest} - If the request is not pending
+     */
+    async reviewRequest(requestId, status, feedback) {
+        const request = await this.instructorRequestRepository.findById(requestId);
+
+        if (!request) {
+            throw ApiError.notFound('Request not found');
+        }
+
+        if (request.status !== 'pending') {
+            throw ApiError.badRequest(`Request is already ${request.status}`);
+        }
+
+        request.status = status;
+        request.adminFeedback = feedback || '';
+        await this.instructorRequestRepository.save(request);
+
+        if (status === 'approved') {
+            await this.userRepository.findByIdAndUpdate(request.user._id, {
+                role: 'instructor',
+            });
+        }
+
+        return request;
+    }
+
+
+    /**
+     * Retrieves all students of an instructor (enrolled in his courses)
+     * @param {string} instructorId - The id of the instructor to get the students for
+     * @returns {Promise<Array<User>>} - The array of students of the instructor
      */
     async getAllInstructorStudents(instructorId) {
-        const id = new mongoose.Types.ObjectId(String(instructorId));
-
-        // Get courses to filter enrollments
-        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
-
-        return await this.Enrollment.aggregate([
-            { $match: { course: { $in: courseIds } } },
-            // Join Student Info
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'student',
-                    foreignField: '_id',
-                    as: 'studentDetails'
-                }
-            },
-            { $unwind: '$studentDetails' },
-            // Join Course Info
-            {
-                $lookup: {
-                    from: 'courses',
-                    localField: 'course',
-                    foreignField: '_id',
-                    as: 'courseInfo'
-                }
-            },
-            { $unwind: '$courseInfo' },
-            // Group By Course
-            {
-                $group: {
-                    _id: '$course',
-                    courseTitle: { $first: '$courseInfo.title' },
-                    studentsCount: { $sum: 1 },
-                    enrolledStudents: {
-                        $push: {
-                            enrollmentId: '$_id',
-                            studentId: '$studentDetails._id',
-                            name: '$studentDetails.name',
-                            email: '$studentDetails.email',
-                            avatar: '$studentDetails.avatar',
-                            progress: '$progress.percentage',
-                            enrolledAt: '$enrolledAt'
-                        }
-                    }
-                }
-            },
-            { $sort: { courseTitle: 1 } }
-        ]);
+        const courses = await this.courseRepository.find({ instructor: instructorId });
+        const courseIds = courses.map(course => course._id);
+        const enrollments = await this.enrollmentRepository.find({ course: { $in: courseIds } })
+            .populate('student', 'name email avatar');
+        return enrollments.map(e => e.student).filter(Boolean);
     }
 
-
     /**
-     * Get instructor stats (lifetime and current month)
-     * @param {ObjectId} instructorId
-     * @returns {Promise<Object>}
+     * Retrieves the stats of an instructor (total courses, total students, total revenue)
+     * @param {string} instructorId - The id of the instructor to get the stats for
+     * @returns {Promise<{totalCourses: number, totalStudents: number, totalRevenue: number}>} - The instructor stats
      */
     async getInstructorStats(instructorId) {
-        const id = new mongoose.Types.ObjectId(String(instructorId));
-        const now = new Date();
-        const startCurrent = new Date(now.getFullYear(), now.getMonth(), 1);
-        const startPrev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-
-        // Get Course IDs for filtering
-        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
-
-        const [instructor, currentMonthStats, prevMonthStats, ratingData, totalCoursesCount, activeCoursesCount] = await Promise.all([
-            // Lifetime Totals 
-            this.User.findById(id).select('instructorStats'),
-
-            // Current Month Activity
-            this.Enrollment.aggregate([
-                { $match: { course: { $in: courseIds }, enrolledAt: { $gte: startCurrent } } },
-                { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
-            ]),
-
-            //Previous Month Activity (For Trend)
-            this.Enrollment.aggregate([
-                { $match: { course: { $in: courseIds }, enrolledAt: { $gte: startPrev, $lt: startCurrent } } },
-                { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: "$amountPaid" } } }
-            ]),
-
-            // Rating 
-            this.Course.aggregate([
-                { $match: { instructor: id } },
-                {
-                    $group: {
-                        _id: null,
-                        avg: {
-                            $avg: { $cond: [{ $gt: ["$ratingCount", 0] }, "$rating", "$$REMOVE"] }
-                        }
-                    }
-                }
-            ]),
-            this.Course.countDocuments({ instructor: id }),
-            this.Course.countDocuments({ instructor: id, status: 'published' }),
-        ]);
-
-        // Data Preparation
-        const stats = instructor.instructorStats || {};
-        const cur = currentMonthStats[0] || { count: 0, amount: 0 };
-        const prev = prevMonthStats[0] || { count: 0, amount: 0 };
-        const avgRating = ratingData[0]?.avg || 0;
-
-        // Trend Calculation
-        const calculateGrowth = (current, previous) => {
-            if (previous === 0) return current > 0 ? "100" : "0";
-            return (((current - previous) / previous) * 100).toFixed(1);
-        };
-
+        const courses = await this.courseRepository.find({ instructor: instructorId });
+        const courseIds = courses.map(course => course._id);
+        const totalStudents = await this.enrollmentRepository.count({ course: { $in: courseIds } });
+        const totalRevenue = await this.enrollmentRepository.getTotalRevenueByInstructor(instructorId);
         return {
-            courses: totalCoursesCount || 0,
-            activeCourses: activeCoursesCount,
-            students: stats.totalStudentsTaught || 0,
-            revenue: stats.totalEarnings || 0,
-            rating: avgRating.toFixed(1),
-
-            revenueTrend: calculateGrowth(cur.amount, prev.amount),
-            revenueTrendDir: cur.amount >= prev.amount ? 'up' : 'down',
-
-            studentTrend: calculateGrowth(cur.count, prev.count),
-            studentTrendDir: cur.count >= prev.count ? 'up' : 'down'
+            totalCourses: courses.length,
+            totalStudents,
+            totalRevenue: totalRevenue.length > 0 ? totalRevenue[0].total : 0,
         };
     }
 
-
-
     /**
-     * Get revenue analytics for an instructor
-     * @param {ObjectId} instructorId - The ID of the instructor to get analytics for
-     * @returns {Promise<object[]>} - A promise that resolves with an array of objects containing revenue and student data for each month/year
+     * Retrieves the revenue analytics for an instructor (total revenue by month)
+     * @param {string} instructorId - The id of the instructor to get the revenue analytics for
+     * @returns {Promise<Array<{_id: {month: number, year: number}, totalRevenue: number}>>} - The array of revenue analytics objects
      */
     async getRevenueAnalytics(instructorId) {
-        const courseIds = await this.Course.find({ instructor: instructorId }).distinct('_id');
-
-        return await this.Enrollment.aggregate([
-            { $match: { course: { $in: courseIds } } },
-            {
-                $group: {
-                    _id: {
-                        year: { $year: "$enrolledAt" },
-                        month: { $month: "$enrolledAt" }
-                    },
-                    revenue: { $sum: "$amountPaid" },
-                    students: { $sum: 1 }
-                }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } },
-            {
-                $project: {
-                    _id: 0,
-                    label: {
-                        $concat: [
-                            { $arrayElemAt: [["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "$_id.month"] },
-                            " ",
-                            { $substr: ["$_id.year", 0, 4] }
-                        ]
-                    },
-                    revenue: 1,
-                    students: 1
-                }
-            }
-        ]);
+        return this.enrollmentRepository.getRevenueAnalyticsByInstructor(instructorId);
     }
 
 
+
     /**
-     * Get course performance data for an instructor
-     * @param {ObjectId} instructorId - The ID of the instructor to get course performance data for
-     * @returns {Promise<object[]>} - A promise that resolves with an array of objects containing course performance data
+     * Retrieves the performance stats of an instructor's courses
+     * @param {string} instructorId - The id of the instructor to get the course performance stats for
+     * @returns {Promise<Array<{_id: ObjectId, title: string, thumbnail: string, rating: number, studentsCount: number, revenue: number, lastEnrollment: Date}>} - The array of course performance stats objects
      */
     async getCoursePerformance(instructorId) {
-        const id = new mongoose.Types.ObjectId(String(instructorId));
-
-        // Get Revenue & Last Enrollment from Enrollments 
-        const stats = await this.Enrollment.aggregate([
-            {
-                $lookup: { from: 'courses', localField: 'course', foreignField: '_id', as: 'c' }
-            },
-            {
-                $match: { 'c.instructor': id }
-            },
-            {
-                $group: {
-                    _id: "$course",
-                    revenue: { $sum: "$amountPaid" },
-                    lastEnrollment: { $max: "$enrolledAt" }
-                }
-            }
-        ]);
-
-        // Get Course Details
-        const courses = await this.Course.find({ instructor: id })
-            .select('title thumbnail studentsCount rating');
+        const stats = await this.enrollmentRepository.getCoursePerformanceStats(instructorId);
+        const courses = await this.courseRepository.getInstructorCourseDetails(instructorId);
 
         const statsMap = new Map(stats.map(s => [s._id.toString(), s]));
 
@@ -229,59 +173,20 @@ class InstructorService {
 
 
     /**
-     * Returns the public profile data for an instructor
-     * @param {ObjectId} instructorId - The ID of the instructor to get the public profile for
-     * @returns {Promise<object>} - A promise that resolves with an object containing the instructor's public profile data and stats
+     * Retrieves the public profile of an instructor
+     * @param {string} instructorId - The id of the instructor to retrieve the profile for
+     * @returns {Promise<Object>} - The public profile of the instructor with the instructor's details and courses
+     * @throws {ApiError} - If the instructor is not found
      */
     async getPublicProfile(instructorId) {
-        const id = new mongoose.Types.ObjectId(String(instructorId));
-
-        const [instructor, courses,statsAggregate] = await Promise.all([
-
-            this.User.findById(id)
-                .select('name avatar bio headline website linkedin github twitter instructorStats'),
-
-            // Get Published Courses
-            this.Course.find({ instructor: id, status: 'published' })
-                .select('title thumbnail price rating ratingCount level slug category instructor')
-                .populate('instructor', 'name')
-                .populate('category', 'name')
-                .sort({ createdAt: -1 }),
-
-            this.Course.aggregate([
-                {
-                    $match: {
-                        instructor: id,
-                        status: 'published',
-                        ratingCount: { $gt: 0 } // exclude unrated 
-                    }
-                },
-                {
-                    $group: {
-                        _id: null,
-                        totalReviews: { $sum: "$ratingCount" },
-                        avgRating: { $avg: "$rating" }
-                    }
-                }
-            ])
-
-
-        ]);
-
-        if (!instructor) throw ApiError.notFound('Instructor not found');
-
-        const stats = statsAggregate[0] || { totalReviews: 0, avgRating: 0 };
-
+        const instructor = await this.userRepository.findById(instructorId);
+        if (!instructor || instructor.role !== 'instructor') {
+            throw ApiError('Instructor not found');
+        }
+        const courses = await this.courseRepository.find({ instructor: instructorId })
+            .select('title description price averageRating studentsCount');
         return {
-            instructor: {
-                ...instructor.toObject(),
-                totalStudents: instructor.instructorStats?.totalStudentsTaught || 0
-            },
-            stats: {
-                totalStudents: instructor.instructorStats?.totalStudentsTaught || 0,
-                totalReviews: stats.totalReviews,
-                avgRating: parseFloat(stats.avgRating.toFixed(1))
-            },
+            instructor,
             courses
         };
     }

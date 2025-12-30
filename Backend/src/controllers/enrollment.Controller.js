@@ -1,13 +1,10 @@
-const Course = require("../models/Course");
-const Enrollment = require("../models/Enrollment");
-const User = require("../models/User");
 const EnrollmentService = require("../services/EnrollmentService");
 const asyncHandler = require("express-async-handler");
 
 
 class EnrollmentController {
     constructor() {
-        this.enrollmentService = new EnrollmentService(Enrollment,Course,User);
+        this.enrollmentService = new EnrollmentService();
     }
 
 

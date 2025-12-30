@@ -1,17 +1,14 @@
-const User = require('../models/User');
 const UserService = require('../services/userService');
+const InstructorService = require('../services/InstructorService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
-const InstructorRequest = require('../models/InstructorRequest');
 const sendEmail = require('../utils/sendEmail');
 
 
 class UserController {
     constructor() {
-        this.userService = new UserService(User, Course, Enrollment, InstructorRequest);
-
+        this.userService = new UserService();
+        this.instructorService = new InstructorService();
     }
 
     // GET /users
@@ -90,13 +87,13 @@ class UserController {
         const { id } = req.user;
         const files = req.files;
 
-        await this.userService.createRequest(id, req.body, files);
+        await this.instructorService.createRequest(id, req.body, files);
 
         res.status(200).json({ message: "Request submitted! Waiting for admin approval." });
     });
 
     getAllRequests = asyncHandler(async (req, res) => {
-        const requests = await this.userService.getAllRequests();
+        const requests = await this.instructorService.getAllRequests();
         res.status(200).json({ data: requests });
     })
 
@@ -109,7 +106,7 @@ class UserController {
             throw ApiError.badRequest("Status must be 'approved' or 'rejected'");
         }
 
-        const request = await this.userService.reviewRequest(id, status, feedback);
+        const request = await this.instructorService.reviewRequest(id, status, feedback);
 
         // ...........Send Email ..............
         const userEmail = request.user.email;

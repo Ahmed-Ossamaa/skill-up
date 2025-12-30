@@ -242,6 +242,49 @@ class CourseRepository {
         ]);
         return { total, page, pages: Math.ceil(total / limit), count: courses.length, data: courses };
     }
+
+    async countAll() {
+        return this.Course.countDocuments();
+    }
+
+    async findRecent() {
+        return this.Course.find()
+            .select('title price studentsCount createdAt instructor studentStats instructorStats')
+            .populate('instructor', 'name')
+            .sort({ createdAt: -1 })
+            .limit(5);
+    }
+
+    async pullStudentFromCourses(enrollments, studentId) {
+        const courseIds = enrollments.map(e => e.course);
+        return this.Course.updateMany(
+            { _id: { $in: courseIds } },
+            {
+                $inc: { studentsCount: -1 },
+                $pull: { students: studentId }
+            }
+        );
+    }
+
+    async addStudent(courseId, studentId) {
+        return this.Course.findByIdAndUpdate(courseId, {
+            $addToSet: { students: studentId },
+            $inc: { studentsCount: 1 }
+        });
+    }
+
+    async find(query) {
+        return this.Course.find(query);
+    }
+
+    async findByIdAndUpdate(id, update, options = { new: true }) {
+        return this.Course.findByIdAndUpdate(id, update, options);
+    }
+
+    async getInstructorCourseDetails(instructorId) {
+        return this.Course.find({ instructor: instructorId })
+            .select('title thumbnail studentsCount rating');
+    }
 }
 
 module.exports = new CourseRepository();

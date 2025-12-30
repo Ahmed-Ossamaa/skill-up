@@ -1,15 +1,9 @@
-const Lesson = require('../models/Lesson');
-const Section = require('../models/Section');
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
 const LessonService = require('../services/LessonService');
 const asyncHandler = require('express-async-handler');
-const { deleteFromCloudinary } = require('../utils/cloudinaryHelpers');
 
 class LessonController {
     constructor() {
-
-        this.lessonService = new LessonService(Lesson, Section, Course, Enrollment);
+        this.lessonService = new LessonService();
     }
 
     createLesson = asyncHandler(async (req, res) => {
@@ -24,8 +18,7 @@ class LessonController {
                 doc,
                 resourceFiles
             },
-            req.user.id,
-            req.user.role
+            req.user.id
         );
         res.status(201).json({ message: 'Lesson created', data: lesson });
     });
@@ -43,19 +36,16 @@ class LessonController {
                 doc,
                 resourceFiles
             },
-            req.user.id,
-            req.user.role
+            req.user.id
         );
         res.status(200).json({ message: 'Lesson updated', data: lesson });
     });
 
 
     deleteLesson = asyncHandler(async (req, res) => {
-
         await this.lessonService.deleteLesson(
             req.params.id,
-            req.user.id,
-            req.user.role
+            req.user.id
         );
         res.status(200).json({ message: 'Lesson deleted' });
     });
@@ -69,7 +59,6 @@ class LessonController {
     });
 
     getLessonById = asyncHandler(async (req, res) => {
-
         const lesson = await this.lessonService.getLessonById(
             req.params.id,
             req.user.id,

@@ -1,11 +1,9 @@
-const Course = require('../models/Course');
-const Review = require('../models/Review');
 const ReviewService = require('../services/ReviewService');
 const asyncHandler = require('express-async-handler');
 
 class ReviewController {
     constructor() {
-        this.reviewService = new ReviewService(Review, Course);
+        this.reviewService = new ReviewService();
     }
 
     getAllReviews = asyncHandler(async (req, res) => {

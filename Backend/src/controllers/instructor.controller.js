@@ -1,6 +1,3 @@
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
-const User = require('../models/User');
 const InstructorService = require('../services/InstructorService');
 const asyncHandler = require('express-async-handler');
 
@@ -8,7 +5,7 @@ const asyncHandler = require('express-async-handler');
 
 class InstructorController {
     constructor() {
-        this.instructorService = new InstructorService(Course, Enrollment, User);
+        this.instructorService = new InstructorService();
     }
 
     getAllInstructorStudents = asyncHandler(async (req, res) => {

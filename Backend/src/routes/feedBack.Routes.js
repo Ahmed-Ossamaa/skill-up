@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const feedback = require('../controllers/feedbackController');
+const feedback = require('../controllers/feedback.Controller');
 const { protect, isAdmin, optionalAuth } = require('../middlewares/AuthMW');  
 const validate= require('../middlewares/reqValidation');
 const { feedbackSchema } = require('../Validation/feedbackValidation');

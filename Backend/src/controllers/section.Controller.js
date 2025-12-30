@@ -1,19 +1,15 @@
-const Section = require('../models/Section');
-const Course = require('../models/Course');
 const SectionService = require('../services/SectionService');
 const asyncHandler = require('express-async-handler');
 
 class SectionController {
     constructor() {
-        this.sectionService = new SectionService(Section, Course);
+        this.sectionService = new SectionService();
     }
 
     createSection = asyncHandler(async (req, res) => {
-    
         const section = await this.sectionService.createSection(
             req.body, 
-            req.user.id, 
-            req.user.role
+            req.user.id
         );
         res.status(201).json({ message: 'Section created', data: section });
     });
@@ -27,8 +23,7 @@ class SectionController {
         const section = await this.sectionService.updateSection(
             req.params.id, 
             req.body, 
-            req.user.id, 
-            req.user.role
+            req.user.id
         );
         res.status(200).json({ message: 'Section updated', data: section });
     });
@@ -36,8 +31,7 @@ class SectionController {
     deleteSection = asyncHandler(async (req, res) => {
         await this.sectionService.deleteSection(
             req.params.id, 
-            req.user.id, 
-            req.user.role
+            req.user.id
         );
         res.status(200).json({ message: 'Section deleted' });
     });

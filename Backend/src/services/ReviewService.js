@@ -1,11 +1,11 @@
 const ApiError = require('../utils/ApiError');
-const mongoose = require('mongoose');
+const reviewRepository = require('../repositories/reviewRepository');
+const courseRepository = require('../repositories/courseRepository');
 
 class ReviewService {
-    constructor(ReviewModel, CourseModel) {
-        this.Review = ReviewModel;
-        this.Course = CourseModel;
-
+    constructor() {
+        this.reviewRepository = reviewRepository;
+        this.courseRepository = courseRepository;
     }
 
     async getAllReviews(courseId, page = 1, limit = 10) {
@@ -13,15 +13,7 @@ class ReviewService {
         const query = {};
         if (courseId) query.course = courseId;
 
-        const [reviews, total] = await Promise.all([
-            this.Review.find(query)
-                .populate('user', 'name email')
-                .populate('course', 'title')
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit),
-            this.Review.countDocuments(query)
-        ]);
+        const { reviews, total } = await this.reviewRepository.findAndCountAll(query, skip, limit);
 
         return {
             total,
@@ -34,18 +26,18 @@ class ReviewService {
 
 
     async getReviewById(id) {
-        const review = await this.Review.findById(id);
+        const review = await this.reviewRepository.findById(id);
         if (!review) throw ApiError.notFound('Review not found');
         return review;
     }
 
     async createReview(userId, courseId, data) {
         // Check if already reviewed
-        const existing = await this.Review.findOne({ course: courseId, user: userId });
+        const existing = await this.reviewRepository.findOne({ course: courseId, user: userId });
         if (existing) throw ApiError.badRequest('You have already reviewed this course');
 
         // create the review >>The Schema Hook will update rating in course schema 
-        const review = await this.Review.create({ ...data, user: userId, course: courseId });
+        const review = await this.reviewRepository.create({ ...data, user: userId, course: courseId });
 
         return review;
     }
@@ -63,34 +55,28 @@ class ReviewService {
         review.comment = data.comment ?? review.comment;
 
         // hook will  update ratings in course schema
-        await review.save();
+        await this.reviewRepository.save(review);
         return review;
     }
 
     async deleteReview(reviewId, userId, userRole) {
         const review = await this.getReviewById(reviewId);
 
-        if (review.user.toString() !== userId || userRole !== 'admin') {
+        if (review.user.toString() !== userId && userRole !== 'admin') {
             throw ApiError.forbidden('Not authorized to delete this review');
         }
 
-        await review.deleteOne();
+        await this.reviewRepository.delete(review);
         return;
     }
 
     async getReviewsByInstructor(instructorId, limit = 10) {
-        const id = new mongoose.Types.ObjectId(String(instructorId));
-
-        // get all courseIds for the instructor
-        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
+        const courses = await this.courseRepository.find({ instructor: instructorId });
+        const courseIds = courses.map(course => course._id);
         if (!courseIds.length) return [];
 
         // Fetch reviews for the course 
-        return await this.Review.find({ course: { $in: courseIds } })
-            .populate('user', 'name avatar')
-            .populate('course', 'title slug')
-            .sort({ createdAt: -1 })
-            .limit(limit);
+        return this.reviewRepository.findByCourseIds(courseIds, limit);
     }
 }
 
