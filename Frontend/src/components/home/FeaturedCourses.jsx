@@ -79,7 +79,7 @@ export default function FeaturedCourses({ initialCourses = [] }) {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    'px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-300',
+                                    'px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 cursor-pointer',
                                     activeTab === tab.id
                                         ? 'bg-linear-to-r from-primary-500 to-secondary-500 text-white'
                                         : 'hover:bg-white/10'

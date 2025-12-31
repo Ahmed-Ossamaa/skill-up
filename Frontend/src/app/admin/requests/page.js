@@ -84,7 +84,7 @@ export default function AdminRequests() {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {requests.map((req) => (
-                            <tr key={req._id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
+                            <tr key={req._id} className="hover:bg-gray-100 dark:hover:bg-gray-800/50">
                                 <td className="p-4">
                                     <div className="font-bold text-gray-900 dark:text-white capitalize">{req.user?.name}</div>
                                     <div className="text-sm text-gray-500">{req.user?.email}</div>

@@ -52,7 +52,7 @@ export default function Hero() {
                                 <FiSearch className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-500" />
                                 <button
                                     type="submit"
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-linear-to-r from-primary-500 to-secondary-500 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-linear-to-r from-primary-500 to-secondary-500 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-103 transition-all duration-300 cursor-pointer"
                                 >
                                     Search
                                 </button>
