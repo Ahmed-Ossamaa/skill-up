@@ -1,12 +1,9 @@
-const Section = require('../models/Section');
-const Course = require('../models/Course');
-const Lesson = require('../models/Lesson'); // Needed for lesson deletion
 
 class SectionRepository {
-    constructor() {
-        this.Section = Section;
-        this.Course = Course;
-        this.Lesson = Lesson;
+    constructor(sectionModel, courseModel, lessonModel) {
+        this.Section = sectionModel;
+        this.Course = courseModel;
+        this.Lesson = lessonModel;
     }
 
     // ==================== Read Operations ====================
@@ -55,4 +52,4 @@ class SectionRepository {
     }
 }
 
-module.exports = new SectionRepository();
+module.exports =  SectionRepository;

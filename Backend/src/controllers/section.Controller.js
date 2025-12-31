@@ -1,9 +1,10 @@
-const SectionService = require('../services/SectionService');
 const asyncHandler = require('express-async-handler');
 
+
+
 class SectionController {
-    constructor() {
-        this.sectionService = new SectionService();
+    constructor(sectionService) {
+        this.sectionService = sectionService;
     }
 
     createSection = asyncHandler(async (req, res) => {
@@ -42,4 +43,4 @@ class SectionController {
     });
 }
 
-module.exports = new SectionController();
+module.exports = SectionController;

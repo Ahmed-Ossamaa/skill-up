@@ -1,14 +1,12 @@
-const UserService = require('../services/userService');
-const InstructorService = require('../services/InstructorService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
 const sendEmail = require('../utils/sendEmail');
 
 
 class UserController {
-    constructor() {
-        this.userService = new UserService();
-        this.instructorService = new InstructorService();
+    constructor(userService,instructorService) {
+        this.userService = userService;
+        this.instructorService = instructorService;
     }
 
     // GET /users
@@ -133,4 +131,4 @@ class UserController {
     });
 }
 
-module.exports = new UserController();
+module.exports =  UserController;

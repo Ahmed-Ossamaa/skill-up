@@ -1,11 +1,9 @@
 const ApiError = require("../utils/ApiError");
 const Crypto = require("crypto");
-const enrollmentRepository = require('../repositories/enrollmentRepository');
-const courseRepository = require('../repositories/courseRepository');
-const userRepository = require('../repositories/userRepository');
+
 
 class EnrollmentService {
-    constructor() {
+    constructor(enrollmentRepository, courseRepository, userRepository) {
         this.enrollmentRepository = enrollmentRepository;
         this.courseRepository = courseRepository;
         this.userRepository = userRepository;
@@ -23,7 +21,7 @@ class EnrollmentService {
     async enroll(studentId, courseId, amountPaid = 0, paymentId = null) {
 
         // Validate course exists
-        const course = await this.courseRepository.findCourseById(courseId);
+        const course = await this.courseRepository.findCourseById(courseId,'instructor title price');
         if (!course) throw ApiError.notFound("Course not found");
 
         // Prevent duplicate enrollment

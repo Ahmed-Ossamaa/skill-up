@@ -1,8 +1,6 @@
-const Category = require('../models/Category');
-
 class CategoryRepository {
-    constructor() {
-        this.Category = Category;
+    constructor(categoryModel) {
+        this.Category = categoryModel;
     }
 
     async find(query) {
@@ -29,4 +27,4 @@ class CategoryRepository {
     }
 }
 
-module.exports = new CategoryRepository();
+module.exports = CategoryRepository;

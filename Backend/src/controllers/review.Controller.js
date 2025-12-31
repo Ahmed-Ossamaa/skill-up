@@ -1,9 +1,8 @@
-const ReviewService = require('../services/ReviewService');
 const asyncHandler = require('express-async-handler');
 
 class ReviewController {
-    constructor() {
-        this.reviewService = new ReviewService();
+    constructor(reviewService) {
+        this.reviewService = reviewService;
     }
 
     getAllReviews = asyncHandler(async (req, res) => {
@@ -48,4 +47,4 @@ class ReviewController {
     });
 }
 
-module.exports = new ReviewController();
+module.exports = ReviewController;

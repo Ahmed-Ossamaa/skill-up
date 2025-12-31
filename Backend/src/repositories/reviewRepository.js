@@ -1,8 +1,7 @@
-const Review = require('../models/Review');
 
 class ReviewRepository {
-    constructor() {
-        this.Review = Review;
+    constructor(reviewModel) {
+        this.Review = reviewModel;
     }
 
     async findAndCountAll(query, skip, limit) {
@@ -47,4 +46,4 @@ class ReviewRepository {
     }
 }
 
-module.exports = new ReviewRepository();
+module.exports = ReviewRepository;

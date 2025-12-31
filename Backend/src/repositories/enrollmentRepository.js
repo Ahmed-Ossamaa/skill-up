@@ -1,8 +1,8 @@
-const Enrollment = require('../models/Enrollment');
 
 class EnrollmentRepository {
-    constructor() {
-        this.Enrollment = Enrollment;
+    constructor(enrollmentModel, courseModel) {
+        this.Enrollment = enrollmentModel;
+        this.Course = courseModel;
     }
 
     async findOne(query) {
@@ -37,7 +37,7 @@ class EnrollmentRepository {
                 select: 'name'
             }
         })
-        .populate('student', 'name');
+            .populate('student', 'name');
     }
 
     async create(enrollmentData) {
@@ -73,12 +73,16 @@ class EnrollmentRepository {
         return this.Enrollment.countDocuments(query);
     }
 
-    async find(query) {
+    find(query) {
         return this.Enrollment.find(query);
     }
 
     async updateMany(query, update) {
         return this.Enrollment.updateMany(query, update);
+    }
+
+    async deleteMany(query) {
+        return this.Enrollment.deleteMany(query);
     }
 
     async getTotalRevenueByInstructor(instructorId) {
@@ -110,37 +114,7 @@ class EnrollmentRepository {
         return revenueData;
     }
 
-    async getRevenueAnalyticsByInstructor(instructorId) {
-        const monthlyRevenue = await this.Enrollment.aggregate([
-            {
-                $lookup: {
-                    from: 'courses',
-                    localField: 'course',
-                    foreignField: '_id',
-                    as: 'course'
-                }
-            },
-            {
-                $unwind: '$course'
-            },
-            {
-                $match: {
-                    'course.instructor': instructorId
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        month: { $month: "$createdAt" },
-                        year: { $year: "$createdAt" }
-                    },
-                    totalRevenue: { $sum: "$amountPaid" }
-                }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
-        ]);
-        return monthlyRevenue;
-    }
+
 
     async getCoursePerformanceStats(instructorId) {
         const mongoose = require('mongoose');
@@ -161,6 +135,107 @@ class EnrollmentRepository {
             }
         ]);
     }
+
+    /**
+ * Get all students enrolled in instructor's courses, grouped by course
+ * @param {ObjectId} instructorId - The instructor's ID
+ * @returns {Promise<Array>} Array of courses with enrolled students
+ */
+    async getInstructorStudentsGroupedByCourse(instructorId) {
+        const mongoose = require('mongoose');
+        const id = new mongoose.Types.ObjectId(String(instructorId));
+
+        // course IDs 
+        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
+
+        return this.Enrollment.aggregate([
+            { $match: { course: { $in: courseIds } } },
+            // Join Student Info
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'student',
+                    foreignField: '_id',
+                    as: 'studentDetails'
+                }
+            },
+            { $unwind: '$studentDetails' },
+            // Join Course Info
+            {
+                $lookup: {
+                    from: 'courses',
+                    localField: 'course',
+                    foreignField: '_id',
+                    as: 'courseInfo'
+                }
+            },
+            { $unwind: '$courseInfo' },
+            // Group By Course
+            {
+                $group: {
+                    _id: '$course',
+                    courseTitle: { $first: '$courseInfo.title' },
+                    studentsCount: { $sum: 1 },
+                    enrolledStudents: {
+                        $push: {
+                            enrollmentId: '$_id',
+                            studentId: '$studentDetails._id',
+                            name: '$studentDetails.name',
+                            email: '$studentDetails.email',
+                            avatar: '$studentDetails.avatar',
+                            progress: '$progress.percentage',
+                            enrolledAt: '$enrolledAt'
+                        }
+                    }
+                }
+            },
+            { $sort: { courseTitle: 1 } }
+        ]);
+    }
+
+    /**
+     * Get revenue analytics by instructor (with formatted labels and student count)
+     * @param {ObjectId} instructorId - The instructor's ID
+     * @returns {Promise<Array>} Array of monthly revenue data
+     */
+    async getRevenueAnalyticsByInstructor(instructorId) {
+        const mongoose = require('mongoose');
+        const id = new mongoose.Types.ObjectId(String(instructorId));
+
+        // course IDs
+        const courseIds = await this.Course.find({ instructor: id }).distinct('_id');
+
+        return this.Enrollment.aggregate([
+            { $match: { course: { $in: courseIds } } },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$enrolledAt" },
+                        month: { $month: "$enrolledAt" }
+                    },
+                    revenue: { $sum: "$amountPaid" },
+                    students: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } },
+            {
+                $project: {
+                    _id: 0,
+                    label: {
+                        $concat: [
+                            { $arrayElemAt: [["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "$_id.month"] },
+                            " ",
+                            { $substr: ["$_id.year", 0, 4] }
+                        ]
+                    },
+                    revenue: 1,
+                    students: 1
+                }
+            }
+        ]);
+    }
+
+
 }
 
-module.exports = new EnrollmentRepository();
+module.exports = EnrollmentRepository;

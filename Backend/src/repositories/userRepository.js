@@ -1,8 +1,7 @@
-const User = require('../models/User');
 
 class UserRepository {
-    constructor() {
-        this.User = User;
+    constructor(userModel) {
+        this.User = userModel;
     }
 
     async findByEmail(email) {
@@ -76,4 +75,4 @@ class UserRepository {
     }
 }
 
-module.exports = new UserRepository();
+module.exports =  UserRepository;

@@ -1,16 +1,15 @@
 const log = require('../utils/logger');
 const ApiError = require('../utils/ApiError');
 const { deleteMediaFromCloudinary } = require('../utils/cloudinaryCelanUp');
-const userRepository = require('../repositories/userRepository');
-const courseRepository = require('../repositories/courseRepository');
-const enrollmentRepository = require('../repositories/enrollmentRepository');
+
 
 
 class UserService {
-    constructor() {
+    constructor(userRepository, courseRepository, enrollmentRepository, courseService) {
         this.userRepository = userRepository;
         this.courseRepository = courseRepository;
         this.enrollmentRepository = enrollmentRepository;
+        this.courseService = courseService;
     }
 
     async getAllUsers(page = 1, limit = 10, filters = {}) {
@@ -62,20 +61,15 @@ class UserService {
         const user = await this.userRepository.findById(id);
         if (!user) return null;
 
+        // If user is a student, handle their enrollments
         const userEnrollments = await this.enrollmentRepository.find({ student: id });
-
         if (userEnrollments.length > 0) {
-            await Promise.all(userEnrollments.map(async (enrollment) => {
-                await this.courseRepository.findByIdAndUpdate(enrollment.course, {
-                    $inc: { studentCount: -1 },
-                    $pull: { students: id }
-                });
-            }));
-
-            await this.enrollmentRepository.updateMany({ student: id }, { student: null });
+            await this.courseRepository.pullStudentFromCourses(userEnrollments, id);
+            await this.enrollmentRepository.nullifyStudent(id);
         }
 
-        if (user.avatar.publicId) {
+
+        if (user.avatar?.publicId) {
             await deleteMediaFromCloudinary({ thumbnailPublicId: user.avatar.publicId });
         }
 
@@ -117,4 +111,4 @@ class UserService {
     }
 }
 
-module.exports =  UserService;
+module.exports = UserService;

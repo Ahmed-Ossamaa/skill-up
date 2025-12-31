@@ -3,10 +3,11 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const ApiError = require('../utils/ApiError');
 const sendEmail = require('../utils/sendEmail');
-const userRepository = require('../repositories/userRepository');
 
 class AuthService {
-    constructor() { }
+    constructor(userRepository) {
+        this.userRepository = userRepository;
+    }
 
     /**
      * Generates an access token for a user
@@ -21,7 +22,7 @@ class AuthService {
         );
     }
 
-    
+
     /**
      * Generates a refresh token for a user
      * @param {object} user - the user to generate a refresh token for
@@ -47,12 +48,12 @@ class AuthService {
      * @throws {conflict} if a user with the same email already exists
      */
     async register(name, email, password, role = 'student') {
-        const existing = await userRepository.findByEmail(email);
+        const existing = await this.userRepository.findByEmail(email);
         if (existing) throw ApiError.conflict('User already exists');
 
         const hashedPw = await bcrypt.hash(password, 10);
 
-        const user = await userRepository.create({
+        const user = await this.userRepository.create({
             name,
             email,
             password: hashedPw,
@@ -63,7 +64,7 @@ class AuthService {
         const refreshToken = this.signRefresh(user);
 
         user.refreshToken = refreshToken;
-        await userRepository.save(user);
+        await this.userRepository.save(user);
 
         const userObj = user.toObject();
         delete userObj.password;
@@ -80,7 +81,7 @@ class AuthService {
      * @throws {notFound} if the user does not exist or the password is incorrect
      */
     async login({ email, password }) {
-        const user = await userRepository.findByEmailWithPassword(email);
+        const user = await this.userRepository.findByEmailWithPassword(email);
         if (!user) throw ApiError.notFound('Invalid email or password');
 
         const matched = await bcrypt.compare(password, user.password);
@@ -90,7 +91,7 @@ class AuthService {
         const refreshToken = this.signRefresh(user);
 
         user.refreshToken = refreshToken;
-        await userRepository.save(user);
+        await this.userRepository.save(user);
 
         const userObj = user.toObject();
         delete userObj.password;
@@ -114,7 +115,7 @@ class AuthService {
             throw ApiError.unauthorized('Invalid refresh token');
         }
 
-        const user = await userRepository.findByIdWithRefreshToken(payload.id);
+        const user = await this.userRepository.findByIdWithRefreshToken(payload.id);
         if (!user || user.refreshToken !== refreshToken)
             throw ApiError.unauthorized('Token expired or invalid');
 
@@ -122,7 +123,7 @@ class AuthService {
         const newRefreshToken = this.signRefresh(user);
 
         user.refreshToken = newRefreshToken;
-        await userRepository.save(user);
+        await this.userRepository.save(user);
 
         const userObj = user.toObject();
         delete userObj.refreshToken;
@@ -136,7 +137,7 @@ class AuthService {
      * @param {string} userId - The id of the user to logout
      */
     async logout(userId) {
-        await userRepository.findByIdAndUpdate(userId, { refreshToken: null });
+        await this.userRepository.findByIdAndUpdate(userId, { refreshToken: null });
     }
 
 
@@ -146,7 +147,7 @@ class AuthService {
      * @return {boolean} true if the email was sent successfully
      */
     async forgotPassword(email) {
-        const user = await userRepository.findByEmail(email);
+        const user = await this.userRepository.findByEmail(email);
         if (!user) throw ApiError.notFound('User not found');
 
         const rawToken = crypto.randomBytes(32).toString('hex');
@@ -154,7 +155,7 @@ class AuthService {
 
         user.resetPasswordToken = hashed;
         user.resetPasswordExpires = Date.now() + 60 * 60 * 1000;
-        await userRepository.save(user);
+        await this.userRepository.save(user);
 
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${rawToken}`;
 
@@ -177,7 +178,7 @@ class AuthService {
     async resetPassword(token, newPassword) {
         const hashed = crypto.createHash('sha256').update(token).digest('hex');
 
-        const user = await userRepository.findByResetToken(hashed);
+        const user = await this.userRepository.findByResetToken(hashed);
 
         if (!user) throw ApiError.badRequest('Invalid or expired token');
 
@@ -185,7 +186,7 @@ class AuthService {
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
 
-        await userRepository.save(user);
+        await this.userRepository.save(user);
 
         return true;
     }
@@ -198,7 +199,7 @@ class AuthService {
      * @param {string} newPassword 
      */
     async changePassword(userId, currentPassword, newPassword) {
-        const user = await userRepository.findByIdWithPassword(userId);
+        const user = await this.userRepository.findByIdWithPassword(userId);
         if (!user) {
             throw ApiError.notFound('User not found');
         }
@@ -210,7 +211,7 @@ class AuthService {
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
         user.password = hashedNewPassword;
-        await userRepository.save(user);
+        await this.userRepository.save(user);
 
         return user;
     }

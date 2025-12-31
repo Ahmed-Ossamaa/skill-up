@@ -1,25 +1,24 @@
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
-const Section = require('../models/Section');
-const Lesson = require('../models/Lesson');
-const User = require('../models/User');
 
 class CourseRepository {
-    constructor() {
-        this.Course = Course;
-        this.Enrollment = Enrollment;
-        this.Section = Section;
-        this.Lesson = Lesson;
-        this.User = User;
+    constructor(courseModel, enrollmentModel, sectionModel, lessonModel, userModel) {
+        this.Course = courseModel;
+        this.Enrollment = enrollmentModel;
+        this.Section = sectionModel;
+        this.Lesson = lessonModel;
+        this.User = userModel;
     }
 
 
     /**
      * Finds a course by id
      * @param {string} courseId - The id of the course to find
+     * @param {string} select - The fields to select
      * @returns {Promise<Course>} - The course with the given id
      */
-    async findCourseById(courseId) {
+    async findCourseById(courseId, select = null) {
+        if (select) {
+            return this.Course.findById(courseId).select(select);
+        }
         return this.Course.findById(courseId);
     }
 
@@ -29,7 +28,7 @@ class CourseRepository {
      * @param {string} courseId - The id of the course to find
      * @returns {Promise<Course>} - The course with details
      */
-    async findCourseByIdWithDetails(courseId) {
+    async findCourseByIdWithDetails(courseId,) {
         return this.Course.findById(courseId)
             .populate('instructor', 'name email avatar title headline bio')
             .populate({
@@ -285,6 +284,30 @@ class CourseRepository {
         return this.Course.find({ instructor: instructorId })
             .select('title thumbnail studentsCount rating');
     }
+
+    /**
+ * Get instructor rating statistics
+ * @param {ObjectId} instructorId - The instructor's ID
+ * @returns {Promise<Array>} Array with totalReviews and avgRating
+ */
+    async getInstructorRatingStats(instructorId) {
+        return this.Course.aggregate([
+            {
+                $match: {
+                    instructor: instructorId,
+                    status: 'published',
+                    ratingCount: { $gt: 0 }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalReviews: { $sum: "$ratingCount" },
+                    avgRating: { $avg: "$rating" }
+                }
+            }
+        ]);
+    }
 }
 
-module.exports = new CourseRepository();
+module.exports = CourseRepository;

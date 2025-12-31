@@ -1,6 +1,6 @@
 const express = require('express');
 const { protect } = require('../middlewares/AuthMW');
-const enrollmentController = require('../controllers/enrollment.Controller');
+const { enrollmentController } = require('../container');
 const router = express.Router();
 
 router.use(protect);

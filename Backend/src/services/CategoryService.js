@@ -1,8 +1,7 @@
 const ApiError = require('../utils/ApiError');
-const categoryRepository = require('../repositories/categoryRepository');
 
 class CategoryService {
-    constructor() {
+    constructor(categoryRepository) {
         this.categoryRepository = categoryRepository;
     }
 

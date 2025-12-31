@@ -1,8 +1,8 @@
-const Feedback = require('../models/FeedBack');
+
 
 class FeedbackRepository {
-    constructor() {
-        this.Feedback = Feedback;
+    constructor(feedbackModel) {
+        this.Feedback = feedbackModel;
     }
 
     async create(data) {
@@ -30,4 +30,4 @@ class FeedbackRepository {
     }
 }
 
-module.exports = new FeedbackRepository();
+module.exports =  FeedbackRepository;

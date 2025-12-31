@@ -1,11 +1,10 @@
 const asyncHandler = require('express-async-handler');
-const FeedbackService = require('../services/FeedbackService');
 const ApiError = require('../utils/ApiError');
 
 
 class FeedbackController {
-    constructor() {
-        this.feedbackService = new FeedbackService();
+    constructor(feedbackService) {
+        this.feedbackService =  feedbackService;
     }
     createFeedback = asyncHandler(async (req, res) => {
         const feedbackData = {
@@ -82,4 +81,4 @@ class FeedbackController {
     });
 }
 
-module.exports = new FeedbackController();
+module.exports =  FeedbackController;

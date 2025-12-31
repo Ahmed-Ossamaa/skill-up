@@ -1,9 +1,8 @@
 const ApiError = require('../utils/ApiError');
-const reviewRepository = require('../repositories/reviewRepository');
-const courseRepository = require('../repositories/courseRepository');
+
 
 class ReviewService {
-    constructor() {
+    constructor(reviewRepository, courseRepository) {
         this.reviewRepository = reviewRepository;
         this.courseRepository = courseRepository;
     }

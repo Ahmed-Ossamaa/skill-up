@@ -1,14 +1,10 @@
-const Lesson = require('../models/Lesson');
-const Section = require('../models/Section');
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
 
 class LessonRepository {
-    constructor() {
-        this.Lesson = Lesson;
-        this.Section = Section;
-        this.Course = Course;
-        this.Enrollment = Enrollment;
+    constructor(lessonModel, sectionModel, courseModel, enrollmentModel) {
+        this.Lesson = lessonModel;
+        this.Section = sectionModel;
+        this.Course = courseModel;
+        this.Enrollment = enrollmentModel;
     }
 
     // ==================== Read Operations ====================
@@ -18,10 +14,14 @@ class LessonRepository {
     }
 
     async findLessonById(lessonId) {
-        return this.Lesson.findById(lessonId).populate({
-            path: 'section',
-            populate: { path: 'course' }
-        });
+        return this.Lesson.findById(lessonId)
+            .populate({
+                path: 'course',
+                populate: {
+                    path: 'instructor'
+                }
+            })
+            .populate('section');
     }
 
     async findCourseById(courseId) {
@@ -33,7 +33,14 @@ class LessonRepository {
     }
     
     async findLessonWithCourse(lessonId) {
-        return this.Lesson.findById(lessonId).populate('section').populate('course');
+        return this.Lesson.findById(lessonId)
+        .populate('section')
+        .populate({
+            path: 'course',
+            populate: {
+                path: 'instructor'
+            }
+        });
     }
 
     async findEnrollment(studentId, courseId) {
@@ -106,4 +113,4 @@ class LessonRepository {
     }
 }
 
-module.exports = new LessonRepository();
+module.exports =  LessonRepository;

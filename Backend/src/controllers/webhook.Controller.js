@@ -1,11 +1,19 @@
 const Stripe = require("stripe");
-const Enrollment = require("../models/Enrollment");
 const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
+const Section = require("../models/Section");
+const Lesson = require("../models/Lesson");
 const User = require("../models/User");
 const EnrollmentService = require("../services/EnrollmentService");
+const enrollmentRepository = require("../repositories/enrollmentRepository");
+const courseRepository = require("../repositories/courseRepository");
+const userRepository = require("../repositories/userRepository");
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const enrollmentService = new EnrollmentService(Enrollment, Course, User);
+const enrollmentRepo = new enrollmentRepository(Enrollment);
+const courseRepo = new courseRepository(Course,Enrollment,Section,Lesson,User);
+const userRepo = new userRepository(User);
+const enrollmentService = new EnrollmentService(enrollmentRepo, courseRepo, userRepo);
 
 /**
  * Handles a webhook event from Stripe.

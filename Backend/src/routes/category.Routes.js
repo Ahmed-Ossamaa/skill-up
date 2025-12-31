@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const categoryController = require('../controllers/category.Controller');
+const { categoryController } = require('../container');
 const { protect, authorize, isAdmin } = require('../middlewares/AuthMW');
 const validate  = require('../middlewares/reqValidation');
 const { createCategorySchema, updateCategorySchema } = require('../Validation/categoryValidation');

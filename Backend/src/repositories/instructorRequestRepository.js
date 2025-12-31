@@ -1,8 +1,7 @@
-const InstructorRequest = require('../models/InstructorRequest');
 
 class InstructorRequestRepository {
-    constructor() {
-        this.InstructorRequest = InstructorRequest;
+    constructor(instructorReqModel) {
+        this.InstructorRequest = instructorReqModel;
     }
 
     async findOne(query) {
@@ -28,4 +27,4 @@ class InstructorRequestRepository {
     }
 }
 
-module.exports = new InstructorRequestRepository();
+module.exports = InstructorRequestRepository;

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/user.Controller');
+const { userController } = require('../container');
 const { protect, isAdmin } = require('../middlewares/AuthMW');
 const { upload } = require('../middlewares/upload');
 const validate = require('../middlewares/reqValidation');

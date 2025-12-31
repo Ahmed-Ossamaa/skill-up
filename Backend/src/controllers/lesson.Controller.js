@@ -1,9 +1,10 @@
-const LessonService = require('../services/LessonService');
 const asyncHandler = require('express-async-handler');
 
+
+
 class LessonController {
-    constructor() {
-        this.lessonService = new LessonService();
+    constructor(lessonService) {
+        this.lessonService = lessonService;
     }
 
     createLesson = asyncHandler(async (req, res) => {
@@ -86,4 +87,4 @@ class LessonController {
     });
 }
 
-module.exports = new LessonController();
+module.exports = LessonController;

@@ -1,10 +1,10 @@
-const EnrollmentService = require("../services/EnrollmentService");
+
 const asyncHandler = require("express-async-handler");
 
 
 class EnrollmentController {
-    constructor() {
-        this.enrollmentService = new EnrollmentService();
+    constructor(enrollmentService) {
+        this.enrollmentService = enrollmentService;
     }
 
 
@@ -40,4 +40,4 @@ class EnrollmentController {
 
 }
 
-module.exports = new EnrollmentController();
+module.exports =  EnrollmentController;

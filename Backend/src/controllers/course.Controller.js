@@ -1,10 +1,9 @@
-const CourseService = require('../services/CourseService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
 
 class CourseController {
-    constructor() {
-        this.courseService = new CourseService();
+    constructor(courseService) {
+        this.courseService = courseService;
     }
 
     // ---------------- Public ----------------
@@ -105,4 +104,4 @@ class CourseController {
     });
 }
 
-module.exports = new CourseController();
+module.exports = CourseController;

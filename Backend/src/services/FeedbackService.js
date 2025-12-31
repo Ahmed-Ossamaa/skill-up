@@ -2,7 +2,7 @@ const ApiError = require('../utils/ApiError');
 const feedbackRepository = require('../repositories/feedbackRepository');
 
 class FeedbackService {
-    constructor() {
+    constructor(feedbackRepository) {
         this.feedbackRepository = feedbackRepository;
     }
 
@@ -26,7 +26,7 @@ class FeedbackService {
     async getFeedbackById(feedbackId) {
         const feedback = await this.feedbackRepository.findById(feedbackId);
         if (!feedback) {
-            throw  ApiError('Feedback not found');
+            throw ApiError.notFound('Feedback not found');
         }
         return feedback;
     }
@@ -34,7 +34,7 @@ class FeedbackService {
     async updateFeedback(id, data) {
         const feedback = await this.feedbackRepository.findByIdAndUpdate(id, data, { new: true });
         if (!feedback) {
-            throw  ApiError('Feedback not found');
+            throw ApiError.notFound('Feedback not found');
         }
         return feedback;
     }
@@ -42,7 +42,7 @@ class FeedbackService {
     async deleteFeedback(feedbackId) {
         const feedback = await this.feedbackRepository.findByIdAndDelete(feedbackId);
         if (!feedback) {
-            throw  ApiError('Feedback not found');
+            throw ApiError.notFound('Feedback not found');
         }
         return feedback;
     }
