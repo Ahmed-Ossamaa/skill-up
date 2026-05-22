@@ -154,17 +154,8 @@ export default function CreateCoursePage() {
 
     useEffect(() => {
         if (!isReady) return;
-        if (!isAuthenticated) {
-            router.push('/auth/login');
-            return;
-        }
-        if (user && user.role !== 'instructor') {
-            router.push('/');
-            return;
-        }
-
         fetchCategories();
-    }, [isReady, isAuthenticated, user, router]);
+    }, [isReady]);
 
 
     useEffect(() => {

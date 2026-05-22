@@ -25,16 +25,6 @@ export default function AdminDashboard() {
     useEffect(() => {
         if (!isReady) return;
 
-        if (!isAuthenticated) {
-            router.push('/auth/login');
-            return;
-        }
-
-        if (user && user.role !== 'admin') {
-            router.push('/');
-            return;
-        }
-
         const fetchDashboardData = async () => {
             try {
                 setLoading(true);

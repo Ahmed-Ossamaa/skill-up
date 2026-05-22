@@ -1,134 +1,115 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { authAPI } from "@/lib/api";
+import Cookies from "js-cookie";
 
 const useAuthStore = create(
-    persist(
-        (set, get) => ({
-            user: null,
-            accessToken: null, // in memory only
-            isAuthenticated: false,
-            isReady: false, // becomes true after initial hydration
-            isLoading: false,
-            error: null,
+    (set, get) => ({
+        user: null,
+        accessToken: null, // in memory only
+        isAuthenticated: false,
+        isReady: false, // becomes true after initial hydration
+        isLoading: false,
+        error: null,
 
-            // Set auth state (in memory)
-            setAuth: ({ user, accessToken }) => {
-                set({
-                    user: user ?? null,
-                    accessToken: accessToken ?? null,
-                    isAuthenticated: !!user,
-                    error: null,
-                    isReady: true,
-                });
-            },
+        // Set auth state (in memory)
+        setAuth: ({ user, accessToken }) => {
+            set({
+                user: user ?? null,
+                accessToken: accessToken ?? null,
+                isAuthenticated: !!user,
+                error: null,
+                isReady: true,
+            });
+        },
 
-            // Register
-            register: async (userData) => {
-                set({ isLoading: true, error: null });
+        // Mark as ready (called by AuthProvider)
+        setReady: (ready) => set({ isReady: ready }),
 
-                try {
-                    const res = await authAPI.register(userData);
-                    const { user, accessToken } = res.data.data;
+        // Register
+        register: async (userData) => {
+            set({ isLoading: true, error: null });
 
-                    get().setAuth({ user, accessToken });
+            try {
+                const res = await authAPI.register(userData);
+                const { user, accessToken } = res.data.data;
 
-                    set({ isLoading: false });
-                    return { success: true };
-                } catch (err) {
-                    const message = err.response?.data?.message || "Registration failed";
-                    set({ error: message, isLoading: false });
-                    return { success: false, error: message };
-                }
-            },
+                Cookies.set('hasSession', 'true', { path: '/' });
+                get().setAuth({ user, accessToken });
 
-            // Login
-            login: async (credentials) => {
-                set({ isLoading: true, error: null });
+                set({ isLoading: false });
+                return { success: true };
+            } catch (err) {
+                const message = err.response?.data?.message || "Registration failed";
+                set({ error: message, isLoading: false });
+                return { success: false, error: message };
+            }
+        },
 
-                try {
-                    const res = await authAPI.login(credentials);
-                    const { user, accessToken } = res.data.data;
+        // Login
+        login: async (credentials) => {
+            set({ isLoading: true, error: null });
 
-                    get().setAuth({ user, accessToken });
+            try {
+                const res = await authAPI.login(credentials);
+                const { user, accessToken } = res.data.data;
 
-                    set({ isLoading: false });
+                Cookies.set('hasSession', 'true', { path: '/' });
+                get().setAuth({ user, accessToken });
 
-                    return { success: true, user };
-                } catch (err) {
-                    const message = err.response?.data?.message || "Login failed";
-                    set({ error: message, isLoading: false });
-                    return { success: false, error: message };
-                }
-            },
+                set({ isLoading: false });
 
-            // Logout
-            logout: async () => {
-                try {
-                    await authAPI.logout();
-                } catch (error) {
-                    console.error('Logout error:', error);
-                }
+                return { success: true, user };
+            } catch (err) {
+                const message = err.response?.data?.message || "Login failed";
+                set({ error: message, isLoading: false });
+                return { success: false, error: message };
+            }
+        },
 
-                set({
-                    user: null,
-                    accessToken: null,
-                    isAuthenticated: false,
-                    error: null,
-                    isReady: true,
-                });
-            },
+        // Logout
+        logout: async () => {
+            try {
+                await authAPI.logout();
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
 
-            // Refresh access token (uses HttpOnly cookie)
-            refreshAccessToken: async () => {
-                try {
-                    const res = await authAPI.refresh();
-                    const { accessToken, user } = res.data.data;
+            Cookies.remove('hasSession', { path: '/' });
+            set({
+                user: null,
+                accessToken: null,
+                isAuthenticated: false,
+                error: null,
+                isReady: true,
+            });
+        },
 
-                    get().setAuth({ user, accessToken });
-                    return accessToken;
-                } catch (err) {
-                    console.error('Refresh token error:', err);
-                    // Clear state but mark ready so UI can respond
-                    set({ user: null, accessToken: null, isAuthenticated: false, isReady: true });
-                    return null;
-                }
-            },
+        // Refresh access token (uses HttpOnly cookie)
+        refreshAccessToken: async () => {
+            try {
+                const res = await authAPI.refresh();
+                const { accessToken, user } = res.data.data;
 
-            // Hydrate (call on app init)
-            hydrate: async () => {
-                const user = get().user;
-                if (!user) {
-                    set({ isLoading: false, isReady: true });
-                    return;
-                }
-                set({ isLoading: true });
-                try {
-                    await get().refreshAccessToken();
-                } catch (err) {
-                    console.error('Hydration failed:', err);
-                    set({ user: null, accessToken: null, isAuthenticated: false });
-                } finally {
-                    set({ isLoading: false, isReady: true });
-                }
-            },
+                Cookies.set('hasSession', 'true', { path: '/' });
+                get().setAuth({ user, accessToken });
+                return accessToken;
+            } catch (err) {
+                console.error('Refresh token error:', err);
+                Cookies.remove('hasSession', { path: '/' });
+                // Clear state but mark ready so UI can respond
+                set({ user: null, accessToken: null, isAuthenticated: false, isReady: true });
+                return null;
+            }
+        },
 
-            // Update user info
-            updateUser: (userData) => {
-                set({ user: { ...get().user, ...userData } });
-            },
+        // Update user info
+        updateUser: (userData) => {
+            set({ user: { ...get().user, ...userData } });
+        },
 
-            // Clear error
-            clearError: () => set({ error: null }),
-        }),
-
-        {
-            name: "auth-storage",
-            partialize: (state) => ({
-                user: state.user,
-            }),
-        }
-    )
+        // Clear error
+        clearError: () => set({ error: null }),
+    })
 );
 
-export default useAuthStore;
+export default useAuthStore;
