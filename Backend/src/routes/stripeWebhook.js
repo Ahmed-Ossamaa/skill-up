@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { webhookHandler } = require("../controllers/webhookController");
+const { webhookHandler } = require("../controllers/webhook.Controller");
 
 router.post("/",
     express.raw({ type: "application/json" }),

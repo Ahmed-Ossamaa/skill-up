@@ -163,14 +163,14 @@ export default function AdminFeedbackPage() {
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             onClick={() => setSelectedFeedback(item)}
-                                                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                            className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors cursor-pointer"
                                                             title="Read Message"
                                                         >
                                                             <AiOutlineEye />
                                                         </button>
                                                         <button
                                                             onClick={() => handleDelete(item._id)}
-                                                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
                                                             title="Delete"
                                                         >
                                                             <FiTrash2 />

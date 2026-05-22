@@ -139,13 +139,13 @@ export default function CourseDetailsClient({ course, initialReviews }) {
                         {/* Left Content */}
                         <div className="lg:col-span-2 ">
                             {/* Tabs */}
-                            <div className="flex space-x-1 glass-card p-1 mb-8 overflow-x-auto no-scrollbar">
+                            <div className="flex space-x-1 glass-card p-1 mb-8  no-scrollbar">
                                 {tabs.map((tab) => (
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
                                         className={cn(
-                                            'px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 whitespace-nowrap',
+                                            'px-6 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 cursor-pointer whitespace-nowrap',
                                             activeTab === tab.id
                                                 ? 'bg-linear-to-r from-primary-500 to-secondary-500 text-white'
                                                 : 'hover:bg-white/10'

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import {
     FiHome, FiBook, FiUsers, FiSettings, FiMenu, FiX, FiLogOut,
-    FiMail , FiDollarSign, FiMessageSquare, FiFolder, FiPlus,
+    FiMail, FiDollarSign, FiMessageSquare, FiFolder, FiPlus,
     FiPlay, FiAward, FiBookOpen, FiTrendingUp
 } from 'react-icons/fi';
 import { cn } from '@/lib/utils';
@@ -14,9 +14,14 @@ import Image from 'next/image';
 
 export default function DashboardLayout({ children, role = 'student' }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
     const { user, logout } = useAuthStore();
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleLogout = async () => {
         await logout();
@@ -32,7 +37,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 { icon: FiBook, label: 'Courses', href: '/admin/courses' },
                 { icon: FiFolder, label: 'Categories', href: '/admin/categories' },
                 { icon: FiPlus, label: 'Requests', href: '/admin/requests' },
-                { icon: FiMail , label: 'Messages', href: '/admin/feedback' },
+                { icon: FiMail, label: 'Messages', href: '/admin/feedback' },
                 { icon: FiMessageSquare, label: 'Testimonials', href: '/admin/testimonials' },
                 { icon: FiTrendingUp, label: 'Analytics', href: '/admin/analytics' },
                 { icon: FiDollarSign, label: 'Revenue', href: '/admin/revenue' },
@@ -90,12 +95,12 @@ export default function DashboardLayout({ children, role = 'student' }) {
             {/* Sidebar */}
             <aside
                 className={cn(
-                    'fixed top-0 left-0 z-40 h-screen w-64 glass border-r border-white/10 transition-transform duration-300',
+                    'fixed top-0 left-0 z-40 h-screen w-64 glass shadow-xl transition-transform duration-300',
                     sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
                 )}
             >
                 {/* Logo */}
-                <div className="hidden lg:flex items-center space-x-2 px-6 py-4 border-b border-white/10">
+                <div className="hidden lg:flex items-center space-x-2 px-6 py-2 border-b border-white/10">
                     <Link href="/" className="flex items-center space-x-2">
                         <Image
                             src="/logo.png"
@@ -109,8 +114,8 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 </div>
 
                 {/* User Info */}
-                <div className="px-4 py-2 border-b border-white/10">
-                    {user?.avatar?.url ? (
+                <div className="px-4 py-2 border-b border-white/10 min-h-[65px]">
+                    {mounted && user?.avatar?.url ? (
                         <div className="flex items-center space-x-3">
                             <div className='rounded-full relative w-10 h-10 overflow-hidden'>
                                 <Image
@@ -119,7 +124,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                                     width={100}
                                     height={100}
                                     loading='eager'
-                                    className=" object-cover"
+                                    className="object-cover w-full h-full rounded-full"
                                 />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -127,9 +132,9 @@ export default function DashboardLayout({ children, role = 'student' }) {
                                 <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{role}</p>
                             </div>
                         </div>
-                    ) :
+                    ) : mounted ? (
                         <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
+                            <div className="w-10 h-10 bg-linear-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-lg font-bold">
                                 {user?.name?.charAt(0) || 'U'}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -137,12 +142,20 @@ export default function DashboardLayout({ children, role = 'student' }) {
                                 <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{role}</p>
                             </div>
                         </div>
-                    }
+                    ) : (
+                        <div className="flex items-center space-x-3 opacity-50">
+                            <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                            <div className="flex-1 min-w-0 space-y-2">
+                                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                                <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
 
                 {/* Navigation */}
-                <nav className="p-4 space-y-1 mb-8 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 220px)' }}>
+                <nav className="p-2 space-y-1 mb-8 overflow-y-auto " style={{ maxHeight: 'calc(100vh - 220px)' }}>
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = item.exact
@@ -155,13 +168,13 @@ export default function DashboardLayout({ children, role = 'student' }) {
                                 href={item.href}
                                 onClick={() => setSidebarOpen(false)}
                                 className={cn(
-                                    'flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200',
+                                    'flex items-center space-x-3 px-4 py-2 rounded-lg transition-all',
                                     isActive
                                         ? 'bg-linear-to-r from-primary-500 to-secondary-500 text-white'
-                                        : 'hover:bg-white/10'
+                                        : 'hover:bg-gray-200'
                                 )}
                             >
-                                <Icon className="w-5 h-5" />
+                                <Icon className="w-4 h-4" />
                                 <span className="font-medium">{item.label}</span>
                             </Link>
                         );

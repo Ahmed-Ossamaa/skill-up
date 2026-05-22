@@ -1,12 +1,10 @@
-const User = require('../models/User');
-const AuthService = require('../services/AuthService');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
 const sanitizeUser = require('../utils/sanitizeUser');
 
 class AuthController {
-    constructor() {
-        this.AuthService = new AuthService(User);
+    constructor(AuthService) {
+        this.AuthService = AuthService;
     }
 
     setRefreshCookie(res, refreshToken) {
@@ -119,4 +117,4 @@ class AuthController {
 
 }
 
-module.exports = new AuthController();
+module.exports =  AuthController;

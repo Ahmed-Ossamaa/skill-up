@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { uploadAvatar, uploadVideo, uploadResource,uploadThumbnail } = require('../middlewares/upload');
-const uploadController = require('../controllers/uploadController');
+const uploadController = require('../controllers/upload.Controller');
 const { protect, authorize } = require('../middlewares/AuthMW');
 
 router.use(protect);

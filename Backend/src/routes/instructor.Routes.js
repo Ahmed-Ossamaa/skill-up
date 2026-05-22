@@ -1,19 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const InstructorController = require('../controllers/instructor.controller');
+const { instructorController } = require('../container');
 const { protect, authorize } = require('../middlewares/AuthMW');
 
 //--------------------------Public routes--------------------------
 // get public profile of the instructor
-router.get('/profile/:instructorId', InstructorController.getPublicProfile);
+router.get('/profile/:instructorId', instructorController.getPublicProfile);
 
 //--------------------------Protected routes--------------------------
 router.use(protect);
 router.use(authorize('instructor'));
 
 // get all students enrolled in the courses of the instructor
-router.get('/students', InstructorController.getAllInstructorStudents);
+router.get('/students', instructorController.getAllInstructorStudents);
 // get dashboard data (stats)
-router.get('/stats', InstructorController.getDashboardData);
+router.get('/stats', instructorController.getDashboardData);
 
 module.exports = router;

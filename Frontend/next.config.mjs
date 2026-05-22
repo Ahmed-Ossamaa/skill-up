@@ -17,7 +17,24 @@ const nextConfig = {
     {
       protocol: 'https',
       hostname: 'images.unsplash.com',
-    },],
+    },
+    {
+      protocol: 'https',
+      hostname: 'loremflickr.com',
+    },
+    {
+      protocol: 'https',
+      hostname: 'cdn.jsdelivr.net',
+    },
+    {
+      protocol: 'https',
+      hostname: 'picsum.photos',
+    },
+    {
+      protocol: 'https',
+      hostname: 'avatars.githubusercontent.com',
+    }
+    ],
   },
 
   allowedDevOrigins: ["res.cloudinary.com"]

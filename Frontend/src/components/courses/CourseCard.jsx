@@ -5,11 +5,12 @@ import { HiOutlineUsers, HiOutlineClock, HiOutlineBookOpen } from 'react-icons/h
 import { formatPrice, getCourseLevelLabel, getCourseLevelColor, getFinalPrice, isOnSale } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
-export default function CourseCard({ course, disableLink = false }) {
+export default function CourseCard({ course,instructor, disableLink = false }) {
     const finalPrice = getFinalPrice(course);
     const onSale = isOnSale(course);
     const discount = course.discount;
     const courseUrl = `/courses/${course._id || course.id}`;
+    const teacher = instructor ?? course.instructor
 
     return (
         <div className="group block animate-fade-in h-full">
@@ -66,15 +67,15 @@ export default function CourseCard({ course, disableLink = false }) {
                     {/*Instructor */}
                     <div className="flex items-center space-x-2 mb-4">
                         <span className="font-semibold">By</span>
-                        <Link href={`/instructor/${course.instructor?._id}`} className="z-10">
+                        <Link href={`/instructor/${teacher?._id}`} className="z-10">
                             <span className="font-semibold text-sm hover:text-primary-500 hover:underline text-gray-600 dark:text-gray-400">
-                                {(course.instructor?.name).charAt(0).toUpperCase() + (course.instructor?.name).slice(1) || 'Instructor'}
+                                {(teacher?.name).charAt(0).toUpperCase() + (teacher?.name).slice(1) || 'Instructor'}
                             </span>
                         </Link>
                     </div>
 
                     {/* Stats */}
-                    <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-auto">
+                    <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-2 ">
                         <div className="flex items-center space-x-4">
                             {/* Rating */}
                             <div className="flex items-center space-x-1">
@@ -100,21 +101,21 @@ export default function CourseCard({ course, disableLink = false }) {
                     </div>
 
                     {/* --- Price & Action Button --- */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800 mt-4">
-                        <div className="flex items-baseline space-x-2">
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800 mt-auto shrink-0 min-h-[55px]">
+                        <div className="flex items-baseline space-x-2 min-w-0 pr-2">
                             <span className="text-2xl font-bold text-primary-500">
                                 {course.isFree ? 'Free' : formatPrice(finalPrice)}
                             </span>
                             {onSale && (
-                                <span className="text-sm text-gray-500 line-through">
+                                <span className="text-sm text-gray-500 line-through hidden sm:inline-block">
                                     {formatPrice(course.price)}
                                 </span>
                             )}
                         </div>
 
                         {!disableLink && (
-                            <Link href={courseUrl}>
-                                <button className="px-4 py-2 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg">
+                            <Link href={courseUrl} className="shrink-0 ml-auto">
+                                <button className="w-[100px] h-[36px] bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-lg flex items-center justify-center">
                                     View Course
                                 </button>
                             </Link>

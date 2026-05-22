@@ -182,36 +182,7 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button
-                    onClick={() => router.push('/admin/users')}
-                    className="glass-card p-6 hover:scale-105 transition-transform duration-300 text-center group"
-                >
-                    <FiUsers className="w-8 h-8 mx-auto mb-2 text-primary-500 group-hover:scale-110 transition-transform" />
-                    <p className="font-semibold">Manage Users</p>
-                </button>
-                <button
-                    onClick={() => router.push('/admin/courses')}
-                    className="glass-card p-6 hover:scale-105 transition-transform duration-300 text-center group"
-                >
-                    <FiBook className="w-8 h-8 mx-auto mb-2 text-secondary-500 group-hover:scale-110 transition-transform" />
-                    <p className="font-semibold">Manage Courses</p>
-                </button>
-                <button
-                    onClick={() => router.push('/admin/revenue')}
-                    className="glass-card p-6 hover:scale-105 transition-transform duration-300 text-center group"
-                >
-                    <FiDollarSign className="w-8 h-8 mx-auto mb-2 text-green-500 group-hover:scale-110 transition-transform" />
-                    <p className="font-semibold">View Revenue</p>
-                </button>
-                <button
-                    onClick={() => router.push('/admin/analytics')}
-                    className="glass-card p-6 hover:scale-105 transition-transform duration-300 text-center group"
-                >
-                    <FiTrendingUp className="w-8 h-8 mx-auto mb-2 text-blue-500 group-hover:scale-110 transition-transform" />
-                    <p className="font-semibold">Analytics</p>
-                </button>
-            </div>
+
         </DashboardLayout>
     );
 }

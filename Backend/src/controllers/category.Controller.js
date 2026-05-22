@@ -1,10 +1,8 @@
-const Category = require('../models/Category');
-const CategoryService = require('../services/CategoryService');
 const asyncHandler = require('express-async-handler');
 
 class CategoryController {
-    constructor() {
-        this.categoryService = new CategoryService(Category);
+    constructor(categoryService) {
+        this.categoryService = categoryService;
     }
 
     getAllCategories = asyncHandler(async (req, res) => {
@@ -33,4 +31,4 @@ class CategoryController {
     });
 }
 
-module.exports = new CategoryController();
+module.exports = CategoryController;

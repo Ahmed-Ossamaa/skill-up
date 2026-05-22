@@ -20,7 +20,15 @@ function CoursesContent() {
 
     // Search & Sort State
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
     const [sortBy, setSortBy] = useState('-createdAt');
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 500);
+        return () => clearTimeout(handler);
+    }, [searchQuery]);
 
     // Pagination State
     const [pagination, setPagination] = useState({
@@ -56,7 +64,7 @@ function CoursesContent() {
                 page,
                 limit: pagination.limit,
                 sort: sortBy,
-                ...(searchQuery && { search: searchQuery }),
+                ...(debouncedSearchQuery && { search: debouncedSearchQuery }),
                 ...(filters.category && { category: filters.category }),
                 ...(filters.level && { level: filters.level }),
                 ...(filters.rating && { rating: filters.rating }),
@@ -94,7 +102,7 @@ function CoursesContent() {
         } finally {
             setLoading(false);
         }
-    }, [filters, sortBy, searchQuery, pagination.limit]);
+    }, [filters, sortBy, debouncedSearchQuery, pagination.limit]);
 
     useEffect(() => {
         fetchCourses(1);
