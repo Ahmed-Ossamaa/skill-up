@@ -152,22 +152,29 @@ class LessonService {
         const lesson = await this.lessonRepository.findLessonWithCourse(lessonId);
         if (!lesson) throw ApiError.notFound('Lesson not found');
 
-
-        console.log('lesson.course:', lesson.course);
-        console.log('lesson.course.instructor:', lesson.course.instructor);
-        console.log('userId:', userId);
         // Authorization
-        const isOwner = lesson.course.instructor?._id.toString() === userId.toString();
-        if (isOwner || userRole === 'admin' || lesson.isPreview) {
+        const isOwner = lesson.course.instructor?._id.toString() === userId?.toString();
+        if (isOwner || userRole === 'admin') {
             return lesson;
         }
-        console.log('isOwner:', isOwner);
-        const enrollment = await this.lessonRepository.findEnrollment(userId, lesson.course._id);
-        if (!enrollment) {
+        
+        let enrollment = null;
+        if (userId) {
+            enrollment = await this.lessonRepository.findEnrollment(userId, lesson.course._id);
+        }
+
+        if (!enrollment && !lesson.isPreview) {
             throw ApiError.forbidden('Please enroll to access this course');
         }
 
-        return lesson;
+        const lessonObj = lesson.toObject();
+        if (enrollment) {
+            lessonObj.isCompleted = enrollment.progress.completedLessons.some(
+                id => id.toString() === lessonId.toString()
+            );
+        }
+
+        return lessonObj;
     }
 
 
