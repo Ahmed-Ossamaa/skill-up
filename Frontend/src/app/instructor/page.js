@@ -32,7 +32,6 @@ export default function InstructorDashboard() {
             // Fetch Course List
             const res = await courseAPI.getInstructorCourses();
             const coursesData = res.data.data || [];
-            // console.log("coursesData", coursesData);
 
             setCourses(coursesData?.data || []);
         } catch (error) {

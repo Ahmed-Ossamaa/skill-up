@@ -13,6 +13,7 @@ import {
     AiOutlineUser, AiOutlineSafety
 } from 'react-icons/ai';
 import Header from '@/components/layout/Header';
+import useAuthStore from '@/store/authStore';
 
 const passwordSchema = z.object({
     currentPassword: z.string().min(1, "Current password is required"),
@@ -34,6 +35,7 @@ export default function SettingsPage() {
     // const [passwordLoading, setPasswordLoading] = useState(false);
     const [userRole, setUserRole] = useState('student');
     const [activeTab, setActiveTab] = useState('profile');
+    const updateUser = useAuthStore((state) => state.updateUser);
 
     const {
         register,
@@ -96,7 +98,8 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             const { avatar, ...textData } = formData;
-            await userAPI.updateMyProfile(textData);
+            const res = await userAPI.updateMyProfile(textData);
+            updateUser(res.data?.data || textData);
             toast.success('Profile updated successfully!');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to update profile');
@@ -143,7 +146,10 @@ export default function SettingsPage() {
 
                                 <AvatarUploader
                                     currentAvatar={formData.avatar}
-                                    onUpdate={(newAvatar) => setFormData(prev => ({ ...prev, avatar: newAvatar }))}
+                                    onUpdate={(newAvatar) => {
+                                        setFormData(prev => ({ ...prev, avatar: newAvatar }));
+                                        updateUser({ avatar: newAvatar });
+                                    }}
                                 />
 
                                 <div className="mt-6 text-sm text-gray-500">
