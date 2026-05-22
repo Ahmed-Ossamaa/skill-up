@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { lessonAPI } from '@/lib/api';
+import useAuthStore from '@/store/authStore';
 import { FiChevronLeft, FiCheckCircle, FiFileText, FiPlayCircle, FiDownload, FiExternalLink, FiFile } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -14,8 +15,18 @@ export default function LessonPage() {
     const [isCompleting, setIsCompleting] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
 
+    const { isReady, isAuthenticated } = useAuthStore();
+
     useEffect(() => {
         const fetchLesson = async () => {
+            if (!isReady) return; // Wait for auth to initialize
+            
+            if (!isAuthenticated) {
+                toast.error("Please login first to view this lesson.");
+                router.replace(`/auth/login`);
+                return;
+            }
+
             try {
                 setLoading(true);
                 const id = params.lessonId || params.id;
@@ -32,7 +43,7 @@ export default function LessonPage() {
             }
         };
         fetchLesson();
-    }, [params]);
+    }, [params, isReady, isAuthenticated, router]);
 
     //Mark Complete
     const handleMarkAsComplete = async () => {

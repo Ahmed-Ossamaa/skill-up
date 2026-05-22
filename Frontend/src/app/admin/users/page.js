@@ -56,8 +56,7 @@ export default function AdminUsersPage() {
 
     useEffect(() => {
         if (!isReady) return;
-        if (!isAuthenticated) return router.push('/auth/login');
-        if (user?.role !== 'admin') return router.push('/');
+
 
         fetchUsers();
     }, [isReady, isAuthenticated, user, fetchUsers, router]);

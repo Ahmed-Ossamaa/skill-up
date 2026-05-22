@@ -43,17 +43,8 @@ export default function InstructorDashboard() {
 
     useEffect(() => {
         if (!isReady) return;
-        if (!isAuthenticated) {
-            router.push('/auth/login');
-            return;
-        }
-        if (user?.role !== 'instructor') {
-            router.push('/');
-            return;
-        }
-
         loadDashboard();
-    }, [isReady, isAuthenticated, user, router, loadDashboard]);
+    }, [isReady, loadDashboard]);
     const handleTogglePublish = async (courseId, currentStatus) => {
         try {
             const newStatus = currentStatus === 'published' ? 'draft' : 'published';

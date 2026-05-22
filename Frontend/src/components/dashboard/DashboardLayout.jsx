@@ -17,11 +17,16 @@ export default function DashboardLayout({ children, role = 'student' }) {
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
-    const { user, logout } = useAuthStore();
+    const { user, isAuthenticated, logout } = useAuthStore();
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        if (!isAuthenticated) {
+            router.push('/auth/login');
+        } else if (user?.role && role && user.role !== role) {
+            router.push('/');
+        }
+    }, [isAuthenticated, user, role, router]);
 
     const handleLogout = async () => {
         await logout();

@@ -22,7 +22,7 @@ export default function AnalyticsPage() {
             value: loading ? "..." : `$${stats.revenue?.toLocaleString() || "0"}`,
             icon: HiOutlineCash,
             color: "success",
-            change: stats.revenueTrend,
+            change: Math.floor(Number(stats.revenueTrend)) + "%",
             trend: stats.revenueTrendDir
         },
         {
@@ -30,7 +30,7 @@ export default function AnalyticsPage() {
             value: loading ? "..." : stats.students?.toLocaleString() || "0",
             icon: HiOutlineUsers,
             color: "secondary",
-            change: stats.studentTrend,
+            change: Math.floor(Number(stats.studentTrend)) + "%",
             trend: stats.studentTrendDir
         },
         {
