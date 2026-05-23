@@ -28,7 +28,7 @@ const LessonService = require('./services/LessonService');
 const EnrollmentService = require('./services/EnrollmentService');
 const UserService = require('./services/UserService');
 const AuthService = require('./services/AuthService');
-const FeedBackService = require('./services/FeedBackService');
+const FeedBackService = require('./services/FeedbackService');
 const ReviewService = require('./services/ReviewService');
 const InstructorService = require('./services/InstructorService');
 
