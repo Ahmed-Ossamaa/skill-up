@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { lessonAPI } from '@/lib/api';
+import useAuthStore from '@/store/authStore';
 import { FiChevronLeft, FiCheckCircle, FiFileText, FiPlayCircle, FiDownload, FiExternalLink, FiFile } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
@@ -12,14 +13,28 @@ export default function LessonPage() {
     const [lesson, setLesson] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isCompleting, setIsCompleting] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(false);
+
+    const { isReady, isAuthenticated } = useAuthStore();
 
     useEffect(() => {
         const fetchLesson = async () => {
+            if (!isReady) return; // Wait for auth to initialize
+            
+            if (!isAuthenticated) {
+                toast.error("Please login first to view this lesson.");
+                router.replace(`/auth/login`);
+                return;
+            }
+
             try {
                 setLoading(true);
                 const id = params.lessonId || params.id;
                 const res = await lessonAPI.getById(id);
                 setLesson(res.data?.data || res.data);
+                if (res.data?.data?.isCompleted || res.data?.isCompleted) {
+                    setIsCompleted(true);
+                }
             } catch (error) {
                 console.error(error);
                 toast.error("Failed to load lesson");
@@ -28,7 +43,7 @@ export default function LessonPage() {
             }
         };
         fetchLesson();
-    }, [params]);
+    }, [params, isReady, isAuthenticated, router]);
 
     //Mark Complete
     const handleMarkAsComplete = async () => {
@@ -37,8 +52,8 @@ export default function LessonPage() {
         try {
             const courseId = lesson.course?._id || lesson.course;
             await lessonAPI.markComplete(courseId, lesson._id);
+            setIsCompleted(true);
             toast.success("Lesson completed!");
-            router.refresh();
         } catch (error) {
             toast.error(error.response?.data?.message || "Error updating progress");
         } finally {
@@ -114,14 +129,20 @@ export default function LessonPage() {
                     <button onClick={() => router.back()} className="flex items-center text-slate-600 dark:text-slate-300 hover:text-primary-500 font-medium transition">
                         <FiChevronLeft className="mr-2" /> Back to Course
                     </button>
-                    <button
-                        onClick={handleMarkAsComplete}
-                        disabled={isCompleting}
-                        className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-all shadow-lg active:scale-95 ${isCompleting ? 'bg-slate-300 text-slate-500' : 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/20'
-                            }`}
-                    >
-                        <FiCheckCircle /> {isCompleting ? "Saving..." : "Mark as Complete"}
-                    </button>
+                    {isCompleted ? (
+                        <div className="flex items-center gap-2 px-6 py-2 rounded-full font-bold bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 border border-green-200 dark:border-green-800">
+                            <FiCheckCircle /> Completed
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleMarkAsComplete}
+                            disabled={isCompleting}
+                            className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-all shadow-lg active:scale-95 ${isCompleting ? 'bg-slate-300 text-slate-500' : 'bg-green-500 hover:bg-green-600 text-white shadow-green-500/20'
+                                }`}
+                        >
+                            <FiCheckCircle /> {isCompleting ? "Saving..." : "Mark as Complete"}
+                        </button>
+                    )}
                 </div>
             </div>
 

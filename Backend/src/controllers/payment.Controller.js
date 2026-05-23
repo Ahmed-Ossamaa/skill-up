@@ -53,7 +53,6 @@ exports.createPaymentIntent = asyncHandler(async (req, res) => {
         console.log(paymentIntent.error.message);
         return res.status(400).json({ message: paymentIntent.error.message });
     } else {
-        console.log("success", paymentIntent.client_secret);
         return res.status(200).json({
             clientSecret: paymentIntent.client_secret,
             amount: amountToCharge

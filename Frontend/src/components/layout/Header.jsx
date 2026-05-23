@@ -13,10 +13,15 @@ export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
 
     const { isAuthenticated, user, logout } = useAuthStore();
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleLogout = async () => {
         await logout();
@@ -107,7 +112,9 @@ export default function Header() {
                     <div className="flex items-center space-x-4">
 
                         {/* User Menu */}
-                        {isAuthenticated ? (
+                        {!mounted ? (
+                            <div className="w-24 h-10 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse"></div>
+                        ) : isAuthenticated ? (
                             <div className="relative group">
                                 <button className="flex items-center gap-2 cursor-pointer outline-none bg-white/20 dark:bg-black/50 backdrop-blur-md py-1 pl-1.5 pr-4 rounded-full border border-white/20 shadow-sm transition-all hover:bg-white/30">
                                     {/* Avatar */}
@@ -118,7 +125,7 @@ export default function Header() {
                                                 width={100}
                                                 height={100}
                                                 loading='eager'
-                                                className="object-cover"
+                                                className="object-cover w-full h-full rounded-full"
                                                 alt={user?.name || "User Avatar"}
                                             />
                                         ) : (
@@ -131,7 +138,7 @@ export default function Header() {
                                     {/* User Name */}
                                     <div className="hidden sm:block text-left">
                                         <span className="font-semibold text-sm text-gray-800 dark:text-gray-200 block leading-tight">
-                                            {user?.name}
+                                            {user?.name || '...'}
                                         </span>
                                     </div>
                                 </button>

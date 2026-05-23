@@ -94,6 +94,7 @@ export default function CreateCoursePage() {
 
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
 
@@ -153,17 +154,8 @@ export default function CreateCoursePage() {
 
     useEffect(() => {
         if (!isReady) return;
-        if (!isAuthenticated) {
-            router.push('/auth/login');
-            return;
-        }
-        if (user && user.role !== 'instructor') {
-            router.push('/');
-            return;
-        }
-
         fetchCategories();
-    }, [isReady, isAuthenticated, user, router]);
+    }, [isReady]);
 
 
     useEffect(() => {
@@ -186,7 +178,9 @@ export default function CreateCoursePage() {
     const fetchCategories = async () => {
         try {
             const res = await categoryAPI.getAll();
-            setCategories(res.data.data || []);
+            const mainCategories = res.data?.data;
+            const subCategories = mainCategories.flatMap((category) => category.subCategories);
+            setCategories(subCategories|| []);
         } catch (error) {
             console.error('Error fetching categories:', error);
         }
@@ -481,7 +475,7 @@ export default function CreateCoursePage() {
                                 </label>
                                 <select
                                     {...register('category')}
-                                    className="w-full px-4 py-3 glass rounded-lg focus-ring"
+                                    className="w-full px-4 py-3 glass rounded-lg focus-ring capitalize"
                                 >
                                     <option value="">Select a category</option>
                                     {categories.map((cat) => (

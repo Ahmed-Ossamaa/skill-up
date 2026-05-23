@@ -61,11 +61,7 @@ export default function AdminCourses() {
         }
     }, [filters, pagination.limit]);
 
-    useEffect(() => {
-        if (isReady && !isAuthenticated) router.push('/auth/login');
-        if (isReady && user && user.role !== 'admin') router.push('/');
-    }, [isReady, isAuthenticated, user, router]);
-
+    // Removed manual auth check, handled by DashboardLayout
     // Debounced filter >> 500ms (my function from utils doesnt work here > fix later)
     useEffect(() => {
         if (!isReady || !user || user.role !== 'admin') return;

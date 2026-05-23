@@ -13,6 +13,7 @@ import {
     AiOutlineUser, AiOutlineSafety
 } from 'react-icons/ai';
 import Header from '@/components/layout/Header';
+import useAuthStore from '@/store/authStore';
 
 const passwordSchema = z.object({
     currentPassword: z.string().min(1, "Current password is required"),
@@ -34,6 +35,7 @@ export default function SettingsPage() {
     // const [passwordLoading, setPasswordLoading] = useState(false);
     const [userRole, setUserRole] = useState('student');
     const [activeTab, setActiveTab] = useState('profile');
+    const updateUser = useAuthStore((state) => state.updateUser);
 
     const {
         register,
@@ -96,7 +98,8 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             const { avatar, ...textData } = formData;
-            await userAPI.updateMyProfile(textData);
+            const res = await userAPI.updateMyProfile(textData);
+            updateUser(res.data?.data || textData);
             toast.success('Profile updated successfully!');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to update profile');
@@ -130,7 +133,7 @@ export default function SettingsPage() {
 
                 <div className="max-w-7xl mx-auto">
                     <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">Account Settings</h1>
-                    <p className="text-gray-600 dark:text-gray-300 mb-8 font-medium">
+                    <p className="text-gray-300 dark:text-gray-300 mb-8 font-medium">
                         Manage your {isInstructor ? 'instructor profile' : 'personal account'} and preferences.
                     </p>
 
@@ -143,7 +146,10 @@ export default function SettingsPage() {
 
                                 <AvatarUploader
                                     currentAvatar={formData.avatar}
-                                    onUpdate={(newAvatar) => setFormData(prev => ({ ...prev, avatar: newAvatar }))}
+                                    onUpdate={(newAvatar) => {
+                                        setFormData(prev => ({ ...prev, avatar: newAvatar }));
+                                        updateUser({ avatar: newAvatar });
+                                    }}
                                 />
 
                                 <div className="mt-6 text-sm text-gray-500">
@@ -160,7 +166,7 @@ export default function SettingsPage() {
                             <div className="bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-100 dark:border-gray-700 inline-flex w-full md:w-auto">
                                 <button
                                     onClick={() => setActiveTab('profile')}
-                                    className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all w-full md:w-auto ${activeTab === 'profile'
+                                    className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all w-full md:w-auto cursor-pointer ${activeTab === 'profile'
                                         ? 'bg-slate-100 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400'
                                         : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                         }`}
@@ -169,7 +175,7 @@ export default function SettingsPage() {
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('security')}
-                                    className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all w-full md:w-auto ${activeTab === 'security'
+                                    className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all w-full md:w-auto cursor-pointer ${activeTab === 'security'
                                         ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400'
                                         : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                                         }`}

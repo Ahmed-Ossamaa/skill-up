@@ -96,7 +96,7 @@ export default function InstructorPublicProfile() {
                                 <h2 className="text-2xl font-bold mb-6">Published Courses ({courses.length})</h2>
                                 <div className="grid md:grid-cols-2 gap-6">
                                     {courses.map(course => (
-                                        <CourseCard key={course._id} course={course} />
+                                        <CourseCard key={course._id} course={course} instructor={instructor} />
                                     ))}
                                 </div>
                             </section>

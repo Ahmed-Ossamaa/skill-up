@@ -77,18 +77,9 @@ export default function StudentDashboard() {
 
     useEffect(() => {
         if (!isReady) return;
-        if (!isAuthenticated) {
-            router.push('/auth/login');
-            return;
-        }
-
-        if (user && user.role !== 'student') {
-            router.push('/');
-            return;
-        }
 
         fetchDashboardData();
-    }, [isReady, isAuthenticated, user, router]);
+    }, [isReady, router]);
 
     if (loading || !isReady) {
         return (

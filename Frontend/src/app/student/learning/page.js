@@ -22,14 +22,6 @@ export default function MyLearningPage() {
 
     useEffect(() => {
         if (!isReady) return;
-        if (!isAuthenticated) {
-            router.push('/auth/login');
-            return;
-        }
-        if (user && user.role !== 'student') {
-            router.push('/');
-            return;
-        }
 
         const fetchEnrollments = async () => {
             try {

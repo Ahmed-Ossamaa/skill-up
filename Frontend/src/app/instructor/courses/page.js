@@ -41,16 +41,8 @@ export default function MyCoursesPage() {
 
     useEffect(() => {
         if (!isReady) return;
-        if (!isAuthenticated) {
-            router.push('/auth/login');
-            return;
-        }
-        if (user && user.role !== 'instructor') {
-            router.push('/');
-            return;
-        }
         fetchPage(page);
-    }, [isReady, isAuthenticated, user, page, router]);
+    }, [isReady, page]);
 
     // Publish / Unpublish
     const handleTogglePublish = async (courseId, currentStatus) => {

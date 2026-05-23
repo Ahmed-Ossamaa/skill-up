@@ -38,7 +38,7 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
 
     const features = [
         { icon: FiClock, label: `${videoCount || 0} on-demand video` },
-        { icon: FiFileText, label: `${documentsCount|| 0} articles` },
+        { icon: FiFileText, label: `${documentsCount|| 0} document Lessons` },
         { icon: FiInbox, label: 'Full lifetime access' },
         { icon: FiSmartphone, label: 'Access on mobile and TV' },
         { icon: FiAward, label: 'Certificate of completion' },
@@ -125,7 +125,7 @@ export default function CourseSidebar({ course, isEnrolled = false, onEnroll }) 
                             <button
                                 onClick={handleEnroll}
                                 disabled={loading}
-                                className="w-full py-3 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+                                className="w-full py-3 bg-linear-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer"
                             >
                                 {course.isFree ? 'Enroll for Free' : 'Enroll'}
                             </button>
