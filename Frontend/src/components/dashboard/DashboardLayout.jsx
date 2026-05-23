@@ -172,7 +172,7 @@ export default function DashboardLayout({ children, role = 'student' }) {
                 <div className="absolute bottom-0 left-0 right-0 p-1  ">
                     <button
                         onClick={handleLogout}
-                        className="flex items-center space-x-3 px-6 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all duration-200 w-full"
+                        className="flex items-center space-x-3 px-6 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 cursor-pointer transition-all duration-200 w-full"
                     >
                         <FiLogOut className="w-3 h-3" />
                         <span className="font-medium">Logout</span>

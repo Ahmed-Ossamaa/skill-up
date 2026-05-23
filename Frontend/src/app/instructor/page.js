@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCard from '@/components/dashboard/StatsCard';
@@ -15,7 +14,6 @@ import InstructorCourseCard from '@/components/instructor/InstructorCourseCard';
 import { courseAPI } from '@/lib/api';
 
 export default function InstructorDashboard() {
-    const router = useRouter();
     const { user, isAuthenticated, isReady } = useAuthStore();
     const { isOpen, config, openConfirm, closeConfirm, handleConfirm } = useConfirmModal();
     const { stats, loading: statsLoading, fetchDashboardData } = useInstructorStore();
@@ -116,7 +114,7 @@ export default function InstructorDashboard() {
                     icon={FiUsers}
                     label="Total Students"
                     value={statsLoading ? "..." : stats.students?.toLocaleString()}
-                    change={stats.studentTrend}
+                    change={Math.floor(Number(stats.studentTrend)) + "%"}
                     trend={stats.studentTrendDir}
                     color="secondary"
                 />
@@ -124,14 +122,14 @@ export default function InstructorDashboard() {
                     icon={FiDollarSign}
                     label="Total Revenue"
                     value={statsLoading ? "..." : `$${stats.revenue?.toLocaleString()}`}
-                    change={stats.revenueTrend}
+                    change={Math.floor(Number(stats.revenueTrend)) + "%"}
                     trend={stats.revenueTrendDir}
                     color="success"
                 />
                 <StatsCard
                     icon={FiStar}
                     label="Avg Rating"
-                    value={statsLoading ? "..." : stats.rating}
+                    value={statsLoading ? "..." : stats.rating + "/5" || "0.0"}
                     color="warning"
                 />
             </div>

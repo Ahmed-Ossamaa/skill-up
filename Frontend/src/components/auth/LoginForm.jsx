@@ -96,7 +96,7 @@ export default function LoginForm() {
                 type={showPassword ? 'text' : 'password'}
                 {...register('password')}
                 placeholder="Enter your password"
-                className="w-full pl-10 pr-12 py-3 glass rounded-lg focus-ring"
+                className="w-full pl-8 pr-12 py-2 glass rounded-lg focus-ring"
               />
               <button
                 type="button"
@@ -104,9 +104,9 @@ export default function LoginForm() {
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
               >
                 {showPassword ? (
-                  <FiEyeOff className="w-5 h-5 text-gray-500 hover:text-gray-700" />
+                  <FiEyeOff className="w-5 h-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
                 ) : (
-                  <FiEye className="w-5 h-5 text-gray-500 hover:text-gray-700" />
+                  <FiEye className="w-5 h-5 text-gray-500 hover:text-gray-700 cursor-pointer" />
                 )}
               </button>
             </div>

@@ -35,7 +35,7 @@ export default function AnalyticsPage() {
         },
         {
             label: "Avg. Rating",
-            value: loading ? "..." : stats.rating || "0.0",
+            value: loading ? "..." : stats.rating +"/5" || "0.0",
             icon: HiOutlineStar,
             color: "warning",
         },

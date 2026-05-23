@@ -11,7 +11,7 @@ export default function StatsCard({ icon: Icon, label, value, change, color = 'p
     };
 
     return (
-        <div className="glass-card p-6 hover-lift h-full flex flex-col justify-between">
+        <div className="glass-card pl-6 pr-3 py-4 hover-lift h-full flex flex-col justify-between">
             <div className="flex items-center justify-between">
                 <div className="flex-1">
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{label}</p>
@@ -28,8 +28,8 @@ export default function StatsCard({ icon: Icon, label, value, change, color = 'p
                         </div>
                     )}
                 </div>
-                <div className={cn('w-14 h-14 rounded-xl flex items-center justify-center bg-linear-to-br', colorClasses[color])}>
-                    <Icon className="w-7 h-7 text-white" />
+                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center bg-linear-to-br', colorClasses[color])}>
+                    <Icon className="w-5 h-5 text-white" />
                 </div>
             </div>
         </div>
