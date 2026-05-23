@@ -6,7 +6,8 @@ export default async function CheckoutPage({ params }) {
     const resolved = await params;
     const courseId = resolved.courseId;
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/courses/${courseId}`, { cache: "no-store" });
+    const SERVER_URL = process.env.NEXT_PUBLIC_RENDER_URL || process.env.NEXT_PUBLIC_API_URL;
+    const res = await fetch(`${SERVER_URL}/courses/${courseId}`, { cache: "no-store" });
     const course = (await res.json()).data;
 
     if (!course) return <p>Course not found</p>;
